@@ -15,21 +15,21 @@ ${MEMBERS_PLUGINS:-}"
     echo "${LOGIN} is a member"
 
     # Added more plugins for reviewers
-    if [[ "${REVIEWERS}" != "" && "${REVIEWERS_PLUGINS}" != "" && "${REVIEWERS}" =~ ^${LOGIN}$ ]]; then
+    if [[ "${REVIEWERS}" != "" && "${REVIEWERS_PLUGINS}" != "" && $(echo "${REVIEWERS}" | grep -e "^${LOGIN}$") == "${LOGIN}" ]]; then
         echo "${LOGIN} is a reviewer"
         PLUGINS="${PLUGINS}
 ${REVIEWERS_PLUGINS:-}"
     fi
 
     # Added more plugins for approvers
-    if [[ "${APPROVERS}" != "" && "${APPROVERS_PLUGINS}" != "" && "${APPROVERS}" =~ ^${LOGIN}$ ]]; then
+    if [[ "${APPROVERS}" != "" && "${APPROVERS_PLUGINS}" != "" && $(echo "${APPROVERS}" | grep -e "^${LOGIN}$") == "${LOGIN}" ]]; then
         echo "${LOGIN} is a approver"
         PLUGINS="${PLUGINS}
 ${APPROVERS_PLUGINS:-}"
     fi
 
     # Added more plugins for maintainers
-    if [[ "${MAINTAINERS}" != "" && "${MAINTAINERS_PLUGINS}" != "" && "${MAINTAINERS}" =~ ^${LOGIN}$ ]]; then
+    if [[ "${MAINTAINERS}" != "" && "${MAINTAINERS_PLUGINS}" != "" && $(echo "${MAINTAINERS}" | grep -e "^${LOGIN}$") == "${LOGIN}" ]]; then
         echo "${LOGIN} is a maintainer"
         PLUGINS="${PLUGINS}
 ${MAINTAINERS_PLUGINS:-}"
