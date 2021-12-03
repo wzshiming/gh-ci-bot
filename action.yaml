@@ -1,0 +1,9 @@
+name: "Github CI Bot"
+description: "Have a CI Bot automatically do things for you"
+author: "wzshiming"
+
+runs:
+  using: "composite"
+  steps:
+    - run: ${{ github.action_path }}/entrypoint.sh
+      shell: bash
