@@ -1,1 +1,0 @@
-remove-help-wanted.sh
