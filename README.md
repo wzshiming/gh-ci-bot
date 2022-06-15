@@ -1,5 +1,9 @@
 # gh-ci-bot
 
+Simply introducing a [Action](https://github.com/wzshiming/gh-ci-bot/blob/master/.github/workflows/ci-bot.yml) gives you the ability to execute the following commands on Issue/PR.
+
+It is better to use with [CodeOwners of Github](https://github.blog/2017-07-06-introducing-code-owners/).
+
 | Command                           | Example                                                                 | Description                                                                                              | Plugin                 |
 | --------------------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ---------------------- |
 | `/retitle`                        | `/retitle New Title`                                                    | Edits the PR or issue title.                                                                             | retitle                |
