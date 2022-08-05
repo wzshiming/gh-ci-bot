@@ -10,8 +10,9 @@ if [[ -z "${login}" ]]; then
   exit 1
 fi
 
-echo "Add assignee ${login} to ${GH_REPOSITORY}#${ISSUE_NUMBER}"
+echo "Remove assignee ${login} to ${GH_REPOSITORY}#${ISSUE_NUMBER}"
 
 for assignee in ${login}; do
-  gh "${ISSUE_KIND}" -R "${GH_REPOSITORY}" edit "${ISSUE_NUMBER}" --remove-assignee "${assignee}"
+  gh "${ISSUE_KIND}" -R "${GH_REPOSITORY}" edit "${ISSUE_NUMBER}" --remove-assignee "${assignee}" ||
+    echo "[FAIL] Failed remove assignee ${assignee}"
 done

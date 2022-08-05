@@ -41,6 +41,7 @@ env:
 
   # This plugins is for in the APPROVERS environment variable
   APPROVERS_PLUGINS: |-
+    label
     merge
 
   # This plugins is for in the MAINTAINERS environment variable

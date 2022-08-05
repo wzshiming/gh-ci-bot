@@ -10,4 +10,5 @@ if [[ -z "${label}" ]]; then
 fi
 
 echo "Remove label ${label//\@/} to ${GH_REPOSITORY}#${ISSUE_NUMBER}"
-gh "${ISSUE_KIND}" -R "${GH_REPOSITORY}" edit "${ISSUE_NUMBER}" --remove-label "${label}"
+gh "${ISSUE_KIND}" -R "${GH_REPOSITORY}" edit "${ISSUE_NUMBER}" --remove-label "${label}" ||
+  echo "[FAIL] Failed remove label ${label}"

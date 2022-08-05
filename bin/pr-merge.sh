@@ -18,4 +18,5 @@ if [[ "${action}" != "" ]]; then
 fi
 
 echo "PR ${GH_REPOSITORY}#${ISSUE_NUMBER} merge by ${LOGIN}"
-gh "${ISSUE_KIND}" -R "${GH_REPOSITORY}" merge "${ISSUE_NUMBER}" --auto "${args}"
+gh "${ISSUE_KIND}" -R "${GH_REPOSITORY}" merge "${ISSUE_NUMBER}" --auto "${args}" ||
+  echo "[FAIL] Failed merge PR"
