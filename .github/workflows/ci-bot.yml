@@ -79,7 +79,7 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
-      - uses: .
+      - uses: ./
         env:
           LOGIN: ${{ github.event.issue.user.login }}
           MESSAGE: ${{ github.event.issue.body }}
@@ -99,7 +99,7 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
-      - uses: .
+      - uses: ./
         env:
           LOGIN: ${{ github.event.pull_request.user.login }}
           MESSAGE: ${{ github.event.pull_request.body }}
@@ -120,7 +120,7 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
-      - uses: .
+      - uses: ./
         env:
           LOGIN: ${{ github.event.comment.user.login }}
           MESSAGE: ${{ github.event.comment.body }}
@@ -136,7 +136,7 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
-      - uses: .
+      - uses: ./
         env:
           LOGIN: ${{ github.event.comment.user.login }}
           MESSAGE: ${{ github.event.comment.body }}
@@ -152,7 +152,7 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
-      - uses: .
+      - uses: ./
         env:
           LOGIN: ${{ github.event.comment.user.login }}
           MESSAGE: ${{ github.event.comment.body }}
