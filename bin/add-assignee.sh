@@ -13,5 +13,6 @@ fi
 echo "Add assignee ${login} to ${GH_REPOSITORY}#${ISSUE_NUMBER}"
 
 for assignee in ${login}; do
-  gh "${ISSUE_KIND}" -R "${GH_REPOSITORY}" edit "${ISSUE_NUMBER}" --add-assignee "${assignee}"
+  gh "${ISSUE_KIND}" -R "${GH_REPOSITORY}" edit "${ISSUE_NUMBER}" --add-assignee "${assignee}" || \
+    echo "[FAIL] Assign to ${assignee}"
 done
