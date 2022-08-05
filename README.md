@@ -1,6 +1,6 @@
 # gh-ci-bot
 
-Simply introducing a [Action](https://github.com/wzshiming/gh-ci-bot/blob/master/.github/workflows/ci-bot.yml) gives you the ability to execute the following commands on Issue/PR.
+Simply introducing a [Action](https://github.com/wzshiming/gh-ci-bot/blob/master/examples/ci-bot.yml) gives you the ability to execute the following commands on Issue/PR.
 
 It is better to use with [CodeOwners of Github](https://github.blog/2017-07-06-introducing-code-owners/).
 
