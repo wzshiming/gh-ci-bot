@@ -92,14 +92,16 @@ permissions:
 
 jobs:
 
-  issue_opened:
-    name: Issue Opened
-    if: ${{ github.event_name == 'issues' }}
+  bot:
+    name: Bot
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
-      - uses: ./
+
+      - name: Issue Opened
+        uses: ./
+        if: ${{ github.event_name == 'issues' }}
         env:
           LOGIN: ${{ github.event.issue.user.login }}
           MESSAGE: ${{ github.event.issue.body }}
@@ -112,14 +114,9 @@ jobs:
             Thanks for opening an issue!
             We will look into it as soon as possible.
 
-  pr_opened:
-    name: PR Opened
-    if: ${{ github.event_name == 'pull_request_target' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v3
-      - uses: ./
+      - name: PR Opened
+        uses: ./
+        if: ${{ github.event_name == 'pull_request_target' }}
         env:
           LOGIN: ${{ github.event.pull_request.user.login }}
           MESSAGE: ${{ github.event.pull_request.body }}
@@ -133,14 +130,9 @@ jobs:
             If the PR is ready, use the `/auto-cc` command to assign Reviewer to Review. 
             We will review it shortly.
 
-  issue_commented:
-    name: Issue Commented
-    if: ${{ github.event_name == 'issue_comment' && !github.event.issue.pull_request }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v3
-      - uses: ./
+      - name: Issue Commented
+        uses: ./
+        if: ${{ github.event_name == 'issue_comment' && !github.event.issue.pull_request }}
         env:
           LOGIN: ${{ github.event.comment.user.login }}
           MESSAGE: ${{ github.event.comment.body }}
@@ -149,14 +141,9 @@ jobs:
           ISSUE_KIND: issue
           TYPE: comment
 
-  pr_review_commented:
-    name: PR Review Commented
-    if: ${{ github.event_name == 'pull_request_review_comment' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v3
-      - uses: ./
+      - name: PR Review Commented
+        uses: ./
+        if: ${{ github.event_name == 'pull_request_review_comment' }}
         env:
           LOGIN: ${{ github.event.comment.user.login }}
           MESSAGE: ${{ github.event.comment.body }}
@@ -165,14 +152,9 @@ jobs:
           ISSUE_KIND: pr
           TYPE: comment
 
-  pr_commented:
-    name: PR Commented
-    if: ${{ github.event_name == 'issue_comment' && github.event.issue.pull_request }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v3
-      - uses: ./
+      - name: PR Commented
+        uses: ./
+        if: ${{ github.event_name == 'issue_comment' && github.event.issue.pull_request }}
         env:
           LOGIN: ${{ github.event.comment.user.login }}
           MESSAGE: ${{ github.event.comment.body }}
