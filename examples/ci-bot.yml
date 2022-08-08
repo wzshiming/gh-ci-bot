@@ -70,6 +70,22 @@ env:
 
     </details>
 
+# https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+permissions:
+  actions: read
+  checks: read
+  contents: read
+  deployments: none
+  id-token: none
+  issues: write
+  discussions: read
+  packages: none
+  pages: none
+  pull-requests: write
+  repository-projects: read
+  security-events: none
+  statuses: read
+
 jobs:
 
   issue_opened:
