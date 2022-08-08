@@ -4,4 +4,4 @@ IFS=","
 
 label="${*}"
 
-remove-label.sh "${label}"
+remove-labels.sh "${label}"

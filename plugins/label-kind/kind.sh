@@ -4,4 +4,4 @@ IFS=","
 
 label="${*/#/kind\/}"
 
-add-label.sh "${label}"
+add-labels.sh "${label}"

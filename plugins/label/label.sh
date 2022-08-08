@@ -4,4 +4,4 @@ IFS=","
 
 label="${*}"
 
-add-label.sh "${label}"
+add-labels.sh "${label}"

@@ -4,4 +4,4 @@ IFS=","
 
 label="${*/#/kind\/}"
 
-remove-label.sh "${label}"
+remove-labels.sh "${label}"

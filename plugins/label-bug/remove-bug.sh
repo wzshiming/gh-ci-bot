@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-remove-label.sh bug
+remove-labels.sh bug

@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-remove-label.sh enhancement
+remove-labels.sh enhancement

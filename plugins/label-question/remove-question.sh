@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-remove-label.sh question
+remove-labels.sh question

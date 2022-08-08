@@ -5,4 +5,4 @@ if [[ "${ISSUE_KIND}" != "pr" ]]; then
     exit 1
 fi
 
-remove-label.sh lgtm
+remove-labels.sh lgtm

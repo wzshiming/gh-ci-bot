@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-add-label.sh documentation
+add-labels.sh documentation

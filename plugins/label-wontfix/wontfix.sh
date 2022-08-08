@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-add-label.sh wontfix
+add-labels.sh wontfix
