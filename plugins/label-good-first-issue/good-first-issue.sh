@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-add-label.sh 'good first issue'
+add-labels.sh 'good first issue'

@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-remove-label.sh 'good first issue'
+remove-labels.sh 'good first issue'

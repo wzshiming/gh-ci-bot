@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-add-label.sh invalid
+add-labels.sh invalid

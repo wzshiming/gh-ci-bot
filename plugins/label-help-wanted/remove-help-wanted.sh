@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-remove-label.sh 'help wanted'
+remove-labels.sh 'help wanted'

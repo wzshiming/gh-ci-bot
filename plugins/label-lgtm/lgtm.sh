@@ -5,4 +5,4 @@ if [[ "${ISSUE_KIND}" != "pr" ]]; then
     exit 1
 fi
 
-add-label.sh lgtm
+add-labels.sh lgtm
