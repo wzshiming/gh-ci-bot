@@ -73,11 +73,21 @@ function exec_cmd() {
     "${cmdpath}" $@
 }
 
+function clearComment() {
+    sed -e ':begin; /<!--/,/-->/ { /-->/! { $! { N; b begin }; }; s/<!--.*-->/COMMENT/; };'
+}
+
+function extractCommand() {
+    grep -e '^/[a-z]\+'
+}
+
 function main() {
     if [[ "${MESSAGE}" == "" ]]; then
         return 0
     fi
-    echo "${MESSAGE}" | grep -e '^/[a-z]\+' | while read line; do
+    echo "${MESSAGE}" |
+        clearComment |
+        extractCommand | while read line; do
         line=$(echo ${line} | sed 's/\t/ /g' | sed 's/  */ /g' | tr -d '\r')
         cmd=("${line#/}")
         echo "Exec command: ${cmd[@]}"
