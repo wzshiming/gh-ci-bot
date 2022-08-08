@@ -3,13 +3,17 @@ on:
   issue_comment:
     types:
       - created
+
   pull_request_review_comment:
     types:
       - created
+
   issues:
     types:
       - opened
-  pull_request:
+  
+  # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request_target
+  pull_request_target:
     types:
       - opened
 
@@ -110,7 +114,7 @@ jobs:
 
   pr_opened:
     name: PR Opened
-    if: ${{ github.event_name == 'pull_request' }}
+    if: ${{ github.event_name == 'pull_request_target' }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
