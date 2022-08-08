@@ -36,7 +36,7 @@ ${MAINTAINERS_PLUGINS:-}"
     fi
 
     # Added more plugins for owners
-    if [[ "${AUTHOR_ASSOCIATION}" != "OWNER" ]]; then
+    if [[ "${AUTHOR_ASSOCIATION}" == "OWNER" ]]; then
         echo "${LOGIN} is a owner"
         PLUGINS="${PLUGINS}
 ${OWNERS_PLUGINS:-}"
