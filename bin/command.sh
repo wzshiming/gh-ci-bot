@@ -43,7 +43,18 @@ ${OWNERS_PLUGINS:-}"
     fi
 fi
 
-echo "PLUGINS: ${PLUGINS}"
+if [[ "${LOGIN}" == "${AUTHOR}" && "${AUTHOR_PLUGINS}" != "" ]]; then
+    echo "${LOGIN} is author"
+    PLUGINS="${PLUGINS}
+${AUTHOR_PLUGINS:-}"
+fi
+
+PLUGINS="$(echo "${PLUGINS}" | sort -u)"
+
+echo "PLUGINS:"
+for plugin in ${PLUGINS}; do
+    echo "- ${plugin}"
+done
 
 function load_plugins() {
     for plugin in ${PLUGINS}; do
