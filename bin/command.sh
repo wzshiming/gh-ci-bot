@@ -66,7 +66,7 @@ PATH="$(load_plugins):${PATH}"
 
 function exec_cmd() {
     local cmd="$1"
-    local cmdpath="$(which ${cmd}.sh)"
+    local cmdpath="$(which ${cmd}.plugin.sh)"
     if [[ -z "${cmdpath}" ]]; then
         if [[ "${ALL_PLUGINS}" =~ "${cmd}" ]]; then
             echo "[FAIL] You do not support using command ${cmd}"

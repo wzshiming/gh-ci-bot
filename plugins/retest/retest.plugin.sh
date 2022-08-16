@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+if [[ "${ISSUE_KIND}" != "pr" ]]; then
+    echo "[FAIL] This plugin only works with pull requests."
+    exit 1
+fi
+
 head_sha="$(gh api \
     -H "Accept: application/vnd.github+json" \
     "/repos/${GH_REPOSITORY}/pulls/${ISSUE_NUMBER}" | jq -r '.head.sha')"
