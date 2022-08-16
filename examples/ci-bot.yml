@@ -37,7 +37,8 @@ env:
     label-kind
     label-wontfix
     lifecycle
-  
+    retest
+
   # This plugins is for in the REVIEWERS environment variable
   REVIEWERS_PLUGINS: |-
     label-lgtm
@@ -76,7 +77,7 @@ env:
 
 # https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
 permissions:
-  actions: read
+  actions: write
   checks: read
   contents: read
   deployments: none
