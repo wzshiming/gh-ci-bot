@@ -5,4 +5,9 @@ if [[ "${ISSUE_KIND}" != "pr" ]]; then
     exit 1
 fi
 
+if [[ "${LOGIN}" == "${AUTHOR}" ]]; then
+    echo "[FAIL] you cannot LGTM your own PR."
+    exit 1
+fi
+
 add-labels.sh lgtm
