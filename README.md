@@ -27,6 +27,8 @@ It is better to use with [CodeOwners of Github](https://github.blog/2017-07-06-i
 | `/[remove-]invalid`               | `/invalid`</br>`/remove-invalid`                   | Applies or removes the 'invalid' labels to an PR or issue.                                                   | label-invalid          |
 | `/[remove-]question`              | `/question`</br>`/remove-question`                 | Applies or removes the 'question' labels to an PR or issue.                                                  | label-question         |
 | `/[remove-]wontfix`               | `/wontfix`</br>`/remove-wontfix`                   | Applies or removes the 'wontfix' labels to an PR or issue.                                                   | label-wontfix          |
+| `/base [branch]`                  | `/base main`                                       | Change to which branch this PR is to be merged into                                                          | base                   |
+| `/rebase`                         | `/rebase`                                          | Rebase the this PR to the latest of the branch                                                               | rebase                 |
 
 ## License
 
