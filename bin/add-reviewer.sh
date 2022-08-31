@@ -22,5 +22,6 @@ for reviewer in ${login}; do
     -H "Accept: application/vnd.github.v3+json" \
     -H "Authorization: token ${GH_TOKEN}" \
     "https://api.github.com/repos/${GH_REPOSITORY}/pulls/${ISSUE_NUMBER}/requested_reviewers" \
-    -d "{\"reviewers\":[\"${reviewer}\"],\"team_reviewers\":[]}"
+    -d "{\"reviewers\":[\"${reviewer}\"],\"team_reviewers\":[]}" ||
+    echo "[FAIL] Failed requeste review ${reviewer}"
 done
