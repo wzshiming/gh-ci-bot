@@ -16,6 +16,7 @@ on:
   pull_request_target:
     types:
       - opened
+      - synchronize
 
 env:
   # This plugins is for anyone who can use it
@@ -54,6 +55,7 @@ env:
 
   # This plugins is for in the APPROVERS environment variable
   APPROVERS_PLUGINS: |-
+    label-approve
     label
     merge
     base
@@ -107,7 +109,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Issue Opened
         uses: ./
@@ -141,6 +143,18 @@ jobs:
             Thanks for your pull request!
             If the PR is ready, use the `/auto-cc` command to assign Reviewer to Review. 
             We will review it shortly.
+
+      - name: PR Synchronize
+        uses: ./
+        if: ${{ github.event_name == 'pull_request_target' && github.event.action == 'synchronize' }}
+        env:
+          LOGIN: ${{ github.event.pull_request.user.login }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
+          MESSAGE: ""
+          ISSUE_NUMBER: ${{ github.event.pull_request.number }}
+          AUTHOR_ASSOCIATION: ${{ github.event.pull_request.author_association }}
+          ISSUE_KIND: pr
+          TYPE: synchronize
 
       - name: Issue Commented
         uses: ./
