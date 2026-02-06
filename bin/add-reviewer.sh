@@ -6,7 +6,7 @@ login="${*}"
 login="${login//\@/}"
 
 if [[ -z "${login}" ]]; then
-  echo "[FAIL] No login provided"
+  echo "[FAIL] Missing required argument: username. Usage: \`/cc @username\`"
   exit 1
 fi
 
@@ -23,5 +23,5 @@ for reviewer in ${login}; do
     -H "Authorization: token ${GH_TOKEN}" \
     "https://api.github.com/repos/${GH_REPOSITORY}/pulls/${ISSUE_NUMBER}/requested_reviewers" \
     -d "{\"reviewers\":[\"${reviewer}\"],\"team_reviewers\":[]}" ||
-    echo "[FAIL] Failed requeste review ${reviewer}"
+    echo "[FAIL] Failed to request review from ${reviewer}. Please check that the username is correct."
 done

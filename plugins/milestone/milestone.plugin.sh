@@ -3,7 +3,7 @@
 milestone="${1:-}"
 
 if [[ -z "${milestone}" ]]; then
-  echo "[FAIL] No milestone specified"
+  echo "[FAIL] Missing required argument: milestone name. Usage: \`/milestone <name>\`"
   exit 1
 fi
 
