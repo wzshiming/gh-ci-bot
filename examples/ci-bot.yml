@@ -60,6 +60,7 @@ env:
     merge
     base
     rebase
+    cherry-pick
 
   # This plugins is for in the MAINTAINERS environment variable
   MAINTAINERS_PLUGINS: |-
