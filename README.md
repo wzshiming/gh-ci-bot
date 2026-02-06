@@ -19,7 +19,7 @@ approvers:
 
 When an OWNERS file is present, the listed users are merged with any `REVIEWERS` and `APPROVERS` defined in the workflow environment variables.
 
-OWNERS files are used hierarchically. You can place OWNERS files in any directory of your repository. When the `/auto-cc` command selects reviewers for changed files, it walks up the directory tree from each changed file to find the nearest OWNERS file with available reviewers. For example, if `pkg/api/handler.go` is changed, it will first look for `pkg/api/OWNERS`, then `pkg/OWNERS`, then the root `OWNERS` file.
+OWNERS files are used hierarchically. You can place OWNERS files in any directory of your repository. For pull requests, the bot determines the common prefix directory of all changed files and walks up from there to the root, collecting reviewers and approvers from every OWNERS file found along the way. For example, if `pkg/api/handler.go` and `pkg/util/helper.go` are both changed, the common prefix is `pkg`, so it will load `pkg/OWNERS` and then the root `OWNERS` file. The `/auto-cc` command additionally walks up from each individual changed file to find the nearest OWNERS file with available reviewers.
 
 | Command                           | Example                                            | Description                                                                                                  | Plugin                 |
 | --------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ---------------------- |
