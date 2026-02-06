@@ -44,6 +44,7 @@ cd "${tmpdir}" || exit 1
 
 git config --global user.email github-actions[bot]@users.noreply.github.com
 git config --global user.name github-actions[bot]
+git remote set-url origin "https://github.com/${GH_REPOSITORY}.git"
 
 git checkout -b "${cherry_pick_branch}"
 git cherry-pick "${merge_commit}" -m 1 || {
