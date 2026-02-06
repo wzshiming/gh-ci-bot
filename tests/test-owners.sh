@@ -54,11 +54,11 @@ approvers:
   - dave
 EOF
 
-reviewers="$(cat "${tmpdir}/OWNERS" | yq e '.reviewers | .[]' 2>/dev/null)"
+reviewers="$(yq e '.reviewers | .[]' "${tmpdir}/OWNERS" 2>/dev/null)"
 assert_eq "yq parses reviewers" "alice
 bob" "${reviewers}"
 
-approvers="$(cat "${tmpdir}/OWNERS" | yq e '.approvers | .[]' 2>/dev/null)"
+approvers="$(yq e '.approvers | .[]' "${tmpdir}/OWNERS" 2>/dev/null)"
 assert_eq "yq parses approvers" "charlie
 dave" "${approvers}"
 
@@ -68,10 +68,10 @@ reviewers:
   - alice
 EOF
 
-reviewers="$(cat "${tmpdir}/OWNERS" | yq e '.reviewers | .[]' 2>/dev/null)"
+reviewers="$(yq e '.reviewers | .[]' "${tmpdir}/OWNERS" 2>/dev/null)"
 assert_eq "yq parses reviewers only" "alice" "${reviewers}"
 
-approvers="$(cat "${tmpdir}/OWNERS" | yq e '.approvers | .[]' 2>/dev/null)"
+approvers="$(yq e '.approvers | .[]' "${tmpdir}/OWNERS" 2>/dev/null)"
 assert_eq "yq handles missing approvers" "" "${approvers}"
 
 rm -rf "${tmpdir}"
