@@ -129,7 +129,7 @@ jobs:
 
       - name: PR Opened
         uses: ./
-        if: ${{ github.event_name == 'pull_request_target' }}
+        if: ${{ github.event_name == 'pull_request_target' && github.event.action == 'opened' }}
         env:
           LOGIN: ${{ github.event.pull_request.user.login }}
           AUTHOR: ${{ github.event.pull_request.user.login }}
