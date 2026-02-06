@@ -55,6 +55,7 @@ env:
 
   # This plugins is for in the APPROVERS environment variable
   APPROVERS_PLUGINS: |-
+    label-approve
     label
     merge
     base

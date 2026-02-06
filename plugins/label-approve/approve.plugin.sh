@@ -6,10 +6,10 @@ if [[ "${ISSUE_KIND}" != "pr" ]]; then
 fi
 
 if [[ "${LOGIN}" == "${AUTHOR}" ]]; then
-    echo "[FAIL] you cannot LGTM your own PR."
+    echo "[FAIL] you cannot approve your own PR."
     exit 1
 fi
 
-add-labels.sh lgtm
+add-labels.sh approved
 
 check-auto-merge.sh
