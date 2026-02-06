@@ -4,6 +4,21 @@ Simply introducing a [Action](https://github.com/wzshiming/gh-ci-bot/blob/master
 
 It is better to use with [CodeOwners of Github](https://github.blog/2017-07-06-introducing-code-owners/).
 
+## OWNERS file
+
+The bot supports [Kubernetes-style OWNERS files](https://www.kubernetes.dev/docs/guide/owners/) for defining reviewers and approvers. Place an `OWNERS` file in the root of your repository:
+
+```yaml
+reviewers:
+  - reviewer1
+  - reviewer2
+approvers:
+  - approver1
+  - approver2
+```
+
+When an OWNERS file is present, the listed users are merged with any `REVIEWERS` and `APPROVERS` defined in the workflow environment variables. The `/auto-cc` command also uses OWNERS files in subdirectories to find the most relevant reviewers for changed files.
+
 | Command                           | Example                                            | Description                                                                                                  | Plugin                 |
 | --------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ---------------------- |
 | `/retitle`                        | `/retitle New Title`                               | Edits the PR or issue title.                                                                                 | retitle                |

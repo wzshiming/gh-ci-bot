@@ -6,6 +6,9 @@ PLUGINS_DIR="${ROOT}/../plugins"
 PLUGINS_DIR="$(realpath -m ${PLUGINS_DIR})"
 ALL_PLUGINS="$(ls ${PLUGINS_DIR})"
 
+# Load reviewers and approvers from OWNERS file
+source "${ROOT}/load-owners.sh"
+
 PLUGINS="${PLUGINS:-}"
 
 # Added more plugins for members
