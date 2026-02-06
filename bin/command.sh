@@ -8,6 +8,19 @@ ALL_PLUGINS="$(ls ${PLUGINS_DIR})"
 
 PLUGINS="${PLUGINS:-}"
 
+# Merge owners from OWNERS files with environment variables
+OWNERS_FILE_REVIEWERS="$(get-owners.sh reviewers 2>/dev/null)" || true
+if [[ -n "${OWNERS_FILE_REVIEWERS}" ]]; then
+    REVIEWERS="$(echo "${REVIEWERS:-}
+${OWNERS_FILE_REVIEWERS}" | grep -v '^$' | sort -u)"
+fi
+
+OWNERS_FILE_APPROVERS="$(get-owners.sh approvers 2>/dev/null)" || true
+if [[ -n "${OWNERS_FILE_APPROVERS}" ]]; then
+    APPROVERS="$(echo "${APPROVERS:-}
+${OWNERS_FILE_APPROVERS}" | grep -v '^$' | sort -u)"
+fi
+
 # Added more plugins for members
 if [[ "${LOGIN}" != "" && "${AUTHOR_ASSOCIATION}" != "NONE" && "${AUTHOR_ASSOCIATION}" != "" ]]; then
     PLUGINS="${PLUGINS}

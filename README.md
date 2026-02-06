@@ -31,6 +31,23 @@ It is better to use with [CodeOwners of Github](https://github.blog/2017-07-06-i
 | `/base [branch]`                  | `/base main`                                       | Change to which branch this PR is to be merged into                                                          | base                   |
 | `/rebase`                         | `/rebase`                                          | Rebase the this PR to the latest of the branch                                                               | rebase                 |
 
+## OWNERS Files
+
+In addition to configuring reviewers and approvers via environment variables, the bot supports reading them from `OWNERS` files in the repository. The `OWNERS` file uses the following YAML format:
+
+```yaml
+reviewers:
+  - reviewer1
+  - reviewer2
+approvers:
+  - approver1
+  - approver2
+```
+
+`OWNERS` files can be placed at multiple directory levels (e.g., `./OWNERS`, `./src/OWNERS`). Users listed as reviewers or approvers in any `OWNERS` file in the repository are granted the corresponding role. The roles from `OWNERS` files are merged with those defined in environment variables.
+
+The `/auto-cc` command uses the `OWNERS` files hierarchically: when selecting reviewers for changed files, it walks up the directory tree to find the nearest `OWNERS` file with available reviewers.
+
 ## Roadmap
 
 - https://github.com/kubernetes/test-infra/tree/master/prow
