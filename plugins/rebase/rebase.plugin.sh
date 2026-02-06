@@ -5,5 +5,5 @@ if [[ "${ISSUE_KIND}" != "pr" ]]; then
     exit 1
 fi
 
-gh pr update-branch ${ISSUE_NUMBER} --rebase ||
+gh pr -R "${GH_REPOSITORY}" update-branch ${ISSUE_NUMBER} --rebase ||
     echo "[FAIL] Failed rebase branch"
