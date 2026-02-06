@@ -8,6 +8,9 @@ ALL_PLUGINS="$(ls ${PLUGINS_DIR})"
 
 PLUGINS="${PLUGINS:-}"
 
+# Merge OWNERS file reviewers/approvers with env vars for PRs
+source "${ROOT}/owners.sh" || true
+
 # Added more plugins for members
 if [[ "${LOGIN}" != "" && "${AUTHOR_ASSOCIATION}" != "NONE" && "${AUTHOR_ASSOCIATION}" != "" ]]; then
     PLUGINS="${PLUGINS}

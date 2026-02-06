@@ -4,6 +4,23 @@ Simply introducing a [Action](https://github.com/wzshiming/gh-ci-bot/blob/master
 
 It is better to use with [CodeOwners of Github](https://github.blog/2017-07-06-introducing-code-owners/).
 
+## OWNERS Files
+
+The bot supports [OWNERS files](https://www.kubernetes.dev/docs/guide/owners/) for defining reviewers and approvers per directory.
+
+```yaml
+reviewers:
+  - reviewer1
+  - reviewer2
+approvers:
+  - approver1
+  - approver2
+```
+
+When an OWNERS file is present, the listed users are merged with any `reviewers` and `approvers` defined in the workflow environment variables.
+
+OWNERS files are used hierarchically. You can place OWNERS files in any directory of your repository. For pull requests, the bot determines the common prefix directory of all changed files and walks up from there to the root, collecting reviewers and approvers from every OWNERS file found along the way. For example, if `pkg/api/handler.go` and `pkg/util/helper.go` are both changed, the common prefix is `pkg`, so it will load `pkg/OWNERS` and then the root `OWNERS` file. The `/auto-cc` command additionally walks up from each individual changed file to find the nearest OWNERS file with available reviewers.
+
 | Command                           | Example                                            | Description                                                                                                  | Plugin                 |
 | --------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ---------------------- |
 | `/retitle`                        | `/retitle New Title`                               | Edits the PR or issue title.                                                                                 | retitle                |
