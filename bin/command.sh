@@ -6,6 +6,43 @@ PLUGINS_DIR="${ROOT}/../plugins"
 PLUGINS_DIR="$(realpath -m ${PLUGINS_DIR})"
 ALL_PLUGINS="$(ls ${PLUGINS_DIR})"
 
+# Source the owners utility for merging OWNERS file data
+source "${ROOT}/owners.sh"
+
+# Merge OWNERS file reviewers/approvers with environment variables for PRs
+if [[ "${ISSUE_KIND}" == "pr" && -n "${ISSUE_NUMBER}" ]]; then
+    echo "Loading OWNERS files for PR #${ISSUE_NUMBER}..."
+    
+    # Get changed files in the PR
+    _changed_files="$(get_pr_changed_files 2>/dev/null)"
+    
+    if [[ -n "${_changed_files}" ]]; then
+        # Get reviewers from OWNERS files and merge with REVIEWERS env var
+        _owners_reviewers="$(get_reviewers_for_files ${_changed_files} 2>/dev/null)"
+        if [[ -n "${_owners_reviewers}" ]]; then
+            if [[ -n "${REVIEWERS}" ]]; then
+                # Merge, avoiding duplicates
+                REVIEWERS="$(echo -e "${REVIEWERS}\n${_owners_reviewers}" | sort -u)"
+            else
+                REVIEWERS="${_owners_reviewers}"
+            fi
+            echo "Merged reviewers from OWNERS files"
+        fi
+        
+        # Get approvers from OWNERS files and merge with APPROVERS env var
+        _owners_approvers="$(get_approvers_for_files ${_changed_files} 2>/dev/null)"
+        if [[ -n "${_owners_approvers}" ]]; then
+            if [[ -n "${APPROVERS}" ]]; then
+                # Merge, avoiding duplicates
+                APPROVERS="$(echo -e "${APPROVERS}\n${_owners_approvers}" | sort -u)"
+            else
+                APPROVERS="${_owners_approvers}"
+            fi
+            echo "Merged approvers from OWNERS files"
+        fi
+    fi
+fi
+
 PLUGINS="${PLUGINS:-}"
 
 # Added more plugins for members

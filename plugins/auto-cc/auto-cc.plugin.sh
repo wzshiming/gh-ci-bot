@@ -5,16 +5,15 @@ if [[ "${ISSUE_KIND}" != "pr" ]]; then
     exit 1
 fi
 
-branch="$(gh api /repos/${GH_REPOSITORY} | jq -r '.default_branch')"
+# Source the owners utility
+ROOT="$(dirname "${BASH_SOURCE}")"
+ROOT="$(realpath -m "${ROOT}")"
+source "${ROOT}/../../bin/owners.sh"
 
-function get_reviewer_from_file() {
-    local dir="${1}"
-    echo curl -fsSL "https://github.com/${GH_REPOSITORY}/raw/${branch}/${dir}/OWNERS" >&2
-    curl -fsSL "https://github.com/${GH_REPOSITORY}/raw/${branch}/${dir}/OWNERS" | yq e '.reviewers | .[]'
-}
-
+# Track users already assigned to avoid duplicates
 user_pool=()
 
+# Check if user is in the pool or is the author
 function in_user_pool() {
     local user="${1}"
     if [[ "${user}" == "${AUTHOR}" ]]; then
@@ -28,6 +27,7 @@ function in_user_pool() {
     return 1
 }
 
+# Track directories already processed
 used_dir=()
 
 function in_used_dir() {
@@ -40,27 +40,19 @@ function in_used_dir() {
     return 1
 }
 
-function get_parent() {
-    local dir="${1}"
-
-    if [[ "${dir}" =~ "/" ]]; then
-        echo "${dir%/*}"
-    else
-        echo ""
-    fi
-}
-
+# Walk up from a directory to find a reviewer from OWNERS files
 function get_reviewer_with_recursively() {
     local dir="${1}"
     local ori="${2}"
     local reviewers
     local parent
+    
     if in_used_dir "${dir}"; then
         return 0
     fi
     used_dir+=("${dir}")
 
-    reviewers="$(get_reviewer_from_file "${dir}")"
+    reviewers="$(read_owners_file "${dir}" "reviewers")"
     if [[ "${reviewers}" != "" ]]; then
         for user in $(echo "${reviewers}" | sort --random-sort); do
             if ! in_user_pool "${user}"; then
@@ -76,16 +68,17 @@ function get_reviewer_with_recursively() {
         return 0
     fi
 
-    parent="$(get_parent "${dir}")"
+    parent="$(get_parent_dir "${dir}")"
     if [[ "${parent}" == "${dir}" ]]; then
         return 0
     fi
-    get_reviewer_with_recursively "${parent}" "${dir}"
+    get_reviewer_with_recursively "${parent}" "${ori}"
 }
 
+# Get reviewers for all changed files
 function get_reviewers() {
-    for dir in "$@"; do
-        get_reviewer_with_recursively "$(get_parent "${dir}")" "${dir}"
+    for file in "$@"; do
+        get_reviewer_with_recursively "$(get_parent_dir "${file}")" "${file}"
     done
 
     for u in "${user_pool[@]}"; do
@@ -93,17 +86,20 @@ function get_reviewers() {
     done
 }
 
-file="$(curl -fsSL "https://github.com/${GH_REPOSITORY}/pull/${ISSUE_NUMBER}.patch" | grep '^[-\+]\{3\} [ab]' | sed "s#--- a/##g" | sed "s#+++ b/##g" | sort -u)"
+# Get list of changed files
+files="$(get_pr_changed_files)"
 
-echo "Modify files:" >&2
-for f in ${file}; do
+echo "Modified files:" >&2
+for f in ${files}; do
     echo "- ${f}" >&2
 done
 
-login="$(get_reviewers ${file} | tr '\n' ',' | sed 's/,$//')"
+# Get reviewers from OWNERS files
+login="$(get_reviewers ${files} | tr '\n' ',' | sed 's/,$//')"
 
+# Fallback to REVIEWERS environment variable if no OWNERS reviewers found
 if [[ "${login}" == "" ]]; then
-    echo "Fallback use REVIEWERS environment variable" >&2
+    echo "Fallback to REVIEWERS environment variable" >&2
     login=$(echo "${REVIEWERS}" | shuf | head -n 2 | tr '\n' ',' | sed 's/,$//')
     if [[ -z "${login}" ]]; then
         echo "[FAIL] Could not find any reviewers to assign. Please make sure the OWNERS file or REVIEWERS are configured."
