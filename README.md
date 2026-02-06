@@ -32,6 +32,29 @@ It is better to use with [CodeOwners of Github](https://github.blog/2017-07-06-i
 | `/rebase`                         | `/rebase`                                          | Rebase the this PR to the latest of the branch                                                               | rebase                 |
 | `/cherry-pick [branch]`           | `/cherry-pick release-1.0`                         | Cherry-pick a merged PR to a target branch and create a new PR                                               | cherry-pick            |
 
+## OWNERS Files
+
+The bot supports `OWNERS` files for defining reviewers and approvers at any directory level in your repository. An `OWNERS` file is a YAML file with the following format:
+
+```yaml
+reviewers:
+- reviewer1
+- reviewer2
+approvers:
+- approver1
+- approver2
+```
+
+When an `OWNERS` file is present, the listed users are merged with any `REVIEWERS` and `APPROVERS` defined in the workflow environment variables.
+
+### Hierarchical OWNERS
+
+OWNERS files are used hierarchically. You can place OWNERS files in any directory of your repository. For pull requests, the bot determines the common prefix directory of all changed files and walks up from there to the root, collecting reviewers and approvers from every OWNERS file found along the way.
+
+For example, if `pkg/api/handler.go` and `pkg/util/helper.go` are both changed, the common prefix is `pkg`, so the bot loads `pkg/OWNERS` and then the root `OWNERS` file.
+
+The `/auto-cc` command additionally walks up from each individual changed file to find the nearest OWNERS file with available reviewers.
+
 ## Roadmap
 
 - https://github.com/kubernetes/test-infra/tree/master/prow

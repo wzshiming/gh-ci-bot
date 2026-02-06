@@ -8,6 +8,12 @@ ALL_PLUGINS="$(ls ${PLUGINS_DIR})"
 
 PLUGINS="${PLUGINS:-}"
 
+# Load OWNERS file reviewers and approvers for PRs
+if [[ "${ISSUE_KIND}" == "pr" && "${ISSUE_NUMBER}" != "" && "${GH_REPOSITORY}" != "" ]]; then
+    source "${ROOT}/owners.sh"
+    load_owners_for_pr
+fi
+
 # Added more plugins for members
 if [[ "${LOGIN}" != "" && "${AUTHOR_ASSOCIATION}" != "NONE" && "${AUTHOR_ASSOCIATION}" != "" ]]; then
     PLUGINS="${PLUGINS}
