@@ -41,6 +41,10 @@ gh repo clone "${GH_REPOSITORY}" "${tmpdir}" -- -b "${branch}" || {
 }
 
 cd "${tmpdir}" || exit 1
+
+git config --global user.email github-actions[bot]@users.noreply.github.com
+git config --global user.name github-actions[bot]
+
 git checkout -b "${cherry_pick_branch}"
 git cherry-pick "${merge_commit}" -m 1 || {
     echo "[FAIL] Cherry-pick failed due to conflicts. Please cherry-pick manually."
