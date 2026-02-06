@@ -16,6 +16,7 @@ on:
   pull_request_target:
     types:
       - opened
+      - synchronize
 
 env:
   # This plugins is for anyone who can use it
@@ -127,7 +128,7 @@ jobs:
 
       - name: PR Opened
         uses: ./
-        if: ${{ github.event_name == 'pull_request_target' }}
+        if: ${{ github.event_name == 'pull_request_target' && github.event.action == 'opened' }}
         env:
           LOGIN: ${{ github.event.pull_request.user.login }}
           AUTHOR: ${{ github.event.pull_request.user.login }}
@@ -141,6 +142,17 @@ jobs:
             Thanks for your pull request!
             If the PR is ready, use the `/auto-cc` command to assign Reviewer to Review. 
             We will review it shortly.
+
+      - name: PR Updated
+        uses: ./
+        if: ${{ github.event_name == 'pull_request_target' && github.event.action == 'synchronize' }}
+        env:
+          LOGIN: ${{ github.event.pull_request.user.login }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
+          ISSUE_NUMBER: ${{ github.event.pull_request.number }}
+          AUTHOR_ASSOCIATION: ${{ github.event.pull_request.author_association }}
+          ISSUE_KIND: pr
+          TYPE: synchronize
 
       - name: Issue Commented
         uses: ./
