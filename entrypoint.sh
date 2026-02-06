@@ -41,6 +41,9 @@ function main() {
     elif [[ "${TYPE}" == "comment" ]]; then
         echo "Response to action"
         response.sh
+    elif [[ "${TYPE}" == "synchronize" ]]; then
+        echo "PR synchronized, removing lgtm label"
+        remove-labels.sh lgtm
     fi
 }
 
