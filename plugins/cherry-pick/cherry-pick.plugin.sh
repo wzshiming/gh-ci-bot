@@ -35,7 +35,7 @@ cherry_pick_branch="cherry-pick-${ISSUE_NUMBER}-to-${branch}"
 tmpdir="$(mktemp -d)"
 trap 'rm -rf ${tmpdir}' EXIT
 
-git clone "https://github.com/${GH_REPOSITORY}.git" "${tmpdir}" --branch "${branch}" || {
+git clone "https://x-access-token:${GH_TOKEN}@github.com/${GH_REPOSITORY}.git" "${tmpdir}" --branch "${branch}" || {
     echo "[FAIL] Failed to clone the repository or branch \`${branch}\` does not exist."
     exit 1
 }
@@ -44,6 +44,9 @@ cd "${tmpdir}" || exit 1
 
 git config --global user.email github-actions[bot]@users.noreply.github.com
 git config --global user.name github-actions[bot]
+
+# Configure the remote to use the authenticated URL
+git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GH_REPOSITORY}.git"
 
 git checkout -b "${cherry_pick_branch}"
 git cherry-pick "${merge_commit}" -m 1 || {
