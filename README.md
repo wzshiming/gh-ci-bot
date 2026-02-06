@@ -17,7 +17,9 @@ approvers:
   - approver2
 ```
 
-When an OWNERS file is present, the listed users are merged with any `REVIEWERS` and `APPROVERS` defined in the workflow environment variables. The `/auto-cc` command also uses OWNERS files in subdirectories to find the most relevant reviewers for changed files.
+When an OWNERS file is present, the listed users are merged with any `REVIEWERS` and `APPROVERS` defined in the workflow environment variables.
+
+OWNERS files are used hierarchically. You can place OWNERS files in any directory of your repository. When the `/auto-cc` command selects reviewers for changed files, it walks up the directory tree from each changed file to find the nearest OWNERS file with available reviewers. For example, if `pkg/api/handler.go` is changed, it will first look for `pkg/api/OWNERS`, then `pkg/OWNERS`, then the root `OWNERS` file.
 
 | Command                           | Example                                            | Description                                                                                                  | Plugin                 |
 | --------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ---------------------- |
