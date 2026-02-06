@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 
 if [[ "${ISSUE_KIND}" != "pr" ]]; then
-    echo "[FAIL] This plugin only works with pull requests."
+    echo "[FAIL] This command is only available on pull requests, not on issues."
     exit 1
 fi
 
 branch="${1:-}"
 
 if [[ "${branch}" == "" ]]; then
-    echo "[FAIL] Need a branch"
+    echo "[FAIL] Missing required argument: branch name. Usage: \`/base <branch>\`"
 fi
 
 gh -R "${GH_REPOSITORY}" pr edit "${ISSUE_NUMBER}" -B "${branch}" ||
-    echo "[FAIL] Failed change base"
+    echo "[FAIL] Failed to change the base branch. Please verify the branch name exists and try again."

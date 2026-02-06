@@ -7,11 +7,11 @@ LOG=$(cat ./ci-bot.log | grep -e "^\[FAIL\] " | sed -e "s/^\[FAIL\] //g" | sed "
 function reply() {
     echo "@${LOGIN}"
     echo
-    echo '``` console'
+    echo "**I encountered an error while processing your command:**"
     echo
-    echo "${LOG}"
-    echo
-    echo '```'
+    while IFS= read -r line; do
+        echo "> :x: ${line}"
+    done <<< "${LOG}"
     echo
     echo "${DETAILS:-}"
 }

@@ -6,7 +6,7 @@ login="${*}"
 login="${login//\@/}"
 
 if [[ -z "${login}" ]]; then
-  echo "[FAIL] No login provided"
+  echo "[FAIL] Missing required argument: username. Usage: \`/assign @username\`"
   exit 1
 fi
 
@@ -26,5 +26,5 @@ for assignee in ${login}; do
     -H "Authorization: token ${GH_TOKEN}" \
     "https://api.github.com/repos/${GH_REPOSITORY}/issues/${ISSUE_NUMBER}/assignees" \
     -d "{\"assignees\":[\"${assignee}\"]}" ||
-    echo "[FAIL] Failed Assign to ${assignee}"
+    echo "[FAIL] Failed to assign ${assignee}. Please check that the username is correct."
 done

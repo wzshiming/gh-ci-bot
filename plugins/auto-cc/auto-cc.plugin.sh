@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 if [[ "${ISSUE_KIND}" != "pr" ]]; then
-    echo "[FAIL] This plugin only works with pull requests."
+    echo "[FAIL] This command is only available on pull requests, not on issues."
     exit 1
 fi
 
@@ -106,7 +106,7 @@ if [[ "${login}" == "" ]]; then
     echo "Fallback use REVIEWERS environment variable" >&2
     login=$(echo "${REVIEWERS}" | shuf | head -n 2 | tr '\n' ',' | sed 's/,$//')
     if [[ -z "${login}" ]]; then
-        echo "[FAIL] No reviewers specified. Skipping auto-cc."
+        echo "[FAIL] Could not find any reviewers to assign. Please make sure the OWNERS file or REVIEWERS are configured."
         exit 1
     fi
 fi

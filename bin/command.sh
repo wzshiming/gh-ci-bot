@@ -69,15 +69,15 @@ function exec_cmd() {
     local cmdpath="$(which ${cmd}.plugin.sh)"
     if [[ -z "${cmdpath}" ]]; then
         if [[ "${ALL_PLUGINS}" =~ "${cmd}" ]]; then
-            echo "[FAIL] You do not support using command ${cmd}"
+            echo "[FAIL] You don't have permission to use the \`/${cmd}\` command. Please contact a maintainer for access."
         else
-            echo "[FAIL] Command ${cmd} is not found"
+            echo "[FAIL] Unknown command \`/${cmd}\`. Please check the available commands and try again."
         fi
         return 1
     fi
 
     if ! [[ "${cmdpath}" =~ ^${PLUGINS_DIR} ]]; then
-        echo "[FAIL] Command ${cmd} is not found"
+        echo "[FAIL] Unknown command \`/${cmd}\`. Please check the available commands and try again."
         return 1
     fi
     shift
