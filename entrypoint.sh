@@ -42,8 +42,9 @@ function main() {
         echo "Response to action"
         response.sh
     elif [[ "${TYPE}" == "synchronize" ]]; then
-        echo "PR synchronized, removing lgtm label"
+        echo "PR synchronized, removing lgtm and approved labels"
         remove-labels.sh lgtm
+        remove-labels.sh approved
     fi
 }
 
