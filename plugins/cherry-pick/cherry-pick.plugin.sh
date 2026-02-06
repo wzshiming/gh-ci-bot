@@ -35,13 +35,12 @@ cherry_pick_branch="cherry-pick-${ISSUE_NUMBER}-to-${branch}"
 tmpdir="$(mktemp -d)"
 trap 'rm -rf ${tmpdir}' EXIT
 
-gh repo clone "${GH_REPOSITORY}" "${tmpdir}" -- --depth=1 -b "${branch}" || {
+gh repo clone "${GH_REPOSITORY}" "${tmpdir}" -- -b "${branch}" || {
     echo "[FAIL] Failed to clone the repository or branch \`${branch}\` does not exist."
     exit 1
 }
 
 cd "${tmpdir}" || exit 1
-git fetch origin "${merge_commit}" --depth=1
 git checkout -b "${cherry_pick_branch}"
 git cherry-pick "${merge_commit}" -m 1 || {
     echo "[FAIL] Cherry-pick failed due to conflicts. Please cherry-pick manually."
