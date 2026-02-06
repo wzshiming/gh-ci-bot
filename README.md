@@ -32,6 +32,12 @@ It is better to use with [CodeOwners of Github](https://github.blog/2017-07-06-i
 | `/rebase`                         | `/rebase`                                          | Rebase the this PR to the latest of the branch                                                               | rebase                 |
 | `/cherry-pick [branch]`           | `/cherry-pick release-1.0`                         | Cherry-pick a merged PR to a target branch and create a new PR                                               | cherry-pick            |
 
+### Troubleshooting
+
+- `/cherry-pick`
+    If you encounter the error `pull request create failed: GraphQL: GitHub Actions is not permitted to create or approve pull requests (createPullRequest)`,
+    go to your repository settings under the Actions section and check `Allow GitHub Actions to create and approve pull requests`.
+
 ## OWNERS Files
 
 The bot supports `OWNERS` files for defining reviewers and approvers at any directory level in your repository. An `OWNERS` file is a YAML file with the following format:
