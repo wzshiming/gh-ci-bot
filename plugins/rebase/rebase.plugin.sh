@@ -5,9 +5,5 @@ if [[ "${ISSUE_KIND}" != "pr" ]]; then
     exit 1
 fi
 
-gh api \
-    --method PUT \
-    -H "Accept: application/vnd.github+json" \
-    /repos/${GH_REPOSITORY}/pulls/${ISSUE_NUMBER}/update-branch \
-    -f update_method=rebase ||
+gh pr update-branch ${ISSUE_NUMBER} --rebase ||
     echo "[FAIL] Failed rebase branch"
