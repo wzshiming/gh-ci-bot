@@ -13,8 +13,8 @@ if [[ "${branch}" == "" ]]; then
 fi
 
 # Check if the PR is merged
-merged="$(gh pr -R "${GH_REPOSITORY}" view "${ISSUE_NUMBER}" --json merged --jq '.merged')"
-if [[ "${merged}" != "true" ]]; then
+merged="$(gh pr -R "${GH_REPOSITORY}" view "${ISSUE_NUMBER}" --json state --jq '.state')"
+if [[ "${merged}" != "MERGED" ]]; then
     echo "[FAIL] The PR must be merged before cherry-picking. Please merge the PR first."
     exit 1
 fi
