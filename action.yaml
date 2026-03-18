@@ -5,5 +5,5 @@ author: "wzshiming"
 runs:
   using: "composite"
   steps:
-    - run: ${{ github.action_path }}/entrypoint.sh
+    - run: cd ${{ github.action_path }} && go run .
       shell: bash
