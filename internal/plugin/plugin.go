@@ -748,7 +748,7 @@ func ResolveEnabledPlugins(login, author, authorAssociation string, reviewers, a
 
 		// Approver plugins
 		if len(approvers) > 0 && envPlugins["APPROVERS_PLUGINS"] != "" && contains(approvers, login) {
-			fmt.Printf("%s is a approver\n", login)
+			fmt.Printf("%s is an approver\n", login)
 			for _, p := range parsePluginList(envPlugins["APPROVERS_PLUGINS"]) {
 				enabled[p] = true
 			}
@@ -764,7 +764,7 @@ func ResolveEnabledPlugins(login, author, authorAssociation string, reviewers, a
 
 		// Owner plugins
 		if authorAssociation == "OWNER" {
-			fmt.Printf("%s is a owner\n", login)
+			fmt.Printf("%s is an owner\n", login)
 			for _, p := range parsePluginList(envPlugins["OWNERS_PLUGINS"]) {
 				enabled[p] = true
 			}
