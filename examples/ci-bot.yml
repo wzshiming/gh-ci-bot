@@ -78,6 +78,10 @@ env:
 
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   GH_REPOSITORY: ${{ github.repository }}
+
+  # It can be `merge`, `rebase`, or `squash`.
+  DEFAULT_MERGE_METHOD: squash
+
   DETAILS: |-
 
     <details>
