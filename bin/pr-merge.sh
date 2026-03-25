@@ -4,17 +4,20 @@ IFS=","
 
 action="${1:-}"
 
-args="--merge"
+default_merge_method="${DEFAULT_MERGE_METHOD:-merge}"
+method="${action:-${default_merge_method}}"
 
-if [[ "${action}" != "" ]]; then
-  if [[ "${action}" == "rebase" ]]; then
-    args="--rebase"
-  elif [[ "${action}" == "squash" ]]; then
-    args="--squash"
-  else
-    echo "[FAIL] Invalid merge method: \`${action}\`. Supported methods are: \`rebase\`, \`squash\`, or omit for default merge."
-    exit 1
-  fi
+args=""
+
+if [[ "${method}" == "merge" || "${method}" == "" ]]; then
+  args="--merge"
+elif [[ "${method}" == "rebase" ]]; then
+  args="--rebase"
+elif [[ "${method}" == "squash" ]]; then
+  args="--squash"
+else
+  echo "[FAIL] Invalid merge method: \`${method}\`. Supported methods are: \`merge\`, \`rebase\`, or \`squash\`. Use \`DEFAULT_MERGE_METHOD\` to set the default."
+  exit 1
 fi
 
 echo "PR ${GH_REPOSITORY}#${ISSUE_NUMBER} merge by ${LOGIN}"
