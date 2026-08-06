@@ -41,6 +41,23 @@ Whenever the bot adds a label (via commands like `/label`, `/kind`, `/lgtm`, `/a
 
 Like prow's `wip` plugin, the bot automatically applies the `do-not-merge/work-in-progress` label to a PR while it is a draft or its title starts with `WIP`, and removes the label once neither is true. Any label starting with `do-not-merge/` blocks both `/merge` and auto-merge. The label is created automatically if it does not exist.
 
+### PR size
+
+Like prow's `size` plugin, the bot automatically labels every PR with one of `size/XS`, `size/S`, `size/M`, `size/L`, `size/XL` or `size/XXL` based on the total number of changed lines (additions + deletions), updating the label whenever new commits are pushed. The thresholds mirror prow's defaults: XS < 10, S < 30, M < 100, L < 500, XL < 1000, XXL ≥ 1000.
+
+Generated files can be excluded from the count by adding a `.generated_files` file at the repository root. Each non-comment line has the form `<kind> <value>`, where `<kind>` is one of `file-name`, `path`, `file-prefix` or `path-prefix`:
+
+```
+# Exclude all files named zz_generated.deepcopy.go
+file-name zz_generated.deepcopy.go
+# Exclude a specific file
+path api/openapi-spec/swagger.json
+# Exclude files whose name starts with a prefix
+file-prefix zz_generated.
+# Exclude everything under a directory
+path-prefix vendor/
+```
+
 ### Troubleshooting
 
 - `/cherry-pick`
