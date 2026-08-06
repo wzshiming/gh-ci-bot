@@ -40,6 +40,24 @@ function label_color() {
   kind/*)
     echo "c7def8"
     ;;
+  size/XS)
+    echo "009900"
+    ;;
+  size/S)
+    echo "77bb00"
+    ;;
+  size/M)
+    echo "eebb00"
+    ;;
+  size/L)
+    echo "ee9900"
+    ;;
+  size/XL)
+    echo "ee5500"
+    ;;
+  size/XXL)
+    echo "ee0000"
+    ;;
   bug)
     echo "d73a4a"
     ;;
@@ -127,6 +145,24 @@ function label_description() {
     ;;
   kind/*)
     echo "Categorizes issue or PR as related to ${1#kind/}."
+    ;;
+  size/XS)
+    echo "Denotes a PR that changes 0-9 lines."
+    ;;
+  size/S)
+    echo "Denotes a PR that changes 10-29 lines."
+    ;;
+  size/M)
+    echo "Denotes a PR that changes 30-99 lines."
+    ;;
+  size/L)
+    echo "Denotes a PR that changes 100-499 lines."
+    ;;
+  size/XL)
+    echo "Denotes a PR that changes 500-999 lines."
+    ;;
+  size/XXL)
+    echo "Denotes a PR that changes 1000+ lines."
     ;;
   bug)
     echo "Something isn't working"

@@ -68,11 +68,20 @@ function sync_wip_label() {
     fi
 }
 
+# sync_size_label keeps the size/* label in sync with the PR's diff size,
+# mirroring prow's size plugin.
+function sync_size_label() {
+    if [[ "${ISSUE_KIND}" == "pr" ]]; then
+        check-size.sh
+    fi
+}
+
 function main() {
     if [[ "${TYPE}" == "created" ]]; then
         echo "Greetings to ${LOGIN}!"
         greeting.sh
         sync_wip_label
+        sync_size_label
         sync_approve_status
         echo "Response to action"
         response.sh
@@ -83,6 +92,7 @@ function main() {
         echo "PR synchronized, removing lgtm label"
         remove-labels.sh lgtm
         sync_wip_label
+        sync_size_label
         sync_approve_status
     elif [[ "${TYPE}" == "edited" ]]; then
         echo "PR edited, syncing work-in-progress label"
