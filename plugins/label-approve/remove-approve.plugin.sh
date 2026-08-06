@@ -5,4 +5,4 @@ if [[ "${ISSUE_KIND}" != "pr" ]]; then
     exit 1
 fi
 
-remove-labels.sh approved
+approve-status.sh unapprove "${LOGIN}"

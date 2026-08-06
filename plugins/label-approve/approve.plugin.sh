@@ -5,11 +5,12 @@ if [[ "${ISSUE_KIND}" != "pr" ]]; then
     exit 1
 fi
 
-if [[ "${LOGIN}" == "${AUTHOR}" ]]; then
-    echo "[FAIL] You cannot approve your own PR. Please ask another reviewer to approve it."
-    exit 1
+# Prow-style: `/approve cancel` revokes the caller's approval.
+if [[ "${1:-}" == "cancel" ]]; then
+    approve-status.sh unapprove "${LOGIN}"
+    exit $?
 fi
 
-add-labels.sh approved
-
-check-auto-merge.sh
+# The PR author may /approve explicitly; areas they own are already
+# approved by default (implicit self-approval).
+approve-status.sh approve "${LOGIN}"
