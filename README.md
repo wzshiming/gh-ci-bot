@@ -35,7 +35,7 @@ It supports [Kubernetes Prow OWNERS](https://github.com/kubernetes/test-infra/tr
 
 ### Label management
 
-Whenever the bot adds a label (via commands like `/label`, `/kind`, `/lgtm`, `/approve`, OWNERS `labels:`, or automatic labels like `do-not-merge/work-in-progress`), any label that does not yet exist in the repository is created automatically with a well-known color and description. Colors and descriptions are synchronized with prow's [label definitions](https://github.com/kubernetes/test-infra/blob/master/label_sync/labels.yaml) (e.g. `lgtm`, `approved`, `do-not-merge/*`, `kind/*`, `good first issue`, `help wanted`); labels not defined by prow fall back to GitHub's defaults, and other labels are created with GitHub's default gray color. Labels no longer need to be created manually in advance.
+Whenever the bot adds a label (via commands like `/label`, `/kind`, `/lgtm`, `/approve`, OWNERS `labels:`, or automatic labels like `do-not-merge/work-in-progress`), any label that does not yet exist in the repository is created automatically with a well-known color and description. Colors and descriptions are synchronized with prow's [label definitions](https://github.com/kubernetes/test-infra/blob/master/label_sync/labels.yaml) (e.g. `lgtm`, `approved`, `do-not-merge/*`, `kind/*`, `good first issue`, `help wanted`); GitHub's built-in labels (e.g. `bug`, `question`) keep their standard GitHub colors and descriptions, and any other label is created with GitHub's default gray color. Labels no longer need to be created manually in advance.
 
 ### Work in progress
 
