@@ -60,6 +60,18 @@ function sync_approve_status() {
     fi
 }
 
+# approve_pending_workflows approves workflow runs awaiting maintainer
+# approval when the PR carries the "ok-to-test" label, mirroring prow's
+# ok-to-test plugin: approval is sticky across new pushes.
+function approve_pending_workflows() {
+    if [[ "${ISSUE_KIND}" == "pr" ]]; then
+        if gh pr -R "${GH_REPOSITORY}" view "${ISSUE_NUMBER}" --json labels --jq '.labels[].name' | grep -qx "ok-to-test"; then
+            echo "PR has the ok-to-test label, approving pending workflow runs"
+            approve-workflows.sh
+        fi
+    fi
+}
+
 # sync_wip_label keeps the do-not-merge/work-in-progress label in sync with
 # the PR's draft state and title, mirroring prow's wip plugin.
 function sync_wip_label() {
@@ -84,6 +96,7 @@ function main() {
         remove-labels.sh lgtm
         sync_wip_label
         sync_approve_status
+        approve_pending_workflows
     elif [[ "${TYPE}" == "edited" ]]; then
         echo "PR edited, syncing work-in-progress label"
         sync_wip_label
