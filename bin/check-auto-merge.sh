@@ -19,6 +19,10 @@ for label in ${labels}; do
     if [[ "${label}" == "approved" ]]; then
         has_approved=true
     fi
+    if [[ "${label}" == do-not-merge/* ]]; then
+        echo "PR has the '${label}' label. Skipping auto-merge."
+        return 0 2>/dev/null || exit 0
+    fi
 done
 
 if [[ "${has_lgtm}" == "true" && "${has_approved}" == "true" ]]; then

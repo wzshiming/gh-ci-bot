@@ -22,6 +22,9 @@ on:
     types:
       - opened
       - synchronize
+      - edited
+      - converted_to_draft
+      - ready_for_review
 
 env:
   # This plugins is for anyone who can use it
@@ -165,6 +168,18 @@ jobs:
           AUTHOR_ASSOCIATION: ${{ github.event.pull_request.author_association }}
           ISSUE_KIND: pr
           TYPE: synchronize
+
+      - name: PR Edited or Draft State Changed
+        uses: ./
+        if: ${{ github.event_name == 'pull_request_target' && (github.event.action == 'edited' || github.event.action == 'converted_to_draft' || github.event.action == 'ready_for_review') }}
+        env:
+          LOGIN: ${{ github.event.pull_request.user.login }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
+          MESSAGE: ""
+          ISSUE_NUMBER: ${{ github.event.pull_request.number }}
+          AUTHOR_ASSOCIATION: ${{ github.event.pull_request.author_association }}
+          ISSUE_KIND: pr
+          TYPE: edited
 
       - name: Issue Commented
         uses: ./
