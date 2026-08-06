@@ -53,6 +53,7 @@ env:
     label-documentation
     label-enhancement
     label-question
+    hold
     lifecycle
     retest
     transfer-issue
