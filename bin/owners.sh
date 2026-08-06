@@ -49,12 +49,22 @@ function get_common_prefix() {
 function fetch_owners_file() {
     local dir="$1"
     local path
+    local content
     if [[ -z "${dir}" ]]; then
         path="OWNERS"
     else
         path="${dir}/OWNERS"
     fi
-    curl -fsSL "https://github.com/${GH_REPOSITORY}/raw/${branch}/${path}" 2>/dev/null
+
+    if ! content="$(gh api \
+        --method GET \
+        -H "Accept: application/vnd.github.raw+json" \
+        "/repos/${GH_REPOSITORY}/contents/${path}" \
+        -f "ref=${branch}" 2>/dev/null)"; then
+        return 0
+    fi
+
+    printf '%s\n' "${content}"
 }
 
 # get_owners_reviewers extracts reviewers from an OWNERS file content.
@@ -109,10 +119,10 @@ ${a}"
 
 # get_pr_changed_files fetches the list of changed files for the current PR.
 function get_pr_changed_files() {
-    curl -fsSL "https://github.com/${GH_REPOSITORY}/pull/${ISSUE_NUMBER}.patch" |
-        grep '^[-+]\{3\} [ab]' |
-        sed "s#--- a/##g" |
-        sed "s#+++ b/##g" |
+    gh api \
+        --paginate \
+        "/repos/${GH_REPOSITORY}/pulls/${ISSUE_NUMBER}/files" \
+        --jq '.[].filename' |
         sort -u
 }
 
