@@ -45,13 +45,6 @@ Like prow's `wip` plugin, the bot automatically applies the `do-not-merge/work-i
 
 Like prow's `size` plugin, the bot automatically labels every PR with one of `size/XS`, `size/S`, `size/M`, `size/L`, `size/XL` or `size/XXL` based on the total number of changed lines (additions + deletions), updating the label whenever new commits are pushed. The thresholds mirror prow's defaults: XS < 10, S < 30, M < 100, L < 500, XL < 1000, XXL ≥ 1000.
 
-Generated files are excluded from the count: files marked [`linguist-generated`](https://docs.github.com/en/repositories/working-with-files/managing-files/customizing-how-changed-files-appear-on-github) in the `.gitattributes` file at the repository root — the same attribute GitHub itself uses to hide generated files in diffs — are ignored:
-
-```
-*.pb.go linguist-generated=true
-generated/** linguist-generated=true
-```
-
 ### Troubleshooting
 
 - `/cherry-pick`

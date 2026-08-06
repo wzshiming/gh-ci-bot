@@ -147,22 +147,22 @@ function label_description() {
     echo "Categorizes issue or PR as related to ${1#kind/}."
     ;;
   size/XS)
-    echo "Denotes a PR that changes 0-9 lines, ignoring generated files."
+    echo "Denotes a PR that changes 0-9 lines."
     ;;
   size/S)
-    echo "Denotes a PR that changes 10-29 lines, ignoring generated files."
+    echo "Denotes a PR that changes 10-29 lines."
     ;;
   size/M)
-    echo "Denotes a PR that changes 30-99 lines, ignoring generated files."
+    echo "Denotes a PR that changes 30-99 lines."
     ;;
   size/L)
-    echo "Denotes a PR that changes 100-499 lines, ignoring generated files."
+    echo "Denotes a PR that changes 100-499 lines."
     ;;
   size/XL)
-    echo "Denotes a PR that changes 500-999 lines, ignoring generated files."
+    echo "Denotes a PR that changes 500-999 lines."
     ;;
   size/XXL)
-    echo "Denotes a PR that changes 1000+ lines, ignoring generated files."
+    echo "Denotes a PR that changes 1000+ lines."
     ;;
   bug)
     echo "Something isn't working"
