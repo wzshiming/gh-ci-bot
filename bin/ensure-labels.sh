@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 
-# ensure-labels.sh - Make sure the given labels exist in the repository,
-# creating any missing ones with a well-known color and description so
-# that labels no longer need to be created manually in advance.
+# ensure-labels.sh - Make sure the given well-known labels exist in the
+# repository, creating any missing ones with a well-known color and
+# description so that these labels no longer need to be created manually
+# in advance.
 #
 # Colors and descriptions are synchronized with prow's label definitions:
 # https://github.com/kubernetes/test-infra/blob/master/label_sync/labels.yaml
-# Labels not defined by prow fall back to GitHub's defaults.
+# Labels not known to the bot are never created, so arbitrary labels
+# (e.g. typos in /label commands) do not pollute the repository.
 #
 # Usage:
 #   ensure-labels.sh <label>...
@@ -15,8 +17,8 @@ if [[ "${#}" -eq 0 ]]; then
   exit 0
 fi
 
-# label_color prints the well-known color for a label, falling back to
-# GitHub's default gray for labels without a dedicated color.
+# label_color prints the well-known color for a label, printing nothing
+# for labels that are not known to the bot.
 function label_color() {
   case "${1}" in
   lgtm)
@@ -86,7 +88,7 @@ function label_color() {
     echo "ffffff"
     ;;
   *)
-    echo "ededed"
+    echo ""
     ;;
   esac
 }
@@ -206,7 +208,12 @@ for label in "${@}"; do
   if grep -qxF "${label}" <<<"${existing}"; then
     continue
   fi
+  color="$(label_color "${label}")"
+  if [[ -z "${color}" ]]; then
+    echo "[SKIP] Label \`${label//\@/}\` is not a well-known label, not creating it."
+    continue
+  fi
   echo "Create label ${label//\@/} in ${GH_REPOSITORY}"
-  gh label -R "${GH_REPOSITORY}" create "${label}" --color "$(label_color "${label}")" --description "$(label_description "${label}")" ||
+  gh label -R "${GH_REPOSITORY}" create "${label}" --color "${color}" --description "$(label_description "${label}")" ||
     echo "[FAIL] Failed to create label \`${label//\@/}\`."
 done
