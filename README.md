@@ -15,6 +15,7 @@ It supports [Kubernetes Prow OWNERS](https://github.com/kubernetes/test-infra/tr
 | `/reopen`                         | `/reopen`                                              | Reopen an PR or issue.                                                                                                                                                               | lifecycle              |
 | `/merge [rebase\|squash]`         | `/merge`</br>`/merge rebase`</br>`/merge squash`       | Merge a PR.                                                                                                                                                                          | merge                  |
 | `/retest`                         | `/retest`                                              | Retest all failed test of PR.                                                                                                                                                        | retest                 |
+| `/ok-to-test`                     | `/ok-to-test`                                          | Marks a non-member PR as trusted to test by adding the 'ok-to-test' label and removing 'needs-ok-to-test'. Must be a Member.      | ok-to-test             |
 | `/[remove-]kind [...]`            | `/kind doc`</br>`/remove-kind doc`                     | Applies or removes the 'kind/*' labels to an PR or issue.                                                                         | kind                   |
 | `/[remove-]label [...]`           | `/label doc`</br>`/remove-label doc`                   | Applies or removes the '*' labels to an PR or issue.                                                                              | label                  |
 | `/[remove-]lgtm`                  | `/lgtm`</br>`/remove-lgtm`                             | Applies or removes the 'lgtm' label. Removed automatically on new commits. Auto-merges with 'approved'.                           | label-lgtm             |
@@ -40,6 +41,21 @@ Whenever the bot adds a label (via commands like `/label`, `/kind`, `/lgtm`, `/a
 ### Work in progress
 
 Like prow's `wip` plugin, the bot automatically applies the `do-not-merge/work-in-progress` label to a PR while it is a draft or its title starts with `WIP`, and removes the label once neither is true. Any label starting with `do-not-merge/` blocks both `/merge` and auto-merge. The label is created automatically if it does not exist.
+
+### Trust gating for external contributors
+
+Like prow's `trigger` plugin, the bot applies the `needs-ok-to-test` label to PRs opened by external contributors (authors with no association to the repository) and posts a comment asking a member to vet the change. This matters because the bot runs on `pull_request_target`, which grants workflows access to secrets. Once a member has reviewed the change and considers it safe to test, they comment `/ok-to-test`, which adds the `ok-to-test` label and removes `needs-ok-to-test`. The `ok-to-test` label is sticky across new pushes.
+
+To keep privileged CI from running on unvetted PRs, gate the jobs of any workflow that uses `pull_request_target` (or otherwise exposes secrets) on the trust labels, for example:
+
+```yaml
+jobs:
+  test:
+    if: >-
+      github.event.pull_request.author_association != 'NONE' ||
+      contains(github.event.pull_request.labels.*.name, 'ok-to-test')
+```
+
 
 ### Troubleshooting
 

@@ -54,6 +54,7 @@ env:
     label-enhancement
     label-question
     lifecycle
+    ok-to-test
     retest
     transfer-issue
 

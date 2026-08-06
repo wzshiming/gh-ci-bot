@@ -68,11 +68,21 @@ function sync_wip_label() {
     fi
 }
 
+# sync_ok_to_test labels PRs from untrusted (non-member) authors with
+# needs-ok-to-test until a member issues /ok-to-test, mirroring the trust
+# model of prow's trigger plugin.
+function sync_ok_to_test() {
+    if [[ "${ISSUE_KIND}" == "pr" ]]; then
+        check-ok-to-test.sh
+    fi
+}
+
 function main() {
     if [[ "${TYPE}" == "created" ]]; then
         echo "Greetings to ${LOGIN}!"
         greeting.sh
         sync_wip_label
+        sync_ok_to_test
         sync_approve_status
         echo "Response to action"
         response.sh
@@ -83,6 +93,7 @@ function main() {
         echo "PR synchronized, removing lgtm label"
         remove-labels.sh lgtm
         sync_wip_label
+        sync_ok_to_test
         sync_approve_status
     elif [[ "${TYPE}" == "edited" ]]; then
         echo "PR edited, syncing work-in-progress label"

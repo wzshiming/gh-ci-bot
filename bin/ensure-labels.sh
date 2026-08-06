@@ -40,6 +40,12 @@ function label_color() {
   kind/*)
     echo "c7def8"
     ;;
+  ok-to-test)
+    echo "15dd18"
+    ;;
+  needs-ok-to-test)
+    echo "b60205"
+    ;;
   bug)
     echo "d73a4a"
     ;;
@@ -127,6 +133,12 @@ function label_description() {
     ;;
   kind/*)
     echo "Categorizes issue or PR as related to ${1#kind/}."
+    ;;
+  ok-to-test)
+    echo "Indicates a non-member PR verified by an org member that is safe to test."
+    ;;
+  needs-ok-to-test)
+    echo "Indicates a PR that requires an org member to verify it is safe to test."
     ;;
   bug)
     echo "Something isn't working"
