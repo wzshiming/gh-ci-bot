@@ -24,10 +24,6 @@ elif echo "${title}" | grep -qiE '^[[:space:][:punct:]]*WIP([[:space:][:punct:]]
 fi
 
 if [[ "${wip}" == "true" && "${has_label}" != "true" ]]; then
-    # Make sure the label exists so adding it cannot fail.
-    if ! gh label -R "${GH_REPOSITORY}" list --search "${WIP_LABEL}" --json name --jq '.[].name' | grep -qx "${WIP_LABEL}"; then
-        gh label -R "${GH_REPOSITORY}" create "${WIP_LABEL}" --color e11d21 --description "Indicates that a PR should not merge because it is a work in progress." || true
-    fi
     add-labels.sh "${WIP_LABEL}"
 elif [[ "${wip}" != "true" && "${has_label}" == "true" ]]; then
     remove-labels.sh "${WIP_LABEL}"

@@ -15,10 +15,10 @@ It supports [Kubernetes Prow OWNERS](https://github.com/kubernetes/test-infra/tr
 | `/reopen`                         | `/reopen`                                              | Reopen an PR or issue.                                                                                                                                                               | lifecycle              |
 | `/merge [rebase\|squash]`         | `/merge`</br>`/merge rebase`</br>`/merge squash`       | Merge a PR.                                                                                                                                                                          | merge                  |
 | `/retest`                         | `/retest`                                              | Retest all failed test of PR.                                                                                                                                                        | retest                 |
-| `/[remove-]kind [...]`            | `/kind doc`</br>`/remove-kind doc`                     | Applies or removes the 'kind/*' labels to an PR or issue. **Labels need to be created manually in advance.**                                                                         | kind                   |
-| `/[remove-]label [...]`           | `/label doc`</br>`/remove-label doc`                   | Applies or removes the '*' labels to an PR or issue. **Labels need to be created manually in advance.**                                                                              | label                  |
-| `/[remove-]lgtm`                  | `/lgtm`</br>`/remove-lgtm`                             | Applies or removes the 'lgtm' label. Removed automatically on new commits. Auto-merges with 'approved'. **Labels need to be created manually in advance.**                           | label-lgtm             |
-| `/approve [cancel]`               | `/approve`</br>`/approve cancel`</br>`/remove-approve` | Approves the PR areas the commenter owns (via OWNERS files); adds 'approved' once all areas are covered. Auto-merges with 'lgtm'. **Labels need to be created manually in advance.** | label-approve          |
+| `/[remove-]kind [...]`            | `/kind doc`</br>`/remove-kind doc`                     | Applies or removes the 'kind/*' labels to an PR or issue.                                                                         | kind                   |
+| `/[remove-]label [...]`           | `/label doc`</br>`/remove-label doc`                   | Applies or removes the '*' labels to an PR or issue.                                                                              | label                  |
+| `/[remove-]lgtm`                  | `/lgtm`</br>`/remove-lgtm`                             | Applies or removes the 'lgtm' label. Removed automatically on new commits. Auto-merges with 'approved'.                           | label-lgtm             |
+| `/approve [cancel]`               | `/approve`</br>`/approve cancel`</br>`/remove-approve` | Approves the PR areas the commenter owns (via OWNERS files); adds 'approved' once all areas are covered. Auto-merges with 'lgtm'. | label-approve          |
 | `/[remove-]help-wanted`           | `/help-wanted`</br>`/remove-help-wanted`               | Applies or removes the 'help wanted' labels to an PR or issue.                                                                                                                       | label-help-wanted      |
 | `/[remove-]good-first-issue`      | `/good-first-issue`</br>`/remove-good-first-issue`     | Applies or removes the 'good first issue' labels to an PR or issue.                                                                                                                  | label-good-first-issue |
 | `/[remove-]bug`                   | `/bug`</br>`/remove-bug`                               | Applies or removes the 'bug' labels to an PR or issue.                                                                                                                               | label-bug              |
@@ -32,6 +32,10 @@ It supports [Kubernetes Prow OWNERS](https://github.com/kubernetes/test-infra/tr
 | `/rebase`                         | `/rebase`                                              | Rebase the this PR to the latest of the branch                                                                                                                                       | rebase                 |
 | `/cherry-pick [branch]`           | `/cherry-pick release-1.0`                             | Cherry-pick a merged PR to a target branch and create a new PR                                                                                                                       | cherry-pick            |
 | `/transfer-issue [repo]`          | `/transfer-issue other-repo`                           | Transfers an issue to another repository in the same organization                                                                                                                    | transfer-issue         |
+
+### Label management
+
+Whenever the bot adds a label (via commands like `/label`, `/kind`, `/lgtm`, `/approve`, OWNERS `labels:`, or automatic labels like `do-not-merge/work-in-progress`), any label that does not yet exist in the repository is created automatically with a well-known color and description. Colors and descriptions are synchronized with prow's [label definitions](https://github.com/kubernetes/test-infra/blob/master/label_sync/labels.yaml) (e.g. `lgtm`, `approved`, `do-not-merge/*`, `kind/*`, `good first issue`, `help wanted`); GitHub's built-in labels (e.g. `bug`, `question`) keep their standard GitHub colors and descriptions, and any other label is created with GitHub's default gray color. Labels no longer need to be created manually in advance.
 
 ### Work in progress
 
@@ -63,7 +67,7 @@ labels:
 - label2
 ```
 
-When an `OWNERS` file is present, the listed users are merged with any `REVIEWERS` and `APPROVERS` defined in the workflow environment variables. Labels declared under `labels:` are automatically applied to pull requests that touch files in the corresponding directories (mirroring prow's [owners-label](https://github.com/kubernetes/test-infra/tree/master/prow) plugin). **Labels need to be created manually in advance.**
+When an `OWNERS` file is present, the listed users are merged with any `REVIEWERS` and `APPROVERS` defined in the workflow environment variables. Labels declared under `labels:` are automatically applied to pull requests that touch files in the corresponding directories (mirroring prow's [owners-label](https://github.com/kubernetes/test-infra/tree/master/prow) plugin).
 
 ### Hierarchical OWNERS
 
