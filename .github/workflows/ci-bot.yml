@@ -192,7 +192,7 @@ jobs:
 
       - name: PR Review Submitted
         uses: ./
-        if: ${{ github.event_name == 'pull_request_review' }}
+        if: ${{ github.event_name == 'pull_request_review' && github.event.review.body != '' }}
         env:
           LOGIN: ${{ github.event.review.user.login }}
           AUTHOR: ${{ github.event.pull_request.user.login }}
