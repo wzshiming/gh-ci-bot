@@ -36,6 +36,10 @@ It supports [Kubernetes Prow OWNERS](https://github.com/kubernetes/test-infra/tr
 
 Like prow's `wip` plugin, the bot automatically applies the `do-not-merge/work-in-progress` label to a PR while it is a draft or its title starts with `WIP`, and removes the label once neither is true. Any label starting with `do-not-merge/` blocks both `/merge` and auto-merge. The label is created automatically if it does not exist.
 
+### Verify OWNERS
+
+Like prow's `verify-owners` plugin, when a PR adds or modifies `OWNERS` or `OWNERS_ALIASES` files, the bot validates them: the YAML syntax must be valid, `approvers`/`reviewers` (and each alias in `OWNERS_ALIASES`) must be lists, and every referenced user must be an existing GitHub user or an alias defined in `OWNERS_ALIASES`. If validation fails, the bot comments with the problems found and applies the `do-not-merge/invalid-owners-file` label, which blocks both `/merge` and auto-merge; the label is removed automatically once all files are valid again. The label is created automatically if it does not exist. Since approvers are always resolved from the base branch, changes to `OWNERS` files still require `/approve` from the existing owners.
+
 ### Troubleshooting
 
 - `/cherry-pick`

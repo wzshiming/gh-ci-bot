@@ -50,11 +50,21 @@ function sync_wip_label() {
     fi
 }
 
+# sync_verify_owners validates OWNERS/OWNERS_ALIASES files changed in the PR
+# and keeps the do-not-merge/invalid-owners-file label in sync, mirroring
+# prow's verify-owners plugin.
+function sync_verify_owners() {
+    if [[ "${ISSUE_KIND}" == "pr" ]]; then
+        verify-owners.sh
+    fi
+}
+
 function main() {
     if [[ "${TYPE}" == "created" ]]; then
         echo "Greetings to ${LOGIN}!"
         greeting.sh
         sync_wip_label
+        sync_verify_owners
         sync_approve_status
         echo "Response to action"
         response.sh
@@ -65,6 +75,7 @@ function main() {
         echo "PR synchronized, removing lgtm label"
         remove-labels.sh lgtm
         sync_wip_label
+        sync_verify_owners
         sync_approve_status
     elif [[ "${TYPE}" == "edited" ]]; then
         echo "PR edited, syncing work-in-progress label"
