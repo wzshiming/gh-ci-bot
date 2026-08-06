@@ -45,6 +45,10 @@ Like prow's `wip` plugin, the bot automatically applies the `do-not-merge/work-i
 
 Like prow's `size` plugin, the bot automatically labels every PR with one of `size/XS`, `size/S`, `size/M`, `size/L`, `size/XL` or `size/XXL` based on the total number of changed lines (additions + deletions), updating the label whenever new commits are pushed. The thresholds mirror prow's defaults: XS < 10, S < 30, M < 100, L < 500, XL < 1000, XXL ≥ 1000.
 
+### OWNERS validation
+
+Like prow's `verify-owners` plugin, whenever a PR modifies `OWNERS` or `OWNERS_ALIASES` files, the bot validates them at the PR head: the files must be valid YAML with the expected structure (`approvers`/`reviewers`/`labels` lists in `OWNERS`, an `aliases` map in `OWNERS_ALIASES`), and every referenced user must be an existing GitHub user or an alias defined in `OWNERS_ALIASES`. If validation fails, the `do-not-merge/invalid-owners-file` label is added together with a comment listing the problems; the label blocks both `/merge` and auto-merge like every other `do-not-merge/*` label, so an existing approver must review the changes and the PR cannot merge until the files are fixed. Once new commits make every modified file valid again, the label is removed automatically.
+
 ### Troubleshooting
 
 - `/cherry-pick`
