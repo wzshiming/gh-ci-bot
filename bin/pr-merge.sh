@@ -20,6 +20,12 @@ else
   exit 1
 fi
 
+blocking_labels="$(gh pr -R "${GH_REPOSITORY}" view "${ISSUE_NUMBER}" --json labels --jq '[.labels[].name | select(startswith("do-not-merge/"))] | join("`, `")')"
+if [[ -n "${blocking_labels}" ]]; then
+  echo "[FAIL] This PR cannot be merged because it has the following blocking label(s): \`${blocking_labels}\`."
+  exit 1
+fi
+
 echo "PR ${GH_REPOSITORY}#${ISSUE_NUMBER} merge by ${LOGIN}"
 gh "${ISSUE_KIND}" -R "${GH_REPOSITORY}" merge "${ISSUE_NUMBER}" --auto "${args}" ||
   echo "[FAIL] Failed to merge the PR. Please ensure all required checks have passed and there are no conflicts."

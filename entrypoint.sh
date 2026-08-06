@@ -42,10 +42,19 @@ function sync_approve_status() {
     fi
 }
 
+# sync_wip_label keeps the do-not-merge/work-in-progress label in sync with
+# the PR's draft state and title, mirroring prow's wip plugin.
+function sync_wip_label() {
+    if [[ "${ISSUE_KIND}" == "pr" ]]; then
+        check-wip.sh
+    fi
+}
+
 function main() {
     if [[ "${TYPE}" == "created" ]]; then
         echo "Greetings to ${LOGIN}!"
         greeting.sh
+        sync_wip_label
         sync_approve_status
         echo "Response to action"
         response.sh
@@ -55,7 +64,11 @@ function main() {
     elif [[ "${TYPE}" == "synchronize" ]]; then
         echo "PR synchronized, removing lgtm label"
         remove-labels.sh lgtm
+        sync_wip_label
         sync_approve_status
+    elif [[ "${TYPE}" == "edited" ]]; then
+        echo "PR edited, syncing work-in-progress label"
+        sync_wip_label
     fi
 }
 
