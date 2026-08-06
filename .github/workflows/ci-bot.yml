@@ -52,6 +52,7 @@ env:
     label-question
     lifecycle
     retest
+    transfer-issue
 
   # This plugins is for in the REVIEWERS environment variable
   REVIEWERS_PLUGINS: |-

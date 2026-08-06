@@ -31,6 +31,7 @@ It supports [Kubernetes Prow OWNERS](https://github.com/kubernetes/test-infra/tr
 | `/base [branch]`                  | `/base main`                                           | Change to which branch this PR is to be merged into                                                                                                                                  | base                   |
 | `/rebase`                         | `/rebase`                                              | Rebase the this PR to the latest of the branch                                                                                                                                       | rebase                 |
 | `/cherry-pick [branch]`           | `/cherry-pick release-1.0`                             | Cherry-pick a merged PR to a target branch and create a new PR                                                                                                                       | cherry-pick            |
+| `/transfer-issue [repo]`          | `/transfer-issue other-repo`                           | Transfers an issue to another repository in the same organization                                                                                                                    | transfer-issue         |
 
 ### Troubleshooting
 
