@@ -45,6 +45,10 @@ Like prow's `wip` plugin, the bot automatically applies the `do-not-merge/work-i
 
 Like prow's `size` plugin, the bot automatically labels every PR with one of `size/XS`, `size/S`, `size/M`, `size/L`, `size/XL` or `size/XXL` based on the total number of changed lines (additions + deletions), updating the label whenever new commits are pushed. The thresholds mirror prow's defaults: XS < 10, S < 30, M < 100, L < 500, XL < 1000, XXL ≥ 1000.
 
+### Needs rebase
+
+Like prow's `needs-rebase` external plugin, the bot automatically applies the `needs-rebase` label and posts a comment asking the author to rebase when a PR has merge conflicts with its base branch, and removes the label once the conflicts are resolved. The mergeability is checked when a PR is opened or synchronized, and — if the `push` event is enabled in the workflow (see the [example](https://github.com/wzshiming/gh-ci-bot/blob/master/examples/ci-bot.yml)) — on every open PR whenever the base branch changes. This complements the `/rebase` command, which can update the branch when there are no conflicts. The label is created automatically if it does not exist.
+
 ### Troubleshooting
 
 - `/cherry-pick`

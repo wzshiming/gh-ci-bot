@@ -26,6 +26,12 @@ on:
       - converted_to_draft
       - ready_for_review
 
+  # Used to detect merge conflicts on open PRs when the base branch changes.
+  push:
+    branches:
+      - main
+      - master
+
 env:
   # This plugins is for anyone who can use it
   PLUGINS: |-
@@ -178,6 +184,13 @@ jobs:
           AUTHOR_ASSOCIATION: ${{ github.event.pull_request.author_association }}
           ISSUE_KIND: pr
           TYPE: edited
+
+      - name: Branch Pushed
+        uses: wzshiming/gh-ci-bot@v1.5.0
+        if: ${{ github.event_name == 'push' }}
+        env:
+          BASE_BRANCH: ${{ github.ref_name }}
+          TYPE: push
 
       - name: Issue Commented
         uses: wzshiming/gh-ci-bot@v1.5.0

@@ -28,6 +28,9 @@ function label_color() {
   do-not-merge | do-not-merge/*)
     echo "e11d21"
     ;;
+  needs-rebase)
+    echo "e11d21"
+    ;;
   kind/api-change | kind/bug | kind/deprecation | kind/failing-test | kind/regression)
     echo "e11d21"
     ;;
@@ -112,6 +115,9 @@ function label_description() {
     ;;
   do-not-merge/*)
     echo "Indicates that a PR should not merge."
+    ;;
+  needs-rebase)
+    echo "Indicates a PR cannot be merged because it has merge conflicts with HEAD."
     ;;
   kind/api-change)
     echo "Categorizes issue or PR as related to adding, removing, or otherwise changing an API"

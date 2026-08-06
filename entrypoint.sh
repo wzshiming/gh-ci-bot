@@ -6,6 +6,14 @@ ROOT="$(realpath -m ${ROOT})"
 PATH="${ROOT}/bin:${PATH}"
 
 function check_args() {
+    if [[ "${TYPE}" == "push" ]]; then
+        if [[ "${GH_REPOSITORY}" == "" ]]; then
+            echo "No repository specified"
+            exit 1
+        fi
+        return 0
+    fi
+
     if [[ "${LOGIN}" == "" ]]; then
         echo "No login specified"
         exit 1
@@ -76,12 +84,21 @@ function sync_size_label() {
     fi
 }
 
+# sync_needs_rebase_label keeps the needs-rebase label in sync with the
+# PR's mergeability, mirroring prow's needs-rebase external plugin.
+function sync_needs_rebase_label() {
+    if [[ "${ISSUE_KIND}" == "pr" ]]; then
+        check-needs-rebase.sh
+    fi
+}
+
 function main() {
     if [[ "${TYPE}" == "created" ]]; then
         echo "Greetings to ${LOGIN}!"
         greeting.sh
         sync_wip_label
         sync_size_label
+        sync_needs_rebase_label
         sync_approve_status
         echo "Response to action"
         response.sh
@@ -93,10 +110,14 @@ function main() {
         remove-labels.sh lgtm
         sync_wip_label
         sync_size_label
+        sync_needs_rebase_label
         sync_approve_status
     elif [[ "${TYPE}" == "edited" ]]; then
         echo "PR edited, syncing work-in-progress label"
         sync_wip_label
+    elif [[ "${TYPE}" == "push" ]]; then
+        echo "Branch pushed, syncing needs-rebase label on open PRs"
+        check-needs-rebase.sh all
     fi
 }
 
