@@ -166,7 +166,7 @@ jobs:
           ISSUE_KIND: pr
           TYPE: synchronize
 
-      - name: PR Edited
+      - name: PR Edited or Draft State Changed
         uses: wzshiming/gh-ci-bot@v1.5.0
         if: ${{ github.event_name == 'pull_request_target' && (github.event.action == 'edited' || github.event.action == 'converted_to_draft' || github.event.action == 'ready_for_review') }}
         env:
