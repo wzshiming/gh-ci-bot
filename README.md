@@ -45,6 +45,10 @@ Like prow's `wip` plugin, the bot automatically applies the `do-not-merge/work-i
 
 Like prow's `size` plugin, the bot automatically labels every PR with one of `size/XS`, `size/S`, `size/M`, `size/L`, `size/XL` or `size/XXL` based on the total number of changed lines (additions + deletions), updating the label whenever new commits are pushed. The thresholds mirror prow's defaults: XS < 10, S < 30, M < 100, L < 500, XL < 1000, XXL ≥ 1000.
 
+### Branch cleanup
+
+Like prow's `branchcleaner` plugin, the bot automatically deletes the source branch of a PR after it is merged. Only branches living in the same repository as the PR are deleted; branches from forks and the repository's default branch are left untouched.
+
 ### Troubleshooting
 
 - `/cherry-pick`

@@ -97,6 +97,9 @@ function main() {
     elif [[ "${TYPE}" == "edited" ]]; then
         echo "PR edited, syncing work-in-progress label"
         sync_wip_label
+    elif [[ "${TYPE}" == "merged" ]]; then
+        echo "PR merged, cleaning up source branch"
+        branch-cleaner.sh
     fi
 }
 
