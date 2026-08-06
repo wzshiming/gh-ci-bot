@@ -7,7 +7,7 @@ PATH="${ROOT}/bin:${PATH}"
 
 function check_args() {
     if [[ "${TYPE}" == "" ]]; then
-        echo "No type"
+        echo "No type specified"
         exit 1
     fi
 
