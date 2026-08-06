@@ -80,6 +80,7 @@ env:
     wzshiming
   MAINTAINERS: |-
     wzshiming
+  AUTO_ASSIGN_REVIEWER: "false"
 
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   GH_REPOSITORY: ${{ github.repository }}

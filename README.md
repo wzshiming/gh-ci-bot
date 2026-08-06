@@ -65,6 +65,8 @@ For example, if `pkg/api/handler.go` and `pkg/util/helper.go` are both changed a
 
 The `/auto-cc` command additionally walks up from each individual changed file to find the nearest OWNERS file with available reviewers.
 
+To assign reviewers automatically when a pull request is opened, set `AUTO_ASSIGN_REVIEWER` to `"true"` in your workflow environment. By default it is `"false"`, and reviewers are only assigned when `/auto-cc` is used manually.
+
 ## Roadmap
 
 - https://github.com/kubernetes/test-infra/tree/master/prow

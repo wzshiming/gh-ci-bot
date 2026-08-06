@@ -42,10 +42,17 @@ function sync_approve_status() {
     fi
 }
 
+function auto_assign_reviewer() {
+    if [[ "${ISSUE_KIND}" == "pr" && "${AUTO_ASSIGN_REVIEWER}" == "true" ]]; then
+        "${ROOT}/plugins/auto-cc/auto-cc.plugin.sh" || true
+    fi
+}
+
 function main() {
     if [[ "${TYPE}" == "created" ]]; then
         echo "Greetings to ${LOGIN}!"
         greeting.sh
+        auto_assign_reviewer
         sync_approve_status
         echo "Response to action"
         response.sh
