@@ -46,6 +46,26 @@ Like prow's `wip` plugin, the bot automatically applies the `do-not-merge/work-i
 
 Like prow's `size` plugin, the bot automatically labels every PR with one of `size/XS`, `size/S`, `size/M`, `size/L`, `size/XL` or `size/XXL` based on the total number of changed lines (additions + deletions), updating the label whenever new commits are pushed. The thresholds mirror prow's defaults: XS < 10, S < 30, M < 100, L < 500, XL < 1000, XXL ≥ 1000.
 
+### Blocked paths
+
+Like prow's `blockade` plugin, the bot can block PRs that touch protected paths. Configure it with environment variables:
+
+- `BLOCKADE_PATHS`: newline separated extended regular expressions matched against changed file paths; a PR touching a matching file gets the `do-not-merge/blocked-paths` label and an explanatory comment. Empty (the default) disables the plugin.
+- `BLOCKADE_EXCEPTION_PATHS`: newline separated extended regular expressions; files matching any of these are never blocked, even if they match a block pattern.
+- `BLOCKADE_REASON`: optional human readable explanation included in the comment.
+
+The label is re-evaluated on every push and removed automatically once the PR no longer touches blocked paths.
+
+```yaml
+env:
+  BLOCKADE_PATHS: |-
+    ^docs/generated/
+    ^vendor/
+  BLOCKADE_EXCEPTION_PATHS: |-
+    ^vendor/README\.md$
+  BLOCKADE_REASON: Generated and vendored files must not be modified manually.
+```
+
 ### Troubleshooting
 
 - `/cherry-pick`

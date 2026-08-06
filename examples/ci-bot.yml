@@ -92,6 +92,17 @@ env:
   # It can be `merge`, `rebase`, or `squash`.
   DEFAULT_MERGE_METHOD: squash
 
+  # Newline separated extended regular expressions; PRs touching a matching
+  # file get the `do-not-merge/blocked-paths` label with an explanatory
+  # comment. Empty disables the blockade plugin.
+  # BLOCKADE_PATHS: |-
+  #   ^vendor/
+  # Files matching any of these are never blocked.
+  # BLOCKADE_EXCEPTION_PATHS: |-
+  #   ^vendor/README\.md$
+  # Optional explanation included in the comment when a PR is blocked.
+  # BLOCKADE_REASON: Vendored files must not be modified manually.
+
   DETAILS: |-
 
     <details>

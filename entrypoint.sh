@@ -76,12 +76,21 @@ function sync_size_label() {
     fi
 }
 
+# sync_blockade_label keeps the do-not-merge/blocked-paths label in sync with
+# the PR's changed files, mirroring prow's blockade plugin.
+function sync_blockade_label() {
+    if [[ "${ISSUE_KIND}" == "pr" ]]; then
+        check-blockade.sh
+    fi
+}
+
 function main() {
     if [[ "${TYPE}" == "created" ]]; then
         echo "Greetings to ${LOGIN}!"
         greeting.sh
         sync_wip_label
         sync_size_label
+        sync_blockade_label
         sync_approve_status
         echo "Response to action"
         response.sh
@@ -93,6 +102,7 @@ function main() {
         remove-labels.sh lgtm
         sync_wip_label
         sync_size_label
+        sync_blockade_label
         sync_approve_status
     elif [[ "${TYPE}" == "edited" ]]; then
         echo "PR edited, syncing work-in-progress label"

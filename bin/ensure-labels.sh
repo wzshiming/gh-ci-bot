@@ -110,6 +110,9 @@ function label_description() {
   do-not-merge/work-in-progress)
     echo "Indicates that a PR should not merge because it is a work in progress."
     ;;
+  do-not-merge/blocked-paths)
+    echo "Indicates that a PR should not merge because it touches files in blocked paths."
+    ;;
   do-not-merge/*)
     echo "Indicates that a PR should not merge."
     ;;
