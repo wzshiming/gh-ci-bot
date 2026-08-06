@@ -50,6 +50,21 @@ Like prow's `size` plugin, the bot automatically labels every PR with one of `si
 
 Like prow's `blunderbuss` plugin, the bot automatically requests reviewers when a PR is opened (like `/auto-cc` but without a manual trigger; both share the same reviewer-selection logic). Reviewers are picked from the `OWNERS` files nearest to the changed files, falling back to the `REVIEWERS` environment variable, and the PR author is never picked. Draft PRs are skipped. The number of reviewers to request is configured with the `BLUNDERBUSS_REVIEWER_COUNT` environment variable (default `2`); set it to `0` to disable the behavior (the manual `/auto-cc` command keeps working).
 
+### Require matching label
+
+Like prow's `require-matching-label` plugin, the bot automatically applies a `needs-X` label plus an explanatory comment when an issue or PR is missing a label matching a configured regular expression, and removes it once a matching label is added. By default, an issue or PR without a `kind/*` label gets the `needs-kind` label, which is removed as soon as a `kind/*` label is applied (e.g. via `/kind bug`).
+
+The rules are configured through the `REQUIRE_MATCHING_LABELS` environment variable, one rule per line in the format `<missing-label> <regexp> [comment...]`:
+
+```yaml
+env:
+  REQUIRE_MATCHING_LABELS: |-
+    needs-kind ^kind/
+    needs-priority ^priority/ Please add a priority/* label with the /label command.
+```
+
+The comment is optional; a default explanatory comment is used when omitted. Set `REQUIRE_MATCHING_LABELS` to an empty string to disable the check.
+
 ### Troubleshooting
 
 - `/cherry-pick`

@@ -16,6 +16,8 @@ on:
   issues:
     types:
       - opened
+      - labeled
+      - unlabeled
 
   # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request_target
   pull_request_target:
@@ -25,6 +27,8 @@ on:
       - edited
       - converted_to_draft
       - ready_for_review
+      - labeled
+      - unlabeled
 
 env:
   # This plugins is for anyone who can use it
@@ -96,6 +100,14 @@ env:
   # (blunderbuss). Set to 0 to disable.
   BLUNDERBUSS_REVIEWER_COUNT: 2
 
+  # Rules for the require-matching-label check, one per line in the format:
+  #   <missing-label> <regexp> [comment...]
+  # When an issue or PR has no label matching the regexp, the missing label
+  # is applied with an explanatory comment, and removed once a matching
+  # label is added. Set to an empty string to disable.
+  REQUIRE_MATCHING_LABELS: |-
+    needs-kind ^kind/
+
   DETAILS: |-
 
     <details>
@@ -129,7 +141,7 @@ jobs:
     steps:
       - name: Issue Opened
         uses: wzshiming/gh-ci-bot@v1.5.0
-        if: ${{ github.event_name == 'issues' }}
+        if: ${{ github.event_name == 'issues' && github.event.action == 'opened' }}
         env:
           LOGIN: ${{ github.event.issue.user.login }}
           AUTHOR: ${{ github.event.issue.user.login }}
@@ -183,6 +195,30 @@ jobs:
           AUTHOR_ASSOCIATION: ${{ github.event.pull_request.author_association }}
           ISSUE_KIND: pr
           TYPE: edited
+
+      - name: Issue Labeled or Unlabeled
+        uses: wzshiming/gh-ci-bot@v1.5.0
+        if: ${{ github.event_name == 'issues' && (github.event.action == 'labeled' || github.event.action == 'unlabeled') }}
+        env:
+          LOGIN: ${{ github.event.sender.login }}
+          AUTHOR: ${{ github.event.issue.user.login }}
+          MESSAGE: ""
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          AUTHOR_ASSOCIATION: ${{ github.event.issue.author_association }}
+          ISSUE_KIND: issue
+          TYPE: ${{ github.event.action }}
+
+      - name: PR Labeled or Unlabeled
+        uses: wzshiming/gh-ci-bot@v1.5.0
+        if: ${{ github.event_name == 'pull_request_target' && (github.event.action == 'labeled' || github.event.action == 'unlabeled') }}
+        env:
+          LOGIN: ${{ github.event.sender.login }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
+          MESSAGE: ""
+          ISSUE_NUMBER: ${{ github.event.pull_request.number }}
+          AUTHOR_ASSOCIATION: ${{ github.event.pull_request.author_association }}
+          ISSUE_KIND: pr
+          TYPE: ${{ github.event.action }}
 
       - name: Issue Commented
         uses: wzshiming/gh-ci-bot@v1.5.0

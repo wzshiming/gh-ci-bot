@@ -146,6 +146,12 @@ function label_description() {
   kind/*)
     echo "Categorizes issue or PR as related to ${1#kind/}."
     ;;
+  needs-kind)
+    echo "Indicates an issue or PR lacks a \`kind/foo\` label and requires one."
+    ;;
+  needs-*)
+    echo "Indicates an issue or PR lacks a \`${1#needs-}/foo\` label and requires one."
+    ;;
   size/XS)
     echo "Denotes a PR that changes 0-9 lines."
     ;;

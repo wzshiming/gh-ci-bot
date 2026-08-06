@@ -84,6 +84,12 @@ function auto_request_reviewers() {
     fi
 }
 
+# sync_matching_labels keeps needs-* labels in sync with the issue/PR labels,
+# mirroring prow's require-matching-label plugin.
+function sync_matching_labels() {
+    check-matching-labels.sh
+}
+
 function main() {
     if [[ "${TYPE}" == "created" ]]; then
         echo "Greetings to ${LOGIN}!"
@@ -92,11 +98,13 @@ function main() {
         sync_size_label
         sync_approve_status
         auto_request_reviewers
+        sync_matching_labels
         echo "Response to action"
         response.sh
     elif [[ "${TYPE}" == "comment" ]]; then
         echo "Response to action"
         response.sh
+        sync_matching_labels
     elif [[ "${TYPE}" == "synchronize" ]]; then
         echo "PR synchronized, removing lgtm label"
         remove-labels.sh lgtm
@@ -106,6 +114,9 @@ function main() {
     elif [[ "${TYPE}" == "edited" ]]; then
         echo "PR edited, syncing work-in-progress label"
         sync_wip_label
+    elif [[ "${TYPE}" == "labeled" || "${TYPE}" == "unlabeled" ]]; then
+        echo "Labels changed, syncing needs-* labels"
+        sync_matching_labels
     fi
 }
 
