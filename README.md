@@ -46,6 +46,10 @@ Like prow's `wip` plugin, the bot automatically applies the `do-not-merge/work-i
 
 Like prow's `size` plugin, the bot automatically labels every PR with one of `size/XS`, `size/S`, `size/M`, `size/L`, `size/XL` or `size/XXL` based on the total number of changed lines (additions + deletions), updating the label whenever new commits are pushed. The thresholds mirror prow's defaults: XS < 10, S < 30, M < 100, L < 500, XL < 1000, XXL ≥ 1000.
 
+### Auto-requesting reviewers
+
+Like prow's `blunderbuss` plugin, the bot automatically requests reviewers when a PR is opened (like `/auto-cc` but without a manual trigger; both share the same reviewer-selection logic). Reviewers are picked from the `OWNERS` files nearest to the changed files, falling back to the `REVIEWERS` environment variable, and the PR author is never picked. Draft PRs are skipped. The number of reviewers to request is configured with the `BLUNDERBUSS_REVIEWER_COUNT` environment variable (default `2`); set it to `0` to disable the behavior (the manual `/auto-cc` command keeps working).
+
 ### Require matching label
 
 Like prow's `require-matching-label` plugin, the bot automatically applies a `needs-X` label plus an explanatory comment when an issue or PR is missing a label matching a configured regular expression, and removes it once a matching label is added. By default, an issue or PR without a `kind/*` label gets the `needs-kind` label, which is removed as soon as a `kind/*` label is applied (e.g. via `/kind bug`).
@@ -95,7 +99,7 @@ OWNERS files are used hierarchically. You can place OWNERS files in any director
 
 For example, if `pkg/api/handler.go` and `pkg/util/helper.go` are both changed and both `pkg/api` and `pkg/util` contain an OWNERS file with approvers, the PR has two areas: `pkg/api` and `pkg/util`. Each area can be approved by its own approvers or by approvers from `pkg` or the root OWNERS file.
 
-The `/auto-cc` command additionally walks up from each individual changed file to find the nearest OWNERS file with available reviewers.
+The `/auto-cc` command and the automatic blunderbuss behavior share the same logic: they walk up from each individual changed file to find the nearest OWNERS file with available reviewers.
 
 ## Roadmap
 

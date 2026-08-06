@@ -76,6 +76,14 @@ function sync_size_label() {
     fi
 }
 
+# auto_request_reviewers requests reviewers from OWNERS files when a PR is
+# opened, mirroring prow's blunderbuss plugin.
+function auto_request_reviewers() {
+    if [[ "${ISSUE_KIND}" == "pr" ]]; then
+        blunderbuss.sh
+    fi
+}
+
 # sync_matching_labels keeps needs-* labels in sync with the issue/PR labels,
 # mirroring prow's require-matching-label plugin.
 function sync_matching_labels() {
@@ -89,6 +97,7 @@ function main() {
         sync_wip_label
         sync_size_label
         sync_approve_status
+        auto_request_reviewers
         sync_matching_labels
         echo "Response to action"
         response.sh
