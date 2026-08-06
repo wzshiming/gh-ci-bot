@@ -108,12 +108,12 @@ env:
   REQUIRE_MATCHING_LABELS: |-
     needs-kind ^kind/
 
-  # The labels the bot is allowed to create, one entry per line. Each entry
-  # is either an exact label name, or a prefix ending in a slash (e.g.
-  # kind/) which allows any label with that prefix. Labels not matching any
-  # entry are never created automatically. Defaults to the well-known prow
-  # and GitHub labels (see bin/ensure-labels.sh); setting this replaces the
-  # default list.
+  # Additional labels the bot is allowed to create, one entry per line.
+  # Each entry is either an exact label name, or a prefix ending in a
+  # slash (e.g. kind/) which allows any label with that prefix. These are
+  # merged with the built-in default list of well-known prow and GitHub
+  # labels (see bin/ensure-labels.sh). Labels not matching any entry are
+  # never created automatically.
   # LABELS: |-
   #   kind/
   #   area/network

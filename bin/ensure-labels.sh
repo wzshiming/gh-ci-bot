@@ -13,9 +13,9 @@
 # either an exact label name, or a prefix ending in a slash (e.g. kind/)
 # which allows any label with that prefix. Labels not matching any entry
 # are never created, so arbitrary labels (e.g. typos in /label commands)
-# do not pollute the repository. When LABELS is not set, it defaults to
-# the well-known prow and GitHub labels listed below; setting LABELS
-# replaces the default list.
+# do not pollute the repository. LABELS is merged with the built-in
+# default list of well-known prow and GitHub labels below, so entries in
+# LABELS are additions to the defaults.
 #
 # Usage:
 #   ensure-labels.sh <label>...
@@ -60,7 +60,8 @@ wontfix
 EOF
 )"
 
-LABELS="${LABELS-${DEFAULT_LABELS}}"
+LABELS="${DEFAULT_LABELS}
+${LABELS:-}"
 
 # label_allowed checks whether a label matches an entry in LABELS and is
 # thus allowed to be created. Entries ending in a slash (e.g. kind/) are
