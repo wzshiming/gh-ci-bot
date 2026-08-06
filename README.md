@@ -37,7 +37,18 @@ It supports [Kubernetes Prow OWNERS](https://github.com/kubernetes/test-infra/tr
 
 ### Label management
 
-Whenever the bot adds a label (via commands like `/label`, `/kind`, `/lgtm`, `/approve`, OWNERS `labels:`, or automatic labels like `do-not-merge/work-in-progress`), any label that does not yet exist in the repository is created automatically with a well-known color and description. Colors and descriptions are synchronized with prow's [label definitions](https://github.com/kubernetes/test-infra/blob/master/label_sync/labels.yaml) (e.g. `lgtm`, `approved`, `do-not-merge/*`, `kind/*`, `good first issue`, `help wanted`); GitHub's built-in labels (e.g. `bug`, `question`) keep their standard GitHub colors and descriptions, and any other label is created with GitHub's default gray color. Labels no longer need to be created manually in advance.
+Whenever the bot adds a label (via commands like `/label`, `/kind`, `/lgtm`, `/approve`, OWNERS `labels:`, or automatic labels like `do-not-merge/work-in-progress`), any label that does not yet exist in the repository is created automatically, provided it is listed in the `LABELS` environment variable. Labels that are not listed there are never created automatically (so a typo like `/label doocumentation` does not pollute the repository); they are only applied if they already exist in the repository.
+
+Colors and descriptions are synchronized with prow's [label definitions](https://github.com/kubernetes/test-infra/blob/master/label_sync/labels.yaml); labels without a well-known definition are created with GitHub's default gray color and an empty description. `LABELS` only controls which labels are allowed to be created, as a list of entries, one per line. Each entry is either an exact label name, or a prefix ending in a slash (e.g. `kind/`) which allows any label with that prefix:
+
+```yaml
+LABELS: |-
+  kind/
+  area/network
+  priority/critical
+```
+
+When `LABELS` is not set, it defaults to the well-known prow labels (e.g. `lgtm`, `approved`, `do-not-merge/hold`, `kind/bug`, `size/*`, `needs-kind`) plus GitHub's built-in labels (e.g. `bug`, `question`); see [`bin/ensure-labels.sh`](bin/ensure-labels.sh) for the full default list. Setting `LABELS` replaces the default list, so include any of the default labels you still want the bot to be able to create.
 
 ### Work in progress
 

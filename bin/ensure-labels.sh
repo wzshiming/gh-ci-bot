@@ -8,12 +8,79 @@
 # https://github.com/kubernetes/test-infra/blob/master/label_sync/labels.yaml
 # Labels not defined by prow fall back to GitHub's defaults.
 #
+# Which labels are allowed to be created is controlled by the LABELS
+# environment variable, a list of entries, one per line. Each entry is
+# either an exact label name, or a prefix ending in a slash (e.g. kind/)
+# which allows any label with that prefix. Labels not matching any entry
+# are never created, so arbitrary labels (e.g. typos in /label commands)
+# do not pollute the repository. When LABELS is not set, it defaults to
+# the well-known prow and GitHub labels listed below; setting LABELS
+# replaces the default list.
+#
 # Usage:
 #   ensure-labels.sh <label>...
 
 if [[ "${#}" -eq 0 ]]; then
   exit 0
 fi
+
+DEFAULT_LABELS="$(
+  cat <<'EOF'
+lgtm
+approved
+do-not-merge
+do-not-merge/hold
+do-not-merge/work-in-progress
+kind/api-change
+kind/bug
+kind/cleanup
+kind/deprecation
+kind/documentation
+kind/failing-test
+kind/feature
+kind/flake
+kind/regression
+kind/support
+needs-kind
+size/XS
+size/S
+size/M
+size/L
+size/XL
+size/XXL
+bug
+documentation
+duplicate
+enhancement
+good first issue
+help wanted
+invalid
+question
+wontfix
+EOF
+)"
+
+LABELS="${LABELS-${DEFAULT_LABELS}}"
+
+# label_allowed checks whether a label matches an entry in LABELS and is
+# thus allowed to be created. Entries ending in a slash (e.g. kind/) are
+# prefixes matching any label starting with them; other entries match the
+# label name exactly.
+function label_allowed() {
+  while IFS= read -r entry; do
+    if [[ -z "${entry}" ]]; then
+      continue
+    fi
+    if [[ "${entry}" == */ ]]; then
+      if [[ "${1}" == "${entry}"?* ]]; then
+        return 0
+      fi
+    elif [[ "${1}" == "${entry}" ]]; then
+      return 0
+    fi
+  done <<<"${LABELS}"
+  return 1
+}
 
 # label_color prints the well-known color for a label, falling back to
 # GitHub's default gray for labels without a dedicated color.
@@ -210,6 +277,10 @@ for label in "${@}"; do
     continue
   fi
   if grep -qxF "${label}" <<<"${existing}"; then
+    continue
+  fi
+  if ! label_allowed "${label}"; then
+    echo "[SKIP] Label \`${label//\@/}\` is not listed in LABELS, not creating it."
     continue
   fi
   echo "Create label ${label//\@/} in ${GH_REPOSITORY}"
