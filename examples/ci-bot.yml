@@ -166,7 +166,7 @@ jobs:
 
       - name: PR Closed
         uses: wzshiming/gh-ci-bot@v1.5.0
-        if: ${{ github.event_name == 'pull_request_target' && github.event.action == 'closed' }}
+        if: ${{ github.event_name == 'pull_request_target' && github.event.action == 'closed' && github.event.pull_request.merged }}
         env:
           LOGIN: ${{ github.event.pull_request.user.login }}
           AUTHOR: ${{ github.event.pull_request.user.login }}
