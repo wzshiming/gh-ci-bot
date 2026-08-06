@@ -32,6 +32,10 @@ It supports [Kubernetes Prow OWNERS](https://github.com/kubernetes/test-infra/tr
 | `/rebase`                         | `/rebase`                                              | Rebase the this PR to the latest of the branch                                                                                                                                       | rebase                 |
 | `/cherry-pick [branch]`           | `/cherry-pick release-1.0`                             | Cherry-pick a merged PR to a target branch and create a new PR                                                                                                                       | cherry-pick            |
 
+### Branch Cleaner
+
+When the workflow handles the `closed` event of `pull_request_target` (see the [example](https://github.com/wzshiming/gh-ci-bot/blob/master/examples/ci-bot.yml)), the bot automatically deletes the source branch of a merged PR, mirroring prow's branchcleaner plugin. Only branches in the same repository are deleted; branches on forks are never touched.
+
 ### Troubleshooting
 
 - `/cherry-pick`

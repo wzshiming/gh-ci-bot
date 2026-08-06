@@ -56,6 +56,9 @@ function main() {
         echo "PR synchronized, removing lgtm label"
         remove-labels.sh lgtm
         sync_approve_status
+    elif [[ "${TYPE}" == "closed" ]]; then
+        echo "PR closed, cleaning up source branch"
+        branch-cleaner.sh
     fi
 }
 

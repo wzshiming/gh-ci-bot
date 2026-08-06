@@ -22,6 +22,7 @@ on:
     types:
       - opened
       - synchronize
+      - closed
 
 env:
   # This plugins is for anyone who can use it
@@ -162,6 +163,18 @@ jobs:
           AUTHOR_ASSOCIATION: ${{ github.event.pull_request.author_association }}
           ISSUE_KIND: pr
           TYPE: synchronize
+
+      - name: PR Closed
+        uses: wzshiming/gh-ci-bot@v1.5.0
+        if: ${{ github.event_name == 'pull_request_target' && github.event.action == 'closed' }}
+        env:
+          LOGIN: ${{ github.event.pull_request.user.login }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
+          MESSAGE: ""
+          ISSUE_NUMBER: ${{ github.event.pull_request.number }}
+          AUTHOR_ASSOCIATION: ${{ github.event.pull_request.author_association }}
+          ISSUE_KIND: pr
+          TYPE: closed
 
       - name: Issue Commented
         uses: wzshiming/gh-ci-bot@v1.5.0
