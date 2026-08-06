@@ -103,6 +103,16 @@ env:
   REQUIRE_MATCHING_LABELS: |-
     needs-kind ^kind/
 
+  # Additional labels the bot is allowed to create, as a YAML list. Each
+  # entry is either a plain label name or a mapping with name and optional
+  # color and description. Labels not known to the bot and not listed here
+  # are never created automatically.
+  # LABELS: |-
+  #   - name: area/network
+  #     color: 0052cc
+  #     description: Issues or PRs related to networking.
+  #   - priority/critical
+
   DETAILS: |-
 
     <details>

@@ -7,8 +7,16 @@
 #
 # Colors and descriptions are synchronized with prow's label definitions:
 # https://github.com/kubernetes/test-infra/blob/master/label_sync/labels.yaml
-# Labels not known to the bot are never created, so arbitrary labels
-# (e.g. typos in /label commands) do not pollute the repository.
+# Additional labels can be allowed via the LABELS environment variable,
+# a YAML list of label definitions:
+#   - name: area/network
+#     color: 0052cc
+#     description: Issues or PRs related to networking.
+#   - priority/critical
+# Entries given as plain strings use GitHub's default gray color and an
+# empty description. Labels not known to the bot and not listed in LABELS
+# are never created, so arbitrary labels (e.g. typos in /label commands)
+# do not pollute the repository.
 #
 # Usage:
 #   ensure-labels.sh <label>...
@@ -201,6 +209,26 @@ function label_description() {
 
 existing="$(gh label -R "${GH_REPOSITORY}" list --limit 1000 --json name --jq '.[].name')"
 
+# user_label_color prints the color defined for a label in the LABELS
+# environment variable (a YAML list of label definitions), falling back to
+# GitHub's default gray for entries listed without a color. Prints nothing
+# if the label is not listed.
+function user_label_color() {
+  if [[ -z "${LABELS:-}" ]]; then
+    return 0
+  fi
+  _label="${1}" yq e '.[] | select((.name // .) == strenv(_label)) | .color // "ededed"' <<<"${LABELS}" 2>/dev/null | head -n 1
+}
+
+# user_label_description prints the description defined for a label in the
+# LABELS environment variable, falling back to an empty description.
+function user_label_description() {
+  if [[ -z "${LABELS:-}" ]]; then
+    return 0
+  fi
+  _label="${1}" yq e '.[] | select((.name // .) == strenv(_label)) | .description // ""' <<<"${LABELS}" 2>/dev/null | head -n 1
+}
+
 for label in "${@}"; do
   if [[ -z "${label}" ]]; then
     continue
@@ -209,11 +237,16 @@ for label in "${@}"; do
     continue
   fi
   color="$(label_color "${label}")"
+  description="$(label_description "${label}")"
+  if [[ -z "${color}" ]]; then
+    color="$(user_label_color "${label}")"
+    description="$(user_label_description "${label}")"
+  fi
   if [[ -z "${color}" ]]; then
     echo "[SKIP] Label \`${label//\@/}\` is not a well-known label, not creating it."
     continue
   fi
   echo "Create label ${label//\@/} in ${GH_REPOSITORY}"
-  gh label -R "${GH_REPOSITORY}" create "${label}" --color "${color}" --description "$(label_description "${label}")" ||
+  gh label -R "${GH_REPOSITORY}" create "${label}" --color "${color}" --description "${description}" ||
     echo "[FAIL] Failed to create label \`${label//\@/}\`."
 done
