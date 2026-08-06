@@ -76,6 +76,14 @@ function sync_size_label() {
     fi
 }
 
+# auto_request_reviewers requests reviewers from OWNERS files when a PR is
+# opened, mirroring prow's blunderbuss plugin.
+function auto_request_reviewers() {
+    if [[ "${ISSUE_KIND}" == "pr" ]]; then
+        blunderbuss.sh
+    fi
+}
+
 function main() {
     if [[ "${TYPE}" == "created" ]]; then
         echo "Greetings to ${LOGIN}!"
@@ -83,6 +91,7 @@ function main() {
         sync_wip_label
         sync_size_label
         sync_approve_status
+        auto_request_reviewers
         echo "Response to action"
         response.sh
     elif [[ "${TYPE}" == "comment" ]]; then

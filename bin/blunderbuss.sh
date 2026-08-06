@@ -1,0 +1,194 @@
+#!/usr/bin/env bash
+
+# blunderbuss.sh - Automatically request reviewers when a PR is opened,
+# mirroring prow's blunderbuss plugin (like /auto-cc but without a manual
+# trigger). Reviewers are picked from the OWNERS files nearest to the
+# changed files, falling back to the REVIEWERS environment variable.
+#
+# Configuration:
+#   BLUNDERBUSS_REVIEWER_COUNT - number of reviewers to request (default 2,
+#                                set to 0 to disable)
+
+if [[ "${ISSUE_KIND}" != "pr" ]]; then
+    exit 0
+fi
+
+count="${BLUNDERBUSS_REVIEWER_COUNT:-2}"
+if ! [[ "${count}" =~ ^[0-9]+$ ]] || [[ "${count}" -eq 0 ]]; then
+    echo "Blunderbuss is disabled (BLUNDERBUSS_REVIEWER_COUNT=${BLUNDERBUSS_REVIEWER_COUNT:-})"
+    exit 0
+fi
+
+# Mirror prow's blunderbuss default of ignoring draft PRs.
+if [[ "$(gh pr -R "${GH_REPOSITORY}" view "${ISSUE_NUMBER}" --json isDraft --jq '.isDraft')" == "true" ]]; then
+    echo "Skipping draft PR"
+    exit 0
+fi
+
+branch="${branch:-$(gh api /repos/${GH_REPOSITORY} | jq -r '.default_branch')}"
+
+# fetch_reviewers_from_file prints the reviewers listed in the OWNERS file
+# of the given directory ("" for the repository root), empty on failure.
+function fetch_reviewers_from_file() {
+    local dir="${1}"
+    local path
+    local content
+    if [[ -z "${dir}" ]]; then
+        path="OWNERS"
+    else
+        path="${dir}/OWNERS"
+    fi
+
+    echo "Fetch ${path} from ${GH_REPOSITORY}@${branch}" >&2
+    if ! content="$(gh api \
+        --method GET \
+        -H "Accept: application/vnd.github.raw+json" \
+        "/repos/${GH_REPOSITORY}/contents/${path}" \
+        -f "ref=${branch}" 2>/dev/null)"; then
+        return 0
+    fi
+
+    printf '%s\n' "${content}" | yq e '.reviewers // [] | .[]' 2>/dev/null
+}
+
+declare -A dir_reviewers
+declare -A dir_checked
+
+# load_dir_reviewers fetches the OWNERS file of a directory once and caches
+# its reviewers. The root directory is ".". Must not be called in a subshell.
+function load_dir_reviewers() {
+    local dir="${1}"
+    if [[ -n "${dir_checked[${dir}]:-}" ]]; then
+        return 0
+    fi
+    dir_checked["${dir}"]=1
+    local fetch_dir=""
+    if [[ "${dir}" != "." ]]; then
+        fetch_dir="${dir}"
+    fi
+    dir_reviewers["${dir}"]="$(fetch_reviewers_from_file "${fetch_dir}" | tr '\n' ' ')"
+}
+
+# get_dir_reviewers prints the cached reviewers of a directory.
+function get_dir_reviewers() {
+    echo "${dir_reviewers[${1}]:-}"
+}
+
+# get_parent_dir prints the parent of a directory, "." for top-level
+# directories and nothing for ".".
+function get_parent_dir() {
+    local dir="${1}"
+    if [[ "${dir}" == "." ]]; then
+        echo ""
+    elif [[ "${dir}" =~ "/" ]]; then
+        echo "${dir%/*}"
+    else
+        echo "."
+    fi
+}
+
+# get_area_for_file walks up from the changed file to the nearest directory
+# whose OWNERS file lists at least one reviewer. Sets _FILE_AREA, empty if
+# no OWNERS file with reviewers is found.
+function get_area_for_file() {
+    local file="${1}"
+    local dir
+    _FILE_AREA=""
+    if [[ "${file}" =~ "/" ]]; then
+        dir="${file%/*}"
+    else
+        dir="."
+    fi
+
+    while [[ -n "${dir}" ]]; do
+        load_dir_reviewers "${dir}"
+        if [[ -n "$(get_dir_reviewers "${dir}")" ]]; then
+            _FILE_AREA="${dir}"
+            return 0
+        fi
+        dir="$(get_parent_dir "${dir}")"
+    done
+}
+
+files="$(gh api \
+    --paginate \
+    "/repos/${GH_REPOSITORY}/pulls/${ISSUE_NUMBER}/files" \
+    --jq '.[].filename' |
+    sort -u)"
+
+echo "Modify files:" >&2
+for f in ${files}; do
+    echo "- ${f}" >&2
+done
+
+# Collect the areas (nearest directories with reviewers) of the changed files.
+areas=""
+for f in ${files}; do
+    get_area_for_file "${f}"
+    if [[ -n "${_FILE_AREA}" ]]; then
+        areas="${areas}
+${_FILE_AREA}"
+    fi
+done
+areas="$(echo "${areas}" | sed '/^$/d' | sort -u)"
+
+picked=()
+
+function in_picked() {
+    local user="${1}"
+    if [[ "${user}" == "${AUTHOR}" ]]; then
+        return 0
+    fi
+    for u in "${picked[@]}"; do
+        if [[ "${user}" == "${u}" ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+# Pick reviewers round-robin across areas so every changed area gets a
+# reviewer before any area gets a second one, until count is reached.
+while [[ "${#picked[@]}" -lt "${count}" && -n "${areas}" ]]; do
+    added=0
+    for area in ${areas}; do
+        if [[ "${#picked[@]}" -ge "${count}" ]]; then
+            break
+        fi
+        for user in $(get_dir_reviewers "${area}" | tr ' ' '\n' | sort --random-sort); do
+            if ! in_picked "${user}"; then
+                picked+=("${user}")
+                added=1
+                echo "Add ${user} for ${area}" >&2
+                break
+            fi
+        done
+    done
+    if [[ "${added}" -eq 0 ]]; then
+        break
+    fi
+done
+
+# Fill up from the REVIEWERS environment variable if needed.
+if [[ "${#picked[@]}" -lt "${count}" ]]; then
+    for user in $(echo "${REVIEWERS:-}" | tr ' ' '\n' | sed '/^$/d' | sort -u | sort --random-sort); do
+        if [[ "${#picked[@]}" -ge "${count}" ]]; then
+            break
+        fi
+        if ! in_picked "${user}"; then
+            picked+=("${user}")
+            echo "Add ${user} from REVIEWERS" >&2
+        fi
+    done
+fi
+
+if [[ "${#picked[@]}" -eq 0 ]]; then
+    echo "No reviewers found to request, skipping" >&2
+    exit 0
+fi
+
+login="$(printf '%s\n' "${picked[@]}" | tr '\n' ',' | sed 's/,$//')"
+
+echo "Auto-requesting reviews from ${login}."
+
+add-reviewer.sh "${login}"
