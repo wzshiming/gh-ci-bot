@@ -7,13 +7,15 @@
 # root, represented as ".") whose OWNERS file lists at least one approver.
 # For each area, the approvers of the area itself and of all its parent
 # directories are collected, so owners of a parent directory can always
-# approve nested areas. Reviewers are collected from every OWNERS file
-# visited along the way. The collected values are merged with the
-# REVIEWERS and APPROVERS environment variables.
+# approve nested areas. Reviewers and labels are collected from every
+# OWNERS file visited along the way. The collected values are merged with
+# the REVIEWERS and APPROVERS environment variables.
 #
 # Exports:
 #   OWNERS_AREAS          - newline separated list of changed areas
 #   OWNERS_AREA_APPROVERS - lines of "<area> <approver>...", one per area
+#   OWNERS_LABELS         - newline separated list of labels declared in
+#                           the OWNERS files of the changed directories
 
 branch="${branch:-$(gh api /repos/${GH_REPOSITORY} | jq -r '.default_branch')}"
 export branch
@@ -51,10 +53,16 @@ function get_owners_approvers() {
     echo "$1" | yq e '.approvers // [] | .[]' 2>/dev/null
 }
 
+# get_owners_labels extracts labels from an OWNERS file content.
+function get_owners_labels() {
+    echo "$1" | yq e '.labels // [] | .[]' 2>/dev/null
+}
+
 # Caches for directories already checked. The root directory is ".".
 _OWNERS_CHECKED=""
 _OWNERS_DIR_APPROVERS="" # lines: "<dir> <user>..."
 _OWNERS_DIR_REVIEWERS="" # lines: "<dir> <user>..."
+_OWNERS_LABELS=""        # lines: one label per line (labels may contain spaces)
 
 # get_parent_dir prints the parent of a directory, "." for top-level
 # directories and nothing for ".".
@@ -89,9 +97,15 @@ ${dir}"
     local content
     content="$(fetch_owners_file "${fetch_dir}")"
 
-    local a r
+    local a r l
     a="$(get_owners_approvers "${content}")"
     r="$(get_owners_reviewers "${content}")"
+    l="$(get_owners_labels "${content}")"
+
+    if [[ -n "${l}" ]]; then
+        _OWNERS_LABELS="${_OWNERS_LABELS}
+${l}"
+    fi
 
     if [[ "${dir}" == "." ]]; then
         a="${a}
@@ -207,6 +221,9 @@ ${_FILE_AREA}"
 
     OWNERS_APPROVERS="$(echo ${all_approvers} | tr ' ' '\n' | sed '/^$/d' | sort -u)"
     OWNERS_REVIEWERS="$(echo "${_OWNERS_DIR_REVIEWERS}" | sed '/^$/d' | awk '{ $1 = ""; print substr($0, 2) }' | tr ' ' '\n' | sed '/^$/d' | sort -u)"
+
+    OWNERS_LABELS="$(echo "${_OWNERS_LABELS}" | sed '/^$/d' | sort -u)"
+    export OWNERS_LABELS
 
     # Merge with environment variables
     if [[ -n "${OWNERS_REVIEWERS}" ]]; then
