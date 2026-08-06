@@ -9,8 +9,24 @@ branch="$(gh api /repos/${GH_REPOSITORY} | jq -r '.default_branch')"
 
 function get_reviewer_from_file() {
     local dir="${1}"
-    echo curl -fsSL "https://github.com/${GH_REPOSITORY}/raw/${branch}/${dir}/OWNERS" >&2
-    curl -fsSL "https://github.com/${GH_REPOSITORY}/raw/${branch}/${dir}/OWNERS" | yq e '.reviewers | .[]'
+    local path
+    local content
+    if [[ -z "${dir}" ]]; then
+        path="OWNERS"
+    else
+        path="${dir}/OWNERS"
+    fi
+
+    echo "Fetch ${path} from ${GH_REPOSITORY}@${branch}" >&2
+    if ! content="$(gh api \
+        --method GET \
+        -H "Accept: application/vnd.github.raw+json" \
+        "/repos/${GH_REPOSITORY}/contents/${path}" \
+        -f "ref=${branch}" 2>/dev/null)"; then
+        return 0
+    fi
+
+    printf '%s\n' "${content}" | yq e '.reviewers | .[]'
 }
 
 user_pool=()
@@ -93,7 +109,11 @@ function get_reviewers() {
     done
 }
 
-file="$(curl -fsSL "https://github.com/${GH_REPOSITORY}/pull/${ISSUE_NUMBER}.patch" | grep '^[-\+]\{3\} [ab]' | sed "s#--- a/##g" | sed "s#+++ b/##g" | sort -u)"
+file="$(gh api \
+    --paginate \
+    "/repos/${GH_REPOSITORY}/pulls/${ISSUE_NUMBER}/files" \
+    --jq '.[].filename' |
+    sort -u)"
 
 echo "Modify files:" >&2
 for f in ${file}; do
