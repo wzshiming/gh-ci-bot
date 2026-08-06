@@ -114,9 +114,7 @@ env:
   # labels (see bin/ensure-labels.sh). Labels not matching any entry are
   # never created automatically.
   # LABELS: |-
-  #   kind/
-  #   area/network
-  #   priority/critical
+  #   kind/docs
 
   DETAILS: |-
 
