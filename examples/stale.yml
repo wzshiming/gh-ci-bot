@@ -1,0 +1,36 @@
+# Optional scheduled workflow that ages inactive issues and PRs like the
+# Kubernetes stale bot: after a period of inactivity items are marked
+# 'lifecycle/stale', then 'lifecycle/rotten', and finally closed.
+# Items labeled 'lifecycle/frozen' are never aged.
+name: Stale Bot
+on:
+  schedule:
+    # Run once a day
+    - cron: "0 1 * * *"
+  workflow_dispatch: {}
+
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GH_REPOSITORY: ${{ github.repository }}
+
+  # Days of inactivity before an item is marked 'lifecycle/stale'.
+  DAYS_UNTIL_STALE: 90
+  # Additional days of inactivity before a stale item is marked 'lifecycle/rotten'.
+  DAYS_UNTIL_ROTTEN: 30
+  # Additional days of inactivity before a rotten item is closed.
+  DAYS_UNTIL_CLOSE: 30
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  stale:
+    name: Stale
+    runs-on: ubuntu-latest
+    steps:
+      - name: Age stale issues and PRs
+        uses: wzshiming/gh-ci-bot@v1.5.0
+        env:
+          TYPE: periodic

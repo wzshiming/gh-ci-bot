@@ -6,6 +6,20 @@ ROOT="$(realpath -m ${ROOT})"
 PATH="${ROOT}/bin:${PATH}"
 
 function check_args() {
+    if [[ "${TYPE}" == "" ]]; then
+        echo "No type"
+        exit 1
+    fi
+
+    if [[ "${GH_REPOSITORY}" == "" ]]; then
+        echo "No repository specified"
+        exit 1
+    fi
+
+    if [[ "${TYPE}" == "periodic" ]]; then
+        return 0
+    fi
+
     if [[ "${LOGIN}" == "" ]]; then
         echo "No login specified"
         exit 1
@@ -18,16 +32,6 @@ function check_args() {
 
     if [[ "${ISSUE_NUMBER}" == "" ]]; then
         echo "No issue number specified"
-        exit 1
-    fi
-
-    if [[ "${GH_REPOSITORY}" == "" ]]; then
-        echo "No repository specified"
-        exit 1
-    fi
-
-    if [[ "${TYPE}" == "" ]]; then
-        echo "No type"
         exit 1
     fi
 }
@@ -97,6 +101,9 @@ function main() {
     elif [[ "${TYPE}" == "edited" ]]; then
         echo "PR edited, syncing work-in-progress label"
         sync_wip_label
+    elif [[ "${TYPE}" == "periodic" ]]; then
+        echo "Periodic run, aging stale issues and PRs"
+        lifecycle-stale.sh
     fi
 }
 

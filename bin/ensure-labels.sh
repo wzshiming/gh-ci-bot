@@ -40,6 +40,15 @@ function label_color() {
   kind/*)
     echo "c7def8"
     ;;
+  lifecycle/frozen)
+    echo "d3e2f0"
+    ;;
+  lifecycle/stale)
+    echo "795548"
+    ;;
+  lifecycle/rotten)
+    echo "604460"
+    ;;
   size/XS)
     echo "009900"
     ;;
@@ -145,6 +154,15 @@ function label_description() {
     ;;
   kind/*)
     echo "Categorizes issue or PR as related to ${1#kind/}."
+    ;;
+  lifecycle/frozen)
+    echo "Indicates that an issue or PR should not be auto-closed due to staleness."
+    ;;
+  lifecycle/stale)
+    echo "Denotes an issue or PR has remained open with no activity and has become stale."
+    ;;
+  lifecycle/rotten)
+    echo "Denotes an issue or PR that has aged beyond stale and will be auto-closed."
     ;;
   size/XS)
     echo "Denotes a PR that changes 0-9 lines."
