@@ -27,7 +27,7 @@ function label_color() {
   approved)
     echo "0ffa16"
     ;;
-  do-not-merge | do-not-merge/*)
+  do-not-merge | do-not-merge/hold | do-not-merge/work-in-progress)
     echo "e11d21"
     ;;
   kind/api-change | kind/bug | kind/deprecation | kind/failing-test | kind/regression)
@@ -39,7 +39,7 @@ function label_color() {
   kind/support)
     echo "d455d0"
     ;;
-  kind/*)
+  kind/cleanup | kind/documentation | kind/feature)
     echo "c7def8"
     ;;
   size/XS)
@@ -112,9 +112,6 @@ function label_description() {
   do-not-merge/work-in-progress)
     echo "Indicates that a PR should not merge because it is a work in progress."
     ;;
-  do-not-merge/*)
-    echo "Indicates that a PR should not merge."
-    ;;
   kind/api-change)
     echo "Categorizes issue or PR as related to adding, removing, or otherwise changing an API"
     ;;
@@ -144,9 +141,6 @@ function label_description() {
     ;;
   kind/support)
     echo "Categorizes issue or PR as a support question."
-    ;;
-  kind/*)
-    echo "Categorizes issue or PR as related to ${1#kind/}."
     ;;
   size/XS)
     echo "Denotes a PR that changes 0-9 lines."
