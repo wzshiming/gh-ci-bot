@@ -9,11 +9,13 @@
 # Labels not defined by prow fall back to GitHub's defaults.
 #
 # Which labels are allowed to be created is controlled by the LABELS
-# environment variable, a list of label names, one per line. Labels not
-# listed there are never created, so arbitrary labels (e.g. typos in
-# /label commands) do not pollute the repository. When LABELS is not set,
-# it defaults to the well-known prow and GitHub labels listed below;
-# setting LABELS replaces the default list.
+# environment variable, a list of entries, one per line. Each entry is
+# either an exact label name, or a prefix ending in a slash (e.g. kind/)
+# which allows any label with that prefix. Labels not matching any entry
+# are never created, so arbitrary labels (e.g. typos in /label commands)
+# do not pollute the repository. When LABELS is not set, it defaults to
+# the well-known prow and GitHub labels listed below; setting LABELS
+# replaces the default list.
 #
 # Usage:
 #   ensure-labels.sh <label>...
@@ -60,10 +62,24 @@ EOF
 
 LABELS="${LABELS-${DEFAULT_LABELS}}"
 
-# label_allowed checks whether a label is listed in LABELS and thus
-# allowed to be created.
+# label_allowed checks whether a label matches an entry in LABELS and is
+# thus allowed to be created. Entries ending in a slash (e.g. kind/) are
+# prefixes matching any label starting with them; other entries match the
+# label name exactly.
 function label_allowed() {
-  grep -qxF "${1}" <<<"${LABELS}"
+  while IFS= read -r entry; do
+    if [[ -z "${entry}" ]]; then
+      continue
+    fi
+    if [[ "${entry}" == */ ]]; then
+      if [[ "${1}" == "${entry}"?* ]]; then
+        return 0
+      fi
+    elif [[ "${1}" == "${entry}" ]]; then
+      return 0
+    fi
+  done <<<"${LABELS}"
+  return 1
 }
 
 # label_color prints the well-known color for a label, falling back to

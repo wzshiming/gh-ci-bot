@@ -38,10 +38,11 @@ It supports [Kubernetes Prow OWNERS](https://github.com/kubernetes/test-infra/tr
 
 Whenever the bot adds a label (via commands like `/label`, `/kind`, `/lgtm`, `/approve`, OWNERS `labels:`, or automatic labels like `do-not-merge/work-in-progress`), any label that does not yet exist in the repository is created automatically, provided it is listed in the `LABELS` environment variable. Labels that are not listed there are never created automatically (so a typo like `/label doocumentation` does not pollute the repository); they are only applied if they already exist in the repository.
 
-Colors and descriptions are synchronized with prow's [label definitions](https://github.com/kubernetes/test-infra/blob/master/label_sync/labels.yaml); labels without a well-known definition are created with GitHub's default gray color and an empty description. `LABELS` only controls which labels are allowed to be created, as a list of label names, one per line:
+Colors and descriptions are synchronized with prow's [label definitions](https://github.com/kubernetes/test-infra/blob/master/label_sync/labels.yaml); labels without a well-known definition are created with GitHub's default gray color and an empty description. `LABELS` only controls which labels are allowed to be created, as a list of entries, one per line. Each entry is either an exact label name, or a prefix ending in a slash (e.g. `kind/`) which allows any label with that prefix:
 
 ```yaml
 LABELS: |-
+  kind/
   area/network
   priority/critical
 ```
