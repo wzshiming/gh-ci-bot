@@ -8,6 +8,11 @@ on:
     types:
       - created
 
+  # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request_review
+  pull_request_review:
+    types:
+      - submitted
+
   issues:
     types:
       - opened
@@ -182,6 +187,18 @@ jobs:
           MESSAGE: ${{ github.event.comment.body }}
           ISSUE_NUMBER: ${{ github.event.pull_request.number }}
           AUTHOR_ASSOCIATION: ${{ github.event.comment.author_association }}
+          ISSUE_KIND: pr
+          TYPE: comment
+
+      - name: PR Review Submitted
+        uses: ./
+        if: ${{ github.event_name == 'pull_request_review' }}
+        env:
+          LOGIN: ${{ github.event.review.user.login }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
+          MESSAGE: ${{ github.event.review.body }}
+          ISSUE_NUMBER: ${{ github.event.pull_request.number }}
+          AUTHOR_ASSOCIATION: ${{ github.event.review.author_association }}
           ISSUE_KIND: pr
           TYPE: comment
 
