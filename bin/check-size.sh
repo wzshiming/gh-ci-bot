@@ -6,16 +6,9 @@
 # updating the label whenever the PR changes.
 #
 # Generated files are excluded from the count, like prow's size plugin:
-#   - files marked "linguist-generated" in the ".gitattributes" file at the
-#     repository root (the same attribute GitHub uses to hide generated
-#     files in diffs)
-#   - files matched by an optional ".generated_files" file at the
-#     repository root. Each non-comment line of that file has the form
-#     "<kind> <value>" where <kind> is one of:
-#       file-name   - matches files with the given base name
-#       path        - matches the exact file path
-#       file-prefix - matches files whose base name starts with the value
-#       path-prefix - matches files whose path starts with the value
+# files marked "linguist-generated" in the ".gitattributes" file at the
+# repository root (the same attribute GitHub uses to hide generated files
+# in diffs) are ignored.
 
 if [[ "${ISSUE_KIND}" != "pr" ]]; then
     return 0 2>/dev/null || exit 0
@@ -38,39 +31,6 @@ function size_label() {
     else
         echo "size/XXL"
     fi
-}
-
-# is_generated_file checks a file path against the rules loaded from
-# .generated_files. Rules are provided via the generated_rules variable.
-function is_generated_file() {
-    local file="$1"
-    local base="${file##*/}"
-    local kind value
-    while read -r kind value; do
-        case "${kind}" in
-        file-name)
-            if [[ "${base}" == "${value}" ]]; then
-                return 0
-            fi
-            ;;
-        path)
-            if [[ "${file}" == "${value}" ]]; then
-                return 0
-            fi
-            ;;
-        file-prefix)
-            if [[ "${base}" == "${value}"* ]]; then
-                return 0
-            fi
-            ;;
-        path-prefix)
-            if [[ "${file}" == "${value}"* ]]; then
-                return 0
-            fi
-            ;;
-        esac
-    done <<<"${generated_rules}"
-    return 1
 }
 
 # gitattributes_pattern_to_regex converts a gitattributes (gitignore-style)
@@ -160,9 +120,6 @@ function fetch_root_file() {
 
 base_branch="$(gh pr -R "${GH_REPOSITORY}" view "${ISSUE_NUMBER}" --json baseRefName --jq '.baseRefName')"
 
-generated_rules="$(fetch_root_file ".generated_files" |
-    sed 's/#.*//' | sed '/^[[:space:]]*$/d')"
-
 gitattributes_rules="$(fetch_root_file ".gitattributes" |
     grep 'linguist-generated')"
 
@@ -171,12 +128,8 @@ while read -r additions deletions file; do
     if [[ -z "${file}" ]]; then
         continue
     fi
-    if [[ -n "${generated_rules}" ]] && is_generated_file "${file}"; then
-        echo "Ignoring generated file: ${file}"
-        continue
-    fi
     if [[ -n "${gitattributes_rules}" ]] && is_linguist_generated "${file}"; then
-        echo "Ignoring linguist-generated file: ${file}"
+        echo "Ignoring generated file: ${file}"
         continue
     fi
     total=$((total + additions + deletions))

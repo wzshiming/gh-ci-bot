@@ -45,26 +45,11 @@ Like prow's `wip` plugin, the bot automatically applies the `do-not-merge/work-i
 
 Like prow's `size` plugin, the bot automatically labels every PR with one of `size/XS`, `size/S`, `size/M`, `size/L`, `size/XL` or `size/XXL` based on the total number of changed lines (additions + deletions), updating the label whenever new commits are pushed. The thresholds mirror prow's defaults: XS < 10, S < 30, M < 100, L < 500, XL < 1000, XXL ≥ 1000.
 
-Generated files are excluded from the count, mirroring prow's behavior:
-
-- Files marked [`linguist-generated`](https://docs.github.com/en/repositories/working-with-files/managing-files/customizing-how-changed-files-appear-on-github) in the `.gitattributes` file at the repository root — the same attribute GitHub itself uses to hide generated files in diffs:
+Generated files are excluded from the count: files marked [`linguist-generated`](https://docs.github.com/en/repositories/working-with-files/managing-files/customizing-how-changed-files-appear-on-github) in the `.gitattributes` file at the repository root — the same attribute GitHub itself uses to hide generated files in diffs — are ignored:
 
 ```
 *.pb.go linguist-generated=true
 generated/** linguist-generated=true
-```
-
-- Files matched by an optional `.generated_files` file at the repository root. Each non-comment line has the form `<kind> <value>`, where `<kind>` is one of `file-name`, `path`, `file-prefix` or `path-prefix`:
-
-```
-# Exclude all files named zz_generated.deepcopy.go
-file-name zz_generated.deepcopy.go
-# Exclude a specific file
-path api/openapi-spec/swagger.json
-# Exclude files whose name starts with a prefix
-file-prefix zz_generated.
-# Exclude everything under a directory
-path-prefix vendor/
 ```
 
 ### Troubleshooting
