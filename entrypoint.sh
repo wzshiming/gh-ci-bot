@@ -32,19 +32,30 @@ function check_args() {
     fi
 }
 
+# sync_approve_status recomputes the per-area approval state for PRs.
+# Approvals are sticky across pushes, mirroring prow's approve plugin.
+function sync_approve_status() {
+    if [[ "${ISSUE_KIND}" == "pr" ]]; then
+        source "${ROOT}/bin/owners.sh"
+        load_owners_for_pr
+        approve-status.sh sync
+    fi
+}
+
 function main() {
     if [[ "${TYPE}" == "created" ]]; then
         echo "Greetings to ${LOGIN}!"
         greeting.sh
+        sync_approve_status
         echo "Response to action"
         response.sh
     elif [[ "${TYPE}" == "comment" ]]; then
         echo "Response to action"
         response.sh
     elif [[ "${TYPE}" == "synchronize" ]]; then
-        echo "PR synchronized, removing lgtm and approved labels"
+        echo "PR synchronized, removing lgtm label"
         remove-labels.sh lgtm
-        remove-labels.sh approved
+        sync_approve_status
     fi
 }
 

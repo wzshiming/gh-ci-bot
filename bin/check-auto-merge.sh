@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-# Check if a PR has both "lgtm" and "approved" labels, and trigger auto-merge if so.
+# Check if a PR has both "lgtm" and "approved" labels and every changed
+# area is approved, and trigger auto-merge if so.
 
 if [[ "${ISSUE_KIND}" != "pr" ]]; then
     return 0 2>/dev/null || exit 0
@@ -21,6 +22,11 @@ for label in ${labels}; do
 done
 
 if [[ "${has_lgtm}" == "true" && "${has_approved}" == "true" ]]; then
-    echo "PR has both 'lgtm' and 'approved' labels. Auto-merging."
+    if ! approve-status.sh check; then
+        echo "PR has both 'lgtm' and 'approved' labels, but not every area is approved. Reconciling."
+        approve-status.sh sync
+        return 0 2>/dev/null || exit 0
+    fi
+    echo "PR has both 'lgtm' and 'approved' labels and all areas are approved. Auto-merging."
     pr-merge.sh
 fi
