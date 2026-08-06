@@ -104,10 +104,11 @@ env:
   REQUIRE_MATCHING_LABELS: |-
     needs-kind ^kind/
 
-  # Additional labels the bot is allowed to create, as a YAML list. Each
-  # entry is either a plain label name or a mapping with name and optional
-  # color and description. Labels not known to the bot and not listed here
-  # are never created automatically.
+  # The labels the bot is allowed to create, as a YAML list. Each entry is
+  # either a plain label name or a mapping with name and optional color and
+  # description. Labels not defined here are never created automatically.
+  # Defaults to the well-known prow and GitHub labels (see
+  # bin/ensure-labels.sh); setting this replaces the default list.
   # LABELS: |-
   #   - name: area/network
   #     color: 0052cc
