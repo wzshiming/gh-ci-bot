@@ -74,9 +74,57 @@ labels:
 
 When an `OWNERS` file is present, the listed users are merged with any `REVIEWERS` and `APPROVERS` defined in the workflow environment variables. Labels declared under `labels:` are automatically applied to pull requests that touch files in the corresponding directories (mirroring prow's [owners-label](https://github.com/kubernetes/test-infra/tree/master/prow) plugin).
 
+### Advanced OWNERS features
+
+Beyond plain lists, the bot supports the advanced [Kubernetes OWNERS](https://www.kubernetes.dev/docs/guide/owners/) features:
+
+- **`OWNERS_ALIASES`**: an `OWNERS_ALIASES` file at the repository root can define named groups of users. Aliases can be used anywhere a user is expected in `reviewers`, `approvers` and `emeritus_approvers` lists:
+
+  ```yaml
+  # OWNERS_ALIASES
+  aliases:
+    sig-foo-leads:
+    - alice
+    - bob
+  ```
+
+- **`filters:`**: a map of regular expressions to `reviewers`/`approvers`/`labels`, applied per changed file. The regex is matched against the path of the file relative to the directory containing the OWNERS file:
+
+  ```yaml
+  filters:
+    ".*":
+      labels:
+      - re/all
+    "\\.go$":
+      reviewers:
+      - go-reviewer
+      approvers:
+      - go-approver
+      labels:
+      - re/go
+  ```
+
+- **`options.no_parent_owners`**: when set, OWNERS files in parent directories are ignored for files under this directory, so only the approvers/reviewers listed here apply:
+
+  ```yaml
+  options:
+    no_parent_owners: true
+  approvers:
+  - approver1
+  ```
+
+- **`emeritus_approvers`**: users listed here are excluded from the effective approvers of the OWNERS file, even if they still appear in `approvers`:
+
+  ```yaml
+  approvers:
+  - approver1
+  emeritus_approvers:
+  - former-approver
+  ```
+
 ### Hierarchical OWNERS
 
-OWNERS files are used hierarchically. You can place OWNERS files in any directory of your repository. For pull requests, every changed file is mapped to its *area*: the nearest ancestor directory whose OWNERS file lists at least one approver (falling back to the repository root). The approvers of an area are the approvers of that directory plus those of all parent directories, so owners of a parent directory can always approve nested areas.
+OWNERS files are used hierarchically. You can place OWNERS files in any directory of your repository. For pull requests, every changed file is mapped to its *area*: the nearest ancestor directory whose OWNERS file lists at least one approver applicable to the file (falling back to the repository root). The approvers of an area are the approvers of that directory plus those of all parent directories (unless `options.no_parent_owners` is set), so owners of a parent directory can always approve nested areas.
 
 For example, if `pkg/api/handler.go` and `pkg/util/helper.go` are both changed and both `pkg/api` and `pkg/util` contain an OWNERS file with approvers, the PR has two areas: `pkg/api` and `pkg/util`. Each area can be approved by its own approvers or by approvers from `pkg` or the root OWNERS file.
 

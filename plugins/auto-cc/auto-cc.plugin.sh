@@ -5,28 +5,20 @@ if [[ "${ISSUE_KIND}" != "pr" ]]; then
     exit 1
 fi
 
-branch="$(gh api /repos/${GH_REPOSITORY} | jq -r '.default_branch')"
+# Reuse the OWNERS parsing helpers (aliases, filters, no_parent_owners,
+# emeritus_approvers) from owners.sh.
+source "$(command -v owners.sh)"
 
-function get_reviewer_from_file() {
+load_owners_aliases
+
+# get_reviewers_for_file prints the reviewers declared in the OWNERS file
+# of a directory that apply to a changed file. The root directory is "".
+# The directory must already be loaded with load_owners_dir.
+function get_reviewers_for_file() {
     local dir="${1}"
-    local path
-    local content
-    if [[ -z "${dir}" ]]; then
-        path="OWNERS"
-    else
-        path="${dir}/OWNERS"
-    fi
+    local file="${2}"
 
-    echo "Fetch ${path} from ${GH_REPOSITORY}@${branch}" >&2
-    if ! content="$(gh api \
-        --method GET \
-        -H "Accept: application/vnd.github.raw+json" \
-        "/repos/${GH_REPOSITORY}/contents/${path}" \
-        -f "ref=${branch}" 2>/dev/null)"; then
-        return 0
-    fi
-
-    printf '%s\n' "${content}" | yq e '.reviewers | .[]'
+    get_file_users "${dir:-.}" "${file}" "reviewers"
 }
 
 user_pool=()
@@ -68,7 +60,8 @@ function get_parent() {
 
 function get_reviewer_with_recursively() {
     local dir="${1}"
-    local ori="${2}"
+    local file="${2}"
+    local ori="${3}"
     local reviewers
     local parent
     if in_used_dir "${dir}"; then
@@ -76,7 +69,16 @@ function get_reviewer_with_recursively() {
     fi
     used_dir+=("${dir}")
 
-    reviewers="$(get_reviewer_from_file "${dir}")"
+    local path
+    if [[ -z "${dir}" ]]; then
+        path="OWNERS"
+    else
+        path="${dir}/OWNERS"
+    fi
+    echo "Fetch ${path} from ${GH_REPOSITORY}@${branch}" >&2
+    load_owners_dir "${dir:-.}"
+
+    reviewers="$(get_reviewers_for_file "${dir}" "${file}")"
     if [[ "${reviewers}" != "" ]]; then
         for user in $(echo "${reviewers}" | sort --random-sort); do
             if ! in_user_pool "${user}"; then
@@ -92,16 +94,22 @@ function get_reviewer_with_recursively() {
         return 0
     fi
 
-    parent="$(get_parent "${dir}")"
-    if [[ "${parent}" == "${dir}" ]]; then
+    if [[ -z "${dir}" ]]; then
         return 0
     fi
-    get_reviewer_with_recursively "${parent}" "${dir}"
+
+    if dir_no_parent_owners "${dir}"; then
+        echo "OWNERS: ${dir} sets no_parent_owners, ignoring parent OWNERS files" >&2
+        return 0
+    fi
+
+    parent="$(get_parent "${dir}")"
+    get_reviewer_with_recursively "${parent}" "${file}" "${dir}"
 }
 
 function get_reviewers() {
-    for dir in "$@"; do
-        get_reviewer_with_recursively "$(get_parent "${dir}")" "${dir}"
+    for file in "$@"; do
+        get_reviewer_with_recursively "$(get_parent "${file}")" "${file}" "${file}"
     done
 
     for u in "${user_pool[@]}"; do
@@ -109,11 +117,7 @@ function get_reviewers() {
     done
 }
 
-file="$(gh api \
-    --paginate \
-    "/repos/${GH_REPOSITORY}/pulls/${ISSUE_NUMBER}/files" \
-    --jq '.[].filename' |
-    sort -u)"
+file="$(get_pr_changed_files)"
 
 echo "Modify files:" >&2
 for f in ${file}; do
