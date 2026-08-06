@@ -1,26 +1,41 @@
 #!/usr/bin/env bash
 
-# blunderbuss.sh - Automatically request reviewers when a PR is opened,
-# mirroring prow's blunderbuss plugin (like /auto-cc but without a manual
-# trigger). Reviewers are picked from the OWNERS files nearest to the
-# changed files, falling back to the REVIEWERS environment variable.
+# blunderbuss.sh - Selects and requests reviewers for a PR from the OWNERS
+# files nearest to the changed files, falling back to the REVIEWERS
+# environment variable. Used in two modes:
+#   auto   - on PR open, mirroring prow's blunderbuss plugin (default):
+#            skips draft PRs and exits quietly when disabled or when no
+#            reviewers are found
+#   manual - for the /auto-cc command: always runs and reports a failure
+#            when no reviewers can be found
 #
 # Configuration:
 #   BLUNDERBUSS_REVIEWER_COUNT - number of reviewers to request (default 2,
-#                                set to 0 to disable)
+#                                set to 0 to disable the auto mode)
+
+mode="${1:-auto}"
 
 if [[ "${ISSUE_KIND}" != "pr" ]]; then
+    if [[ "${mode}" == "manual" ]]; then
+        echo "[FAIL] This command is only available on pull requests, not on issues."
+        exit 1
+    fi
     exit 0
 fi
 
 count="${BLUNDERBUSS_REVIEWER_COUNT:-2}"
 if ! [[ "${count}" =~ ^[0-9]+$ ]] || [[ "${count}" -eq 0 ]]; then
-    echo "Blunderbuss is disabled (BLUNDERBUSS_REVIEWER_COUNT=${BLUNDERBUSS_REVIEWER_COUNT:-})"
-    exit 0
+    if [[ "${mode}" == "manual" ]]; then
+        count=2
+    else
+        echo "Blunderbuss is disabled (BLUNDERBUSS_REVIEWER_COUNT=${BLUNDERBUSS_REVIEWER_COUNT:-})"
+        exit 0
+    fi
 fi
 
 # Mirror prow's blunderbuss default of ignoring draft PRs.
-if [[ "$(gh pr -R "${GH_REPOSITORY}" view "${ISSUE_NUMBER}" --json isDraft --jq '.isDraft')" == "true" ]]; then
+if [[ "${mode}" != "manual" ]] &&
+    [[ "$(gh pr -R "${GH_REPOSITORY}" view "${ISSUE_NUMBER}" --json isDraft --jq '.isDraft')" == "true" ]]; then
     echo "Skipping draft PR"
     exit 0
 fi
@@ -183,6 +198,10 @@ if [[ "${#picked[@]}" -lt "${count}" ]]; then
 fi
 
 if [[ "${#picked[@]}" -eq 0 ]]; then
+    if [[ "${mode}" == "manual" ]]; then
+        echo "[FAIL] Could not find any reviewers to assign. Please make sure the OWNERS file or REVIEWERS are configured."
+        exit 1
+    fi
     echo "No reviewers found to request, skipping" >&2
     exit 0
 fi
