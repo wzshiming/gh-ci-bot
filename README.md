@@ -2,7 +2,7 @@
 
 Simply introducing a [Action](https://github.com/wzshiming/gh-ci-bot/blob/master/examples/ci-bot.yml) gives you the ability to execute the following commands on Issue/PR.
 
-It is better to use with [CodeOwners of Github](https://github.blog/2017-07-06-introducing-code-owners/).
+It supports [Kubernetes Prow OWNERS](https://github.com/kubernetes/test-infra/tree/master/prow) files, so you can use it as an alternative to GitHub [CODEOWNERS](https://github.blog/2017-07-06-introducing-code-owners/).
 
 | Command                           | Example                                                | Description                                                                                                                                                                          | Plugin                 |
 | --------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------- |
@@ -44,7 +44,7 @@ It is better to use with [CodeOwners of Github](https://github.blog/2017-07-06-i
 
 ## OWNERS Files
 
-The bot supports `OWNERS` files for defining reviewers and approvers at any directory level in your repository. An `OWNERS` file is a YAML file with the following format:
+The bot supports Prow-style `OWNERS` files for defining reviewers and approvers at any directory level in your repository. This makes it a drop-in alternative when you want to manage ownership outside GitHub `CODEOWNERS`. An `OWNERS` file is a YAML file with the following format:
 
 ```yaml
 reviewers:
