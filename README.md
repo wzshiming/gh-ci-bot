@@ -43,9 +43,7 @@ Colors and descriptions are synchronized with prow's [label definitions](https:/
 
 ```yaml
 LABELS: |-
-  kind/
-  area/network
-  priority/critical
+  kind/docs
 ```
 
 The entries in `LABELS` are merged with the built-in default list of well-known prow labels (e.g. `lgtm`, `approved`, `do-not-merge/hold`, `kind/bug`, `size/*`, `needs-kind`) and GitHub's built-in labels (e.g. `bug`, `question`); see [`bin/ensure-labels.sh`](bin/ensure-labels.sh) for the full default list. So `LABELS` is only needed to allow additional labels beyond the defaults.
