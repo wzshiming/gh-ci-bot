@@ -12,16 +12,12 @@ fi
 
 echo "Add reviewer ${login} to ${GH_REPOSITORY}#${ISSUE_NUMBER}"
 
-# gh pr edit --add-reviewer Don't acquire organizational teams if it's not necessary
-# see more https://github.com/wzshiming/gh-ci-bot/issues/1 
-# gh "${ISSUE_KIND}" -R "${GH_REPOSITORY}" edit "${ISSUE_NUMBER}" --add-reviewer "${login}"
+# gh pr edit --add-reviewer no longer fetches organizational teams when it's not necessary,
+# so it works with the GitHub Actions token since gh v2.82.0.
+# see more https://github.com/wzshiming/gh-ci-bot/issues/1
+# and https://github.com/cli/cli/issues/4844 fixed by https://github.com/cli/cli/pull/11835
 
 for reviewer in ${login}; do
-  curl \
-    -X POST \
-    -H "Accept: application/vnd.github.v3+json" \
-    -H "Authorization: token ${GH_TOKEN}" \
-    "https://api.github.com/repos/${GH_REPOSITORY}/pulls/${ISSUE_NUMBER}/requested_reviewers" \
-    -d "{\"reviewers\":[\"${reviewer}\"],\"team_reviewers\":[]}" ||
+  gh "${ISSUE_KIND}" -R "${GH_REPOSITORY}" edit "${ISSUE_NUMBER}" --add-reviewer "${reviewer}" ||
     echo "[FAIL] Failed to request review from ${reviewer}. Please check that the username is correct."
 done
