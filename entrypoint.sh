@@ -76,12 +76,20 @@ function sync_size_label() {
     fi
 }
 
+# sync_matching_labels keeps the needs-* labels in sync with the presence of
+# labels matching the configured regular expressions, mirroring prow's
+# require-matching-label plugin.
+function sync_matching_labels() {
+    check-matching-labels.sh
+}
+
 function main() {
     if [[ "${TYPE}" == "created" ]]; then
         echo "Greetings to ${LOGIN}!"
         greeting.sh
         sync_wip_label
         sync_size_label
+        sync_matching_labels
         sync_approve_status
         echo "Response to action"
         response.sh
@@ -97,6 +105,9 @@ function main() {
     elif [[ "${TYPE}" == "edited" ]]; then
         echo "PR edited, syncing work-in-progress label"
         sync_wip_label
+    elif [[ "${TYPE}" == "labeled" ]]; then
+        echo "Labels changed, syncing require-matching-label rules"
+        sync_matching_labels
     fi
 }
 

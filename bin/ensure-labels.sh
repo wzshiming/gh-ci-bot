@@ -40,6 +40,9 @@ function label_color() {
   kind/*)
     echo "c7def8"
     ;;
+  needs-sig)
+    echo "d3e2f0"
+    ;;
   size/XS)
     echo "009900"
     ;;
@@ -145,6 +148,18 @@ function label_description() {
     ;;
   kind/*)
     echo "Categorizes issue or PR as related to ${1#kind/}."
+    ;;
+  needs-kind)
+    echo "Indicates an issue or PR lacks a \`kind/foo\` label and requires one."
+    ;;
+  needs-priority)
+    echo "Indicates an issue or PR lacks a \`priority/foo\` label and requires one."
+    ;;
+  needs-sig)
+    echo "Indicates an issue or PR lacks a \`sig/foo\` label and requires one."
+    ;;
+  needs-triage)
+    echo "Indicates an issue or PR lacks a \`triage/foo\` label and requires one."
     ;;
   size/XS)
     echo "Denotes a PR that changes 0-9 lines."
