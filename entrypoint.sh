@@ -68,12 +68,21 @@ function sync_wip_label() {
     fi
 }
 
+# approve_workflows automatically approves workflow runs pending maintainer
+# approval on fork PRs when AUTO_APPROVE_WORKFLOWS=true is set.
+function approve_workflows() {
+    if [[ "${ISSUE_KIND}" == "pr" ]]; then
+        approve-workflows.sh
+    fi
+}
+
 function main() {
     if [[ "${TYPE}" == "created" ]]; then
         echo "Greetings to ${LOGIN}!"
         greeting.sh
         sync_wip_label
         sync_approve_status
+        approve_workflows
         echo "Response to action"
         response.sh
     elif [[ "${TYPE}" == "comment" ]]; then
@@ -84,6 +93,7 @@ function main() {
         remove-labels.sh lgtm
         sync_wip_label
         sync_approve_status
+        approve_workflows
     elif [[ "${TYPE}" == "edited" ]]; then
         echo "PR edited, syncing work-in-progress label"
         sync_wip_label

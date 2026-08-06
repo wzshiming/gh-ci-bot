@@ -41,6 +41,10 @@ Whenever the bot adds a label (via commands like `/label`, `/kind`, `/lgtm`, `/a
 
 Like prow's `wip` plugin, the bot automatically applies the `do-not-merge/work-in-progress` label to a PR while it is a draft or its title starts with `WIP`, and removes the label once neither is true. Any label starting with `do-not-merge/` blocks both `/merge` and auto-merge. The label is created automatically if it does not exist.
 
+### Auto-approving workflow runs
+
+Workflows triggered by `pull_request` from first-time contributors on public forks sit in the "This workflow requires approval from a maintainer" state until a maintainer approves them. Because the bot itself runs on `pull_request_target`, it can approve those pending runs automatically when the PR is opened or new commits are pushed. Set `AUTO_APPROVE_WORKFLOWS: true` in the workflow environment to enable this. As a safety measure, pull requests that modify files under `.github/` (workflows, actions, bot configuration) are never auto-approved and still require a manual approval from a maintainer. Requires the `actions: write` permission.
+
 ### Troubleshooting
 
 - `/cherry-pick`

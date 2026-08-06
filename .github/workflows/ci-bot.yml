@@ -91,6 +91,10 @@ env:
   # It can be `merge`, `rebase`, or `squash`.
   DEFAULT_MERGE_METHOD: squash
 
+  # Automatically approve workflow runs pending maintainer approval on
+  # PRs from forks, except when the PR modifies files under `.github/`.
+  AUTO_APPROVE_WORKFLOWS: true
+
   DETAILS: |-
 
     <details>
