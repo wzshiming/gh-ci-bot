@@ -39,15 +39,6 @@ It supports [Kubernetes Prow OWNERS](https://github.com/kubernetes/test-infra/tr
 
 Whenever the bot adds a label (via commands like `/label`, `/kind`, `/lgtm`, `/approve`, OWNERS `labels:`, or automatic labels like `do-not-merge/work-in-progress`), any label that does not yet exist in the repository is created automatically, provided it is in the built-in default list of well-known labels or listed in the `LABELS` environment variable. Labels not in the allowlist are never created automatically (so a typo like `/label doocumentation` does not pollute the repository); they are only applied if they already exist in the repository.
 
-Colors and descriptions are synchronized with prow's [label definitions](https://github.com/kubernetes/test-infra/blob/master/label_sync/labels.yaml); labels without a well-known definition are created with GitHub's default gray color and an empty description. `LABELS` only controls which labels are allowed to be created, as a list of entries, one per line. Each entry is either an exact label name, or a prefix ending in a slash (e.g. `kind/`) which allows any label with that prefix:
-
-```yaml
-LABELS: |-
-  kind/docs
-```
-
-The entries in `LABELS` are merged with the built-in default list of well-known prow labels (e.g. `lgtm`, `approved`, `do-not-merge/hold`, `kind/bug`, `size/*`, `needs-kind`) and GitHub's built-in labels (e.g. `bug`, `question`); see [`bin/ensure-labels.sh`](bin/ensure-labels.sh) for the full default list. So `LABELS` is only needed to allow additional labels beyond the defaults.
-
 ### Work in progress
 
 Like prow's `wip` plugin, the bot automatically applies the `do-not-merge/work-in-progress` label to a PR while it is a draft or its title starts with `WIP`, and removes the label once neither is true. Any label starting with `do-not-merge/` blocks both `/merge` and auto-merge. The label is created automatically if it does not exist.
