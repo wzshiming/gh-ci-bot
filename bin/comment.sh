@@ -9,7 +9,7 @@ if [[ -n "${GITHUB_RUN_ID:-}" ]]; then
     body="${body}
 
 <details>
-<summary>Execution details</summary>
+<summary>Execution log</summary>
 
 [Open the execution log](${run_url})
 
