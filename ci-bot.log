@@ -1,12 +1,14 @@
 OWNERS: common prefix of changed files: ''
 PLUGINS:
+- assign
 - auto-cc
+- cc
 Exec command: auto-cc
 Try AI reviewer copilot
 Try AI reviewer gemini
-Try AI reviewer codex
+Auto-ccing AI reviewer gemini.
 Modify files:
 - {}
 Fetch OWNERS from o/r@null
 Fallback use REVIEWERS environment variable
-[FAIL] Could not find any reviewers to assign. Please make sure the OWNERS file or REVIEWERS are configured.
+No human reviewers found, only AI reviewer gemini was assigned.

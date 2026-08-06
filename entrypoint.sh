@@ -43,7 +43,7 @@ function auto_cc() {
         return 0
     fi
 
-    if ! echo "${PLUGINS:-}" | grep -q -e '^auto-cc$'; then
+    if ! echo "${PLUGINS:-}" | grep -q -e '^[[:space:]]*auto-cc[[:space:]]*$'; then
         return 0
     fi
 

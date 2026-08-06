@@ -130,8 +130,9 @@ function request_ai_reviewer() {
 }
 
 ai_reviewer=""
-for ai in ${AI_REVIEWERS}; do
+while IFS= read -r ai; do
     ai="${ai//\@/}"
+    ai="$(echo "${ai}" | tr -d '[:space:]')"
     if [[ -z "${ai}" || "${ai}" == "${AUTHOR}" ]]; then
         continue
     fi
@@ -141,7 +142,7 @@ for ai in ${AI_REVIEWERS}; do
         echo "Auto-ccing AI reviewer ${ai}."
         break
     fi
-done
+done <<< "${AI_REVIEWERS}"
 
 file="$(gh api \
     --paginate \
