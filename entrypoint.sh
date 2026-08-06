@@ -105,7 +105,7 @@ function main() {
     elif [[ "${TYPE}" == "edited" ]]; then
         echo "PR edited, syncing work-in-progress label"
         sync_wip_label
-    elif [[ "${TYPE}" == "labeled" ]]; then
+    elif [[ "${TYPE}" == "labeled" || "${TYPE}" == "unlabeled" ]]; then
         echo "Labels changed, syncing needs-* labels"
         sync_matching_labels
     fi

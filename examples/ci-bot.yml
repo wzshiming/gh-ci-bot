@@ -202,7 +202,7 @@ jobs:
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           AUTHOR_ASSOCIATION: ${{ github.event.issue.author_association }}
           ISSUE_KIND: issue
-          TYPE: labeled
+          TYPE: ${{ github.event.action }}
 
       - name: PR Labeled or Unlabeled
         uses: wzshiming/gh-ci-bot@v1.5.0
@@ -214,7 +214,7 @@ jobs:
           ISSUE_NUMBER: ${{ github.event.pull_request.number }}
           AUTHOR_ASSOCIATION: ${{ github.event.pull_request.author_association }}
           ISSUE_KIND: pr
-          TYPE: labeled
+          TYPE: ${{ github.event.action }}
 
       - name: Issue Commented
         uses: wzshiming/gh-ci-bot@v1.5.0
