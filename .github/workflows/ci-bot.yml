@@ -91,6 +91,10 @@ env:
   # It can be `merge`, `rebase`, or `squash`.
   DEFAULT_MERGE_METHOD: squash
 
+  # Number of reviewers automatically requested when a PR is opened
+  # (blunderbuss). Set to 0 to disable.
+  BLUNDERBUSS_REVIEWER_COUNT: 2
+
   DETAILS: |-
 
     <details>
@@ -155,7 +159,7 @@ jobs:
           GREETING: |-
             Hi @${{ github.event.pull_request.user.login }},
             Thanks for your pull request!
-            If the PR is ready, use the `/auto-cc` command to assign Reviewer to Review. 
+            ${{ env.BLUNDERBUSS_REVIEWER_COUNT != '0' && 'Reviewers will be requested automatically. You can also use the `/auto-cc` command to request reviews again.' || 'If the PR is ready, use the `/auto-cc` command to assign Reviewer to Review.' }}
             We will review it shortly.
 
       - name: PR Synchronize

@@ -157,7 +157,7 @@ jobs:
           GREETING: |-
             Hi @${{ github.event.pull_request.user.login }},
             Thanks for your pull request!
-            Reviewers will be requested automatically. You can also use the `/auto-cc` command to request reviews again.
+            ${{ env.BLUNDERBUSS_REVIEWER_COUNT != '0' && 'Reviewers will be requested automatically. You can also use the `/auto-cc` command to request reviews again.' || 'If the PR is ready, use the `/auto-cc` command to assign Reviewer to Review.' }}
             We will review it shortly.
 
       - name: PR Synchronize
