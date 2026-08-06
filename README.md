@@ -41,6 +41,10 @@ Whenever the bot adds a label (via commands like `/label`, `/kind`, `/lgtm`, `/a
 
 Like prow's `wip` plugin, the bot automatically applies the `do-not-merge/work-in-progress` label to a PR while it is a draft or its title starts with `WIP`, and removes the label once neither is true. Any label starting with `do-not-merge/` blocks both `/merge` and auto-merge. The label is created automatically if it does not exist.
 
+### Approving workflow runs
+
+By default, GitHub requires a maintainer to [approve workflow runs from first-time or outside contributors](https://docs.github.com/actions/managing-workflow-runs/approving-workflow-runs-from-public-forks). Since the bot itself runs on `pull_request_target`, it does not need approval, and it automatically approves the workflow runs that are awaiting approval whenever a PR is opened or new commits are pushed, so external contributors' workflows run without manual intervention. This requires the `actions: write` permission (already included in the [example workflow](https://github.com/wzshiming/gh-ci-bot/blob/master/examples/ci-bot.yml)).
+
 ### Troubleshooting
 
 - `/cherry-pick`
