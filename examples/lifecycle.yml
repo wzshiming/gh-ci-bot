@@ -1,0 +1,33 @@
+name: Lifecycle
+on:
+  schedule:
+    # Runs once a day
+    - cron: "0 0 * * *"
+  workflow_dispatch: {}
+
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GH_REPOSITORY: ${{ github.repository }}
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  lifecycle:
+    name: Lifecycle
+    runs-on: ubuntu-latest
+    steps:
+      # Ages open issues and PRs: no activity -> lifecycle/stale -> lifecycle/rotten -> closed.
+      # Anything labeled lifecycle/frozen is left untouched.
+      # Labels need to be created manually in advance.
+      - name: Lifecycle Sweep
+        uses: wzshiming/gh-ci-bot@v1.5.0
+        env:
+          TYPE: schedule
+          # Days of inactivity before an issue or PR is marked as lifecycle/stale
+          DAYS_UNTIL_STALE: 90
+          # Days of further inactivity before lifecycle/stale becomes lifecycle/rotten
+          DAYS_UNTIL_ROTTEN: 30
+          # Days of further inactivity before a lifecycle/rotten issue or PR is closed
+          DAYS_UNTIL_CLOSE: 30

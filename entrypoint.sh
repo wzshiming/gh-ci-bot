@@ -6,6 +6,14 @@ ROOT="$(realpath -m ${ROOT})"
 PATH="${ROOT}/bin:${PATH}"
 
 function check_args() {
+    if [[ "${TYPE}" == "schedule" ]]; then
+        if [[ "${GH_REPOSITORY}" == "" ]]; then
+            echo "No repository specified"
+            exit 1
+        fi
+        return 0
+    fi
+
     if [[ "${LOGIN}" == "" ]]; then
         echo "No login specified"
         exit 1
@@ -56,6 +64,9 @@ function main() {
         echo "PR synchronized, removing lgtm label"
         remove-labels.sh lgtm
         sync_approve_status
+    elif [[ "${TYPE}" == "schedule" ]]; then
+        echo "Sweeping stale issues and PRs"
+        lifecycle-sweep.sh
     fi
 }
 

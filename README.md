@@ -13,6 +13,7 @@ It supports [Kubernetes Prow OWNERS](https://github.com/kubernetes/test-infra/tr
 | `/[remove-]milestone [milestone]` | `/milestone v1.0.0`</br>`/remove-milestone`            | Edits the PR or issue milestone. **Milestone need to be created manually in advance.**                                                                                               | milestone              |
 | `/close`                          | `/close`                                               | Closes an PR or issue.                                                                                                                                                               | lifecycle              |
 | `/reopen`                         | `/reopen`                                              | Reopen an PR or issue.                                                                                                                                                               | lifecycle              |
+| `/[remove-]lifecycle [...]`       | `/lifecycle stale`</br>`/remove-lifecycle frozen`      | Applies or removes the 'lifecycle/stale', 'lifecycle/rotten' or 'lifecycle/frozen' labels to an PR or issue. **Labels need to be created manually in advance.**                      | lifecycle              |
 | `/merge [rebase\|squash]`         | `/merge`</br>`/merge rebase`</br>`/merge squash`       | Merge a PR.                                                                                                                                                                          | merge                  |
 | `/retest`                         | `/retest`                                              | Retest all failed test of PR.                                                                                                                                                        | retest                 |
 | `/[remove-]kind [...]`            | `/kind doc`</br>`/remove-kind doc`                     | Applies or removes the 'kind/*' labels to an PR or issue. **Labels need to be created manually in advance.**                                                                         | kind                   |
@@ -31,6 +32,16 @@ It supports [Kubernetes Prow OWNERS](https://github.com/kubernetes/test-infra/tr
 | `/base [branch]`                  | `/base main`                                           | Change to which branch this PR is to be merged into                                                                                                                                  | base                   |
 | `/rebase`                         | `/rebase`                                              | Rebase the this PR to the latest of the branch                                                                                                                                       | rebase                 |
 | `/cherry-pick [branch]`           | `/cherry-pick release-1.0`                             | Cherry-pick a merged PR to a target branch and create a new PR                                                                                                                       | cherry-pick            |
+
+### Lifecycle sweep
+
+An optional scheduled [workflow](https://github.com/wzshiming/gh-ci-bot/blob/master/examples/lifecycle.yml) can age open issues and PRs, mirroring the Kubernetes stale bot:
+
+1. After `DAYS_UNTIL_STALE` (default 90) days of inactivity, the `lifecycle/stale` label is applied.
+2. After another `DAYS_UNTIL_ROTTEN` (default 30) days of inactivity, `lifecycle/stale` is replaced with `lifecycle/rotten`.
+3. After another `DAYS_UNTIL_CLOSE` (default 30) days of inactivity, the issue or PR is closed.
+
+Issues and PRs labeled `lifecycle/frozen` are exempt from aging. Use `/remove-lifecycle stale` or `/remove-lifecycle rotten` to restart the aging process, or `/lifecycle frozen` to opt out entirely. **Labels need to be created manually in advance.**
 
 ### Troubleshooting
 
