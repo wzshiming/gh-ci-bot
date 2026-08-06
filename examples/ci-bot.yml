@@ -17,11 +17,20 @@ on:
     types:
       - opened
 
+  # These events need the privileged token of the base repository even for
+  # PRs from forks (posting comments, removing the lgtm label), so they must
+  # be triggered by pull_request_target.
   # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request_target
   pull_request_target:
     types:
       - opened
       - synchronize
+
+  # These events only sync labels from trusted PR metadata and do not need
+  # the privileged context of pull_request_target.
+  # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request
+  pull_request:
+    types:
       - edited
       - converted_to_draft
       - ready_for_review
@@ -169,7 +178,7 @@ jobs:
 
       - name: PR Edited or Draft State Changed
         uses: wzshiming/gh-ci-bot@v1.5.0
-        if: ${{ github.event_name == 'pull_request_target' && (github.event.action == 'edited' || github.event.action == 'converted_to_draft' || github.event.action == 'ready_for_review') }}
+        if: ${{ github.event_name == 'pull_request' && (github.event.action == 'edited' || github.event.action == 'converted_to_draft' || github.event.action == 'ready_for_review') }}
         env:
           LOGIN: ${{ github.event.pull_request.user.login }}
           AUTHOR: ${{ github.event.pull_request.user.login }}
