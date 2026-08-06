@@ -12,7 +12,7 @@ fi
 echo "Add label ${label//\@/} to ${GH_REPOSITORY}#${ISSUE_NUMBER}"
 if ! gh "${ISSUE_KIND}" -R "${GH_REPOSITORY}" edit "${ISSUE_NUMBER}" --add-label "${label}"; then
   # Adding failed, likely because a label does not exist yet.
-  # Create any missing labels defined in LABELS, then retry with only the
+  # Create any missing labels listed in LABELS, then retry with only the
   # labels that exist so unknown labels are never created.
   ensure-labels.sh "${@}"
 

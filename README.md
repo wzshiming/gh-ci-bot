@@ -36,19 +36,17 @@ It supports [Kubernetes Prow OWNERS](https://github.com/kubernetes/test-infra/tr
 
 ### Label management
 
-Whenever the bot adds a label (via commands like `/label`, `/kind`, `/lgtm`, `/approve`, OWNERS `labels:`, or automatic labels like `do-not-merge/work-in-progress`), any label that does not yet exist in the repository is created automatically, provided it is defined in the `LABELS` environment variable. Labels that are not defined there are never created automatically (so a typo like `/label doocumentation` does not pollute the repository); they are only applied if they already exist in the repository.
+Whenever the bot adds a label (via commands like `/label`, `/kind`, `/lgtm`, `/approve`, OWNERS `labels:`, or automatic labels like `do-not-merge/work-in-progress`), any label that does not yet exist in the repository is created automatically, provided it is listed in the `LABELS` environment variable. Labels that are not listed there are never created automatically (so a typo like `/label doocumentation` does not pollute the repository); they are only applied if they already exist in the repository.
 
-`LABELS` is a YAML list of label definitions. Each entry is either a plain label name (created with GitHub's default gray color and an empty description) or a mapping with `name` and optional `color` and `description`:
+Colors and descriptions are synchronized with prow's [label definitions](https://github.com/kubernetes/test-infra/blob/master/label_sync/labels.yaml); labels without a well-known definition are created with GitHub's default gray color and an empty description. `LABELS` only controls which labels are allowed to be created, as a list of label names, one per line:
 
 ```yaml
 LABELS: |-
-  - name: area/network
-    color: 0052cc
-    description: Issues or PRs related to networking.
-  - priority/critical
+  area/network
+  priority/critical
 ```
 
-When `LABELS` is not set, it defaults to the labels synchronized with prow's [label definitions](https://github.com/kubernetes/test-infra/blob/master/label_sync/labels.yaml) (e.g. `lgtm`, `approved`, `do-not-merge/hold`, `kind/bug`, `size/*`, `needs-kind`) plus GitHub's built-in labels (e.g. `bug`, `question`) with their standard colors and descriptions; see [`bin/ensure-labels.sh`](bin/ensure-labels.sh) for the full default list. Setting `LABELS` replaces the default list, so include any of the default labels you still want the bot to be able to create.
+When `LABELS` is not set, it defaults to the well-known prow labels (e.g. `lgtm`, `approved`, `do-not-merge/hold`, `kind/bug`, `size/*`, `needs-kind`) plus GitHub's built-in labels (e.g. `bug`, `question`); see [`bin/ensure-labels.sh`](bin/ensure-labels.sh) for the full default list. Setting `LABELS` replaces the default list, so include any of the default labels you still want the bot to be able to create.
 
 ### Work in progress
 
