@@ -46,6 +46,21 @@ Like prow's `wip` plugin, the bot automatically applies the `do-not-merge/work-i
 
 Like prow's `size` plugin, the bot automatically labels every PR with one of `size/XS`, `size/S`, `size/M`, `size/L`, `size/XL` or `size/XXL` based on the total number of changed lines (additions + deletions), updating the label whenever new commits are pushed. The thresholds mirror prow's defaults: XS < 10, S < 30, M < 100, L < 500, XL < 1000, XXL ≥ 1000.
 
+### Require matching label
+
+Like prow's `require-matching-label` plugin, the bot automatically applies a `needs-X` label plus an explanatory comment when an issue or PR is missing a label matching a configured regular expression, and removes it once a matching label is added. By default, an issue or PR without a `kind/*` label gets the `needs-kind` label, which is removed as soon as a `kind/*` label is applied (e.g. via `/kind bug`).
+
+The rules are configured through the `REQUIRE_MATCHING_LABELS` environment variable, one rule per line in the format `<missing-label> <regexp> [comment...]`:
+
+```yaml
+env:
+  REQUIRE_MATCHING_LABELS: |-
+    needs-kind ^kind/
+    needs-priority ^priority/ Please add a priority/* label with the /label command.
+```
+
+The comment is optional; a default explanatory comment is used when omitted. Set `REQUIRE_MATCHING_LABELS` to an empty string to disable the check.
+
 ### Troubleshooting
 
 - `/cherry-pick`

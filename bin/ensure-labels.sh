@@ -42,6 +42,9 @@ function label_color() {
   kind/cleanup | kind/documentation | kind/feature)
     echo "c7def8"
     ;;
+  needs-kind)
+    echo "ededed"
+    ;;
   size/XS)
     echo "009900"
     ;;
@@ -141,6 +144,9 @@ function label_description() {
     ;;
   kind/support)
     echo "Categorizes issue or PR as a support question."
+    ;;
+  needs-kind)
+    echo "Indicates an issue or PR lacks a \`kind/foo\` label and requires one."
     ;;
   size/XS)
     echo "Denotes a PR that changes 0-9 lines."
