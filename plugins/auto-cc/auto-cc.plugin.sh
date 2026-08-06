@@ -109,6 +109,40 @@ function get_reviewers() {
     done
 }
 
+# AI reviewers to prioritize, in preference order. Can be overridden with
+# the AI_REVIEWERS environment variable (newline separated logins).
+AI_REVIEWERS="${AI_REVIEWERS-copilot
+gemini
+codex}"
+
+# request_ai_reviewer tries to request a review from the given user and
+# succeeds only if the API accepts the request.
+function request_ai_reviewer() {
+    local user="${1}"
+    local status
+    status="$(curl -s -o /dev/null -w '%{http_code}' \
+        -X POST \
+        -H "Accept: application/vnd.github.v3+json" \
+        -H "Authorization: token ${GH_TOKEN}" \
+        "https://api.github.com/repos/${GH_REPOSITORY}/pulls/${ISSUE_NUMBER}/requested_reviewers" \
+        -d "{\"reviewers\":[\"${user}\"],\"team_reviewers\":[]}")"
+    [[ "${status}" == "201" ]]
+}
+
+ai_reviewer=""
+for ai in ${AI_REVIEWERS}; do
+    ai="${ai//\@/}"
+    if [[ -z "${ai}" || "${ai}" == "${AUTHOR}" ]]; then
+        continue
+    fi
+    echo "Try AI reviewer ${ai}" >&2
+    if request_ai_reviewer "${ai}"; then
+        ai_reviewer="${ai}"
+        echo "Auto-ccing AI reviewer ${ai}."
+        break
+    fi
+done
+
 file="$(gh api \
     --paginate \
     "/repos/${GH_REPOSITORY}/pulls/${ISSUE_NUMBER}/files" \
@@ -126,6 +160,10 @@ if [[ "${login}" == "" ]]; then
     echo "Fallback use REVIEWERS environment variable" >&2
     login=$(echo "${REVIEWERS}" | shuf | head -n 2 | tr '\n' ',' | sed 's/,$//')
     if [[ -z "${login}" ]]; then
+        if [[ -n "${ai_reviewer}" ]]; then
+            echo "No human reviewers found, only AI reviewer ${ai_reviewer} was assigned." >&2
+            exit 0
+        fi
         echo "[FAIL] Could not find any reviewers to assign. Please make sure the OWNERS file or REVIEWERS are configured."
         exit 1
     fi

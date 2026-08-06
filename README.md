@@ -8,7 +8,7 @@ It is better to use with [CodeOwners of Github](https://github.blog/2017-07-06-i
 | --------------------------------- | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
 | `/retitle`                        | `/retitle New Title`                               | Edits the PR or issue title.                                                                                                                                                                                                                                                 | retitle                |
 | `/[un]cc [[@]...]`                | `/cc`</br>`/uncc`</br>`/cc @wzshiming`             | Requests a review from the user(s). Must be a Member.                                                                                                                                                                                                                        | cc                     |
-| `/auto-cc`                        | `/auto-cc`                                         | Requests a review from the random Reviewer.                                                                                                                                                                                                                                  | auto-cc                |
+| `/auto-cc`                        | `/auto-cc`                                         | Requests a review from the random Reviewer. Also runs proactively when a PR is opened or synchronized (see [Proactive auto-cc](#proactive-auto-cc)).                                                                                                                        | auto-cc                |
 | `/[un]assign [[@]...]`            | `/assign`</br>`/unassign`</br>`/assign @wzshiming` | Assigns assignee(s) to the PR or issue.                                                                                                                                                                                                                                      | assign                 |
 | `/[remove-]milestone [milestone]` | `/milestone v1.0.0`</br>`/remove-milestone`        | Edits the PR or issue milestone. **Milestone need to be created manually in advance.**                                                                                                                                                                                       | milestone              |
 | `/close`                          | `/close`                                           | Closes an PR or issue.                                                                                                                                                                                                                                                       | lifecycle              |
@@ -64,6 +64,20 @@ OWNERS files are used hierarchically. You can place OWNERS files in any director
 For example, if `pkg/api/handler.go` and `pkg/util/helper.go` are both changed, the common prefix is `pkg`, so the bot loads `pkg/OWNERS` and then the root `OWNERS` file.
 
 The `/auto-cc` command additionally walks up from each individual changed file to find the nearest OWNERS file with available reviewers.
+
+## Proactive auto-cc
+
+When the `auto-cc` plugin is enabled in the `PLUGINS` environment variable, the bot proactively triggers `/auto-cc` when a pull request is opened or synchronized, without requiring a manual command. The proactive trigger is skipped when a reviewer has already been requested or a review already exists, and it can be disabled entirely by setting the `AUTO_CC` environment variable to `false`.
+
+### AI-aware routing
+
+Auto-cc can prioritize assigning AI reviewers before selecting human reviewers. The bot tries each login listed in the `AI_REVIEWERS` environment variable (newline separated, in preference order) and requests a review from the first one accepted by GitHub. The default preference order is:
+
+1. `copilot`
+2. `gemini`
+3. `codex`
+
+Each entry must be a login that can be requested as a reviewer on the repository. Entries that cannot be requested are skipped, and the regular reviewer selection from OWNERS files or the `REVIEWERS` environment variable still runs afterwards. Set `AI_REVIEWERS` to an empty string to disable AI-aware routing.
 
 ## Roadmap
 

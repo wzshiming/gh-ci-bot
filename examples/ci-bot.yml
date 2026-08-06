@@ -76,6 +76,17 @@ env:
   MAINTAINERS: |-
     wzshiming
 
+  # Proactively trigger auto-cc when a PR is opened or synchronized
+  # and no reviewer has been requested yet. Set to "false" to disable.
+  AUTO_CC: "true"
+
+  # AI reviewers to prioritize for auto-cc, in preference order.
+  # Each entry must be a login that can be requested as a reviewer on the repository.
+  AI_REVIEWERS: |-
+    copilot
+    gemini
+    codex
+
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   GH_REPOSITORY: ${{ github.repository }}
 
@@ -143,8 +154,7 @@ jobs:
           GREETING: |-
             Hi @${{ github.event.pull_request.user.login }},
             Thanks for your pull request!
-            If the PR is ready, use the `/auto-cc` command to assign Reviewer to Review. 
-            We will review it shortly.
+            I will automatically assign a Reviewer to review it shortly.
 
       - name: PR Synchronize
         uses: wzshiming/gh-ci-bot@v1.4.0
