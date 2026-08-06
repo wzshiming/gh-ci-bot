@@ -53,9 +53,12 @@ reviewers:
 approvers:
 - approver1
 - approver2
+labels:
+- label1
+- label2
 ```
 
-When an `OWNERS` file is present, the listed users are merged with any `REVIEWERS` and `APPROVERS` defined in the workflow environment variables.
+When an `OWNERS` file is present, the listed users are merged with any `REVIEWERS` and `APPROVERS` defined in the workflow environment variables. Labels declared under `labels:` are automatically applied to pull requests that touch files in the corresponding directories (mirroring prow's [owners-label](https://github.com/kubernetes/test-infra/tree/master/prow) plugin). **Labels need to be created manually in advance.**
 
 ### Hierarchical OWNERS
 

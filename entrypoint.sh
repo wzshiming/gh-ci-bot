@@ -32,12 +32,30 @@ function check_args() {
     fi
 }
 
+# apply_owners_labels applies the labels declared in the OWNERS files of
+# the changed directories to the PR, mirroring prow's owners-label plugin.
+# Requires OWNERS_LABELS (exported by load_owners_for_pr).
+function apply_owners_labels() {
+    if [[ -z "${OWNERS_LABELS:-}" ]]; then
+        return 0
+    fi
+    local labels=()
+    local label
+    while read -r label; do
+        if [[ -n "${label}" ]]; then
+            labels+=("${label}")
+        fi
+    done <<<"${OWNERS_LABELS}"
+    add-labels.sh "${labels[@]}"
+}
+
 # sync_approve_status recomputes the per-area approval state for PRs.
 # Approvals are sticky across pushes, mirroring prow's approve plugin.
 function sync_approve_status() {
     if [[ "${ISSUE_KIND}" == "pr" ]]; then
         source "${ROOT}/bin/owners.sh"
         load_owners_for_pr
+        apply_owners_labels
         approve-status.sh sync
     fi
 }
