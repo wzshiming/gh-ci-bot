@@ -149,7 +149,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Issue Opened
-        uses: wzshiming/gh-ci-bot@v1.5.0
+        uses: wzshiming/gh-ci-bot@v1.6.0
         if: ${{ github.event_name == 'issues' && github.event.action == 'opened' }}
         env:
           LOGIN: ${{ github.event.issue.user.login }}
@@ -165,7 +165,7 @@ jobs:
             We will look into it as soon as possible.
 
       - name: PR Opened
-        uses: wzshiming/gh-ci-bot@v1.5.0
+        uses: wzshiming/gh-ci-bot@v1.6.0
         if: ${{ github.event_name == 'pull_request_target' && github.event.action == 'opened' }}
         env:
           LOGIN: ${{ github.event.pull_request.user.login }}
@@ -182,7 +182,7 @@ jobs:
             We will review it shortly.
 
       - name: PR Synchronize
-        uses: wzshiming/gh-ci-bot@v1.5.0
+        uses: wzshiming/gh-ci-bot@v1.6.0
         if: ${{ github.event_name == 'pull_request_target' && github.event.action == 'synchronize' }}
         env:
           LOGIN: ${{ github.event.pull_request.user.login }}
@@ -194,7 +194,7 @@ jobs:
           TYPE: synchronize
 
       - name: PR Edited or Draft State Changed
-        uses: wzshiming/gh-ci-bot@v1.5.0
+        uses: wzshiming/gh-ci-bot@v1.6.0
         if: ${{ github.event_name == 'pull_request_target' && (github.event.action == 'edited' || github.event.action == 'converted_to_draft' || github.event.action == 'ready_for_review') }}
         env:
           LOGIN: ${{ github.event.pull_request.user.login }}
@@ -206,7 +206,7 @@ jobs:
           TYPE: edited
 
       - name: Issue Labeled or Unlabeled
-        uses: wzshiming/gh-ci-bot@v1.5.0
+        uses: wzshiming/gh-ci-bot@v1.6.0
         if: ${{ github.event_name == 'issues' && (github.event.action == 'labeled' || github.event.action == 'unlabeled') }}
         env:
           LOGIN: ${{ github.event.sender.login }}
@@ -218,7 +218,7 @@ jobs:
           TYPE: ${{ github.event.action }}
 
       - name: PR Labeled or Unlabeled
-        uses: wzshiming/gh-ci-bot@v1.5.0
+        uses: wzshiming/gh-ci-bot@v1.6.0
         if: ${{ github.event_name == 'pull_request_target' && (github.event.action == 'labeled' || github.event.action == 'unlabeled') }}
         env:
           LOGIN: ${{ github.event.sender.login }}
@@ -230,7 +230,7 @@ jobs:
           TYPE: ${{ github.event.action }}
 
       - name: Issue Commented
-        uses: wzshiming/gh-ci-bot@v1.5.0
+        uses: wzshiming/gh-ci-bot@v1.6.0
         if: ${{ github.event_name == 'issue_comment' && !github.event.issue.pull_request }}
         env:
           LOGIN: ${{ github.event.comment.user.login }}
@@ -242,7 +242,7 @@ jobs:
           TYPE: comment
 
       - name: PR Review Commented
-        uses: wzshiming/gh-ci-bot@v1.5.0
+        uses: wzshiming/gh-ci-bot@v1.6.0
         if: ${{ github.event_name == 'pull_request_review_comment' }}
         env:
           LOGIN: ${{ github.event.comment.user.login }}
@@ -254,7 +254,7 @@ jobs:
           TYPE: comment
 
       - name: PR Review Submitted
-        uses: wzshiming/gh-ci-bot@v1.5.0
+        uses: wzshiming/gh-ci-bot@v1.6.0
         if: ${{ github.event_name == 'pull_request_review' && github.event.review.body != '' }}
         env:
           LOGIN: ${{ github.event.review.user.login }}
@@ -266,7 +266,7 @@ jobs:
           TYPE: comment
 
       - name: PR Commented
-        uses: wzshiming/gh-ci-bot@v1.5.0
+        uses: wzshiming/gh-ci-bot@v1.6.0
         if: ${{ github.event_name == 'issue_comment' && github.event.issue.pull_request }}
         env:
           LOGIN: ${{ github.event.comment.user.login }}
