@@ -27,5 +27,25 @@ if [[ -n "${blocking_labels}" ]]; then
 fi
 
 echo "PR ${GH_REPOSITORY}#${ISSUE_NUMBER} merge by ${LOGIN}"
-gh "${ISSUE_KIND}" -R "${GH_REPOSITORY}" merge "${ISSUE_NUMBER}" --auto "${args}" ||
-  echo "[FAIL] Failed to merge the PR. Please ensure all required checks have passed and there are no conflicts."
+
+# try_merge runs gh merge, printing its output and keeping the error of the
+# last failed attempt for the [FAIL] reply.
+merge_error=""
+function try_merge() {
+  local out
+  if out="$(gh "${ISSUE_KIND}" -R "${GH_REPOSITORY}" merge "${ISSUE_NUMBER}" "$@" 2>&1)"; then
+    [[ -n "${out}" ]] && echo "${out}"
+    return 0
+  fi
+  [[ -n "${out}" ]] && echo "${out}"
+  merge_error="$(echo "${out}" | tr '\n' ' ' | sed 's/  */ /g')"
+  return 1
+}
+
+if ! try_merge "${args}"; then
+  # A direct merge fails when required checks are still pending; fall back
+  # to enabling auto-merge so GitHub merges once they pass.
+  if ! try_merge --auto "${args}"; then
+    echo "[FAIL] Failed to merge the PR: ${merge_error:-unknown error}"
+  fi
+fi
