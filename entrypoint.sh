@@ -68,6 +68,15 @@ function sync_wip_label() {
     fi
 }
 
+# sync_ok_to_test gates PRs from untrusted authors behind the ok-to-test
+# label and approves pending workflow runs while it is present, mirroring
+# prow's trigger plugin.
+function sync_ok_to_test() {
+    if [[ "${ISSUE_KIND}" == "pr" ]]; then
+        check-ok-to-test.sh
+    fi
+}
+
 # sync_release_note_label keeps the release-note labels in sync with the
 # release-note block in the PR body, mirroring prow's release-note plugin.
 function sync_release_note_label() {
@@ -102,6 +111,7 @@ function main() {
     if [[ "${TYPE}" == "created" ]]; then
         echo "Greetings to ${LOGIN}!"
         greeting.sh
+        sync_ok_to_test
         sync_wip_label
         sync_release_note_label
         sync_size_label
@@ -117,6 +127,7 @@ function main() {
     elif [[ "${TYPE}" == "synchronize" ]]; then
         echo "PR synchronized, removing lgtm label"
         remove-labels.sh lgtm
+        sync_ok_to_test
         sync_wip_label
         sync_release_note_label
         sync_size_label

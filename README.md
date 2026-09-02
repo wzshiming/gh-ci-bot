@@ -17,6 +17,7 @@ It supports [Kubernetes Prow OWNERS](https://github.com/kubernetes/test-infra/tr
 | `/hold [cancel]`                  | `/hold`</br>`/hold cancel`                             | Applies or removes the 'do-not-merge/hold' label, blocking `/merge` and auto-merge while present.                                 | hold                   |
 | `/retest`                         | `/retest`                                              | Retest all failed test of PR.                                                                                                                                                        | retest                 |
 | `/test [workflow-or-job\|all]`    | `/test all`</br>`/test CI`</br>`/test unit-test`       | Reruns a specific workflow or job for a PR by name, or all of them with `all`.                                                                                                          | retest                 |
+| `/ok-to-test`                     | `/ok-to-test`                                          | Marks an external contributor's PR as safe to test: adds the 'ok-to-test' label, removes 'needs-ok-to-test', and approves the PR's pending workflow runs, now and on future pushes.  | ok-to-test             |
 | `/[remove-]kind [...]`            | `/kind doc`</br>`/remove-kind doc`                     | Applies or removes the 'kind/*' labels to an PR or issue.                                                                         | kind                   |
 | `/[remove-]label [...]`           | `/label doc`</br>`/remove-label doc`                   | Applies or removes the '*' labels to an PR or issue.                                                                              | label                  |
 | `/[remove-]lgtm`                  | `/lgtm`</br>`/remove-lgtm`                             | Applies or removes the 'lgtm' label. Removed automatically on new commits. Auto-merges with 'approved'.                           | label-lgtm             |
@@ -88,6 +89,22 @@ and applies exactly one of these mutually exclusive labels, removing the others:
 | block missing or empty    | `do-not-merge/release-note-label-needed` |
 
 `do-not-merge/release-note-label-needed` blocks `/merge` and auto-merge like any other `do-not-merge/*` label, until a valid block is added or `/release-note-none` is used. The `/release-note-none` command is available to whoever the `release-note` plugin is enabled for, even when `RELEASE_NOTE_REQUIRED` is unset.
+
+### Ok to test
+
+Like prow's [`trigger`](https://github.com/kubernetes/test-infra/tree/master/prow/plugins/trigger) plugin, the bot can hold back CI on pull requests from external contributors until someone trusted vouches for them. When the `OK_TO_TEST_REQUIRED` environment variable is set to a non-empty value (it is unset by default), a PR opened by an untrusted author — one whose author association is not `OWNER`, `MEMBER` or `COLLABORATOR` and who is not listed in the `REVIEWERS`, `APPROVERS` or `MAINTAINERS` environment variables — gets the `needs-ok-to-test` label and a comment asking a reviewer to reply with `/ok-to-test`.
+
+`/ok-to-test` adds the `ok-to-test` label, removes `needs-ok-to-test` and approves all of the PR's workflow runs that are waiting for approval, automating the "Approve and run" button GitHub shows for runs of first-time contributors (approving requires the `actions: write` permission, which the example workflow already grants). The label is sticky: while it is present, workflow runs waiting for approval are approved automatically on every push, so one `/ok-to-test` covers the whole PR lifetime; remove the label to go back to manual approval. The command works whenever the `ok-to-test` plugin is enabled, even when `OK_TO_TEST_REQUIRED` is unset.
+
+The plugin is suggested for `REVIEWERS_PLUGINS` rather than `MEMBERS_PLUGINS`: the command dispatcher counts any author association other than `NONE` — including `CONTRIBUTOR` — as a member, which is too weak a bar for vouching. Since the bot itself runs on `pull_request_target` and is therefore never held back by workflow-run approval, your own `pull_request`-triggered workflows can additionally require the label explicitly:
+
+```yaml
+jobs:
+  test:
+    if: >-
+      contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.pull_request.author_association) ||
+      contains(github.event.pull_request.labels.*.name, 'ok-to-test')
+```
 
 ### Troubleshooting
 

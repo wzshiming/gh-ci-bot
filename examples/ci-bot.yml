@@ -67,6 +67,7 @@ env:
   # This plugins is for in the REVIEWERS environment variable
   REVIEWERS_PLUGINS: |-
     label-lgtm
+    ok-to-test
     retitle
 
   # This plugins is for in the APPROVERS environment variable
@@ -115,6 +116,9 @@ env:
 
   # Sync release-note labels from the ```release-note block in PR bodies, blocking merge until one applies (prow's release-note plugin). Unset to disable.
   RELEASE_NOTE_REQUIRED: "true"
+
+  # Label PRs opened by untrusted authors needs-ok-to-test and withhold workflow-run approval until a reviewer replies /ok-to-test (prow's trigger plugin). Unset to disable.
+  # OK_TO_TEST_REQUIRED: "true"
 
   # Additional labels the bot is allowed to create, one entry per line.
   # Each entry is either an exact label name, or a prefix ending in a
