@@ -117,9 +117,9 @@ function main() {
         sync_size_label
         sync_approve_status
         auto_request_reviewers
-        sync_matching_labels
         echo "Response to action"
         response.sh
+        sync_matching_labels
     elif [[ "${TYPE}" == "comment" ]]; then
         echo "Response to action"
         response.sh
