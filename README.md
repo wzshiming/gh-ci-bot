@@ -63,11 +63,11 @@ env:
   ISSUE_REQUIRE_MATCHING_LABELS: |-
     needs-kind ^kind/
   PR_REQUIRE_MATCHING_LABELS: |-
-    needs-kind ^kind/
+    do-not-merge/needs-kind ^kind/
     needs-priority ^priority/
 ```
 
-Set a variable to an empty string to disable the check for the corresponding scope.
+Set a variable to an empty string to disable the check for the corresponding scope. Using a `do-not-merge/*` missing label (e.g. `do-not-merge/needs-kind` for PRs) additionally blocks `/merge` and auto-merge until a matching label is added.
 
 ### Release notes
 

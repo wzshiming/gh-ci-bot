@@ -111,10 +111,10 @@ env:
   ISSUE_REQUIRE_MATCHING_LABELS: |-
     needs-kind ^kind/
   PR_REQUIRE_MATCHING_LABELS: |-
-    needs-kind ^kind/
+    do-not-merge/needs-kind ^kind/
 
   # Sync release-note labels from the ```release-note block in PR bodies, blocking merge until one applies (prow's release-note plugin). Unset to disable.
-  # RELEASE_NOTE_REQUIRED: "true"
+  RELEASE_NOTE_REQUIRED: "true"
 
   # Additional labels the bot is allowed to create, one entry per line.
   # Each entry is either an exact label name, or a prefix ending in a
