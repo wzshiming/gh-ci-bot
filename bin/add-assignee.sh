@@ -24,7 +24,7 @@ for assignee in ${login}; do
     -X POST \
     -H "Accept: application/vnd.github.v3+json" \
     -H "Authorization: token ${GH_TOKEN}" \
-    "https://api.github.com/repos/${GH_REPOSITORY}/issues/${ISSUE_NUMBER}/assignees" \
+    "${GITHUB_API_URL:-https://api.github.com}/repos/${GH_REPOSITORY}/issues/${ISSUE_NUMBER}/assignees" \
     -d "{\"assignees\":[\"${assignee}\"]}" ||
     echo "[FAIL] Failed to assign ${assignee}. Please check that the username is correct."
 done
