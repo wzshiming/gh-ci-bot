@@ -111,11 +111,15 @@ function fail_case() {
 
 function finish() {
     local rc=$?
-    end_case
     if [[ "${rc}" -ne 0 ]]; then
-        echo "not ok - ${SPEC_NAME} aborted with exit code ${rc}"
-        FAIL=$((FAIL + 1))
+        if [[ -n "${CASE_DESC}" ]]; then
+            fail_case "spec aborted with exit code ${rc}"
+        else
+            echo "not ok - ${SPEC_NAME} aborted with exit code ${rc}"
+            FAIL=$((FAIL + 1))
+        fi
     fi
+    end_case
     echo "# ${SPEC_NAME}: ${PASS} passed, ${FAIL} failed, $((PASS + FAIL)) total"
     rm -rf "${WORK_DIR}"
     if [[ "${FAIL}" -ne 0 ]]; then
