@@ -16,29 +16,61 @@
 #   OWNERS_AREA_APPROVERS - lines of "<area> <approver>...", one per area
 #   OWNERS_LABELS         - newline separated list of labels declared in
 #                           the OWNERS files of the changed directories
+#   OWNERS_LOAD_FAILED    - non-empty when the OWNERS data could not be
+#                           loaded; consumers must fail closed on it
 
-branch="${branch:-$(gh api /repos/${GH_REPOSITORY} | jq -r '.default_branch')}"
+OWNERS_LOAD_FAILED=""
+export OWNERS_LOAD_FAILED
+
+# OWNERS files are read from the PR's base branch (like prow); outside a
+# PR context they come from the repository default branch. A failed
+# lookup marks the load failed instead of proceeding with a wrong ref.
+if [[ -z "${branch:-}" ]]; then
+    if [[ "${ISSUE_KIND:-}" == "pr" && -n "${ISSUE_NUMBER:-}" ]]; then
+        _owners_branch_json="$(gh pr -R "${GH_REPOSITORY}" view "${ISSUE_NUMBER}" --json baseRefName)" || _owners_branch_json=""
+        branch="$(echo "${_owners_branch_json}" | jq -r '.baseRefName // empty')"
+    else
+        _owners_branch_json="$(gh api "/repos/${GH_REPOSITORY}")" || _owners_branch_json=""
+        branch="$(echo "${_owners_branch_json}" | jq -r '.default_branch // empty')"
+    fi
+    unset _owners_branch_json
+    if [[ -z "${branch}" ]]; then
+        echo "OWNERS: failed to resolve the ref to read OWNERS files from" >&2
+        OWNERS_LOAD_FAILED=1
+    fi
+fi
 export branch
 
-# fetch_owners_file fetches an OWNERS file from the given directory in the repo.
-# Outputs the file content on success, empty on failure.
+# fetch_owners_file fetches an OWNERS file from the given directory in
+# the repo. Outputs the file content on success, nothing when the file
+# does not exist (HTTP 404), and fails on any other error so that API
+# failures are never mistaken for a missing OWNERS file.
 function fetch_owners_file() {
     local dir="$1"
     local path
     local content
+    local errfile
     if [[ -z "${dir}" ]]; then
         path="OWNERS"
     else
         path="${dir}/OWNERS"
     fi
 
+    errfile="$(mktemp)"
     if ! content="$(gh api \
         --method GET \
         -H "Accept: application/vnd.github.raw+json" \
         "/repos/${GH_REPOSITORY}/contents/${path}" \
-        -f "ref=${branch}" 2>/dev/null)"; then
-        return 0
+        -f "ref=${branch}" 2>"${errfile}")"; then
+        if grep -q "HTTP 404" "${errfile}"; then
+            rm -f "${errfile}"
+            return 0
+        fi
+        cat "${errfile}" >&2
+        rm -f "${errfile}"
+        return 1
     fi
+    rm -f "${errfile}"
 
     printf '%s\n' "${content}"
 }
@@ -79,7 +111,8 @@ function get_parent_dir() {
 
 # load_owners_dir fetches the OWNERS file of a directory once and caches
 # its approvers and reviewers. Env APPROVERS are merged into the root
-# directory as if they were listed in the root OWNERS file.
+# directory as if they were listed in the root OWNERS file. Fails when
+# the fetch fails (other than a 404).
 # Must not be called in a subshell.
 function load_owners_dir() {
     local dir="$1"
@@ -95,7 +128,9 @@ ${dir}"
     fi
 
     local content
-    content="$(fetch_owners_file "${fetch_dir}")"
+    if ! content="$(fetch_owners_file "${fetch_dir}")"; then
+        return 1
+    fi
 
     local a r l
     a="$(get_owners_approvers "${content}")"
@@ -142,7 +177,9 @@ function get_file_area() {
     fi
 
     while true; do
-        load_owners_dir "${dir}"
+        if ! load_owners_dir "${dir}"; then
+            return 1
+        fi
         if [[ -n "$(get_dir_approvers "${dir}")" ]]; then
             _FILE_AREA="${dir}"
             return 0
@@ -161,7 +198,9 @@ function collect_area_approvers() {
     local dir="$1"
     local users=""
     while true; do
-        load_owners_dir "${dir}"
+        if ! load_owners_dir "${dir}"; then
+            return 1
+        fi
         local a
         a="$(get_dir_approvers "${dir}")"
         if [[ -n "${a}" ]]; then
@@ -175,25 +214,60 @@ function collect_area_approvers() {
     _AREA_APPROVERS="$(echo ${users} | tr ' ' '\n' | sed '/^$/d' | sort -u | tr '\n' ' ' | sed 's/ *$//')"
 }
 
-# get_pr_changed_files fetches the list of changed files for the current PR.
+# get_pr_changed_files fetches the list of changed files for the current
+# PR. Fails when the fetch fails, so callers never mistake an API error
+# for an empty change set.
 function get_pr_changed_files() {
-    gh api \
+    local files
+    if ! files="$(gh api \
         --paginate \
         "/repos/${GH_REPOSITORY}/pulls/${ISSUE_NUMBER}/files" \
-        --jq '.[].filename' |
-        sort -u
+        --jq '.[].filename')"; then
+        return 1
+    fi
+    echo "${files}" | sort -u
+}
+
+# mark_owners_load_failed records a hard OWNERS load failure and blanks
+# every OWNERS_* result so no partial data survives; consumers
+# (approve-status.sh) fail closed on it.
+function mark_owners_load_failed() {
+    echo "OWNERS: failed to load OWNERS data: $1" >&2
+    OWNERS_AREAS=""
+    OWNERS_AREA_APPROVERS=""
+    OWNERS_LABELS=""
+    OWNERS_LOAD_FAILED=1
+    export OWNERS_AREAS OWNERS_AREA_APPROVERS OWNERS_LABELS OWNERS_LOAD_FAILED
 }
 
 # load_owners_for_pr fetches changed files, computes the changed areas,
-# collects per-area approvers, and merges everything with env vars.
+# collects per-area approvers, and merges everything with env vars. On
+# any API failure it leaves the OWNERS_* variables empty and sets
+# OWNERS_LOAD_FAILED instead of failing, so command dispatch keeps
+# working while approval changes fail closed.
 function load_owners_for_pr() {
+    OWNERS_AREAS=""
+    OWNERS_AREA_APPROVERS=""
+    OWNERS_LABELS=""
+    export OWNERS_AREAS OWNERS_AREA_APPROVERS OWNERS_LABELS
+
+    if [[ -n "${OWNERS_LOAD_FAILED}" ]]; then
+        return 0
+    fi
+
     local files
-    files="$(get_pr_changed_files)"
+    if ! files="$(get_pr_changed_files)"; then
+        mark_owners_load_failed "could not fetch the changed files"
+        return 0
+    fi
 
     local areas=""
     local f
     for f in ${files}; do
-        get_file_area "${f}"
+        if ! get_file_area "${f}"; then
+            mark_owners_load_failed "could not fetch OWNERS for ${f}"
+            return 0
+        fi
         areas="${areas}
 ${_FILE_AREA}"
     done
@@ -206,12 +280,20 @@ ${_FILE_AREA}"
     local all_approvers=""
     local area
     for area in ${areas}; do
-        collect_area_approvers "${area}"
+        if ! collect_area_approvers "${area}"; then
+            mark_owners_load_failed "could not fetch OWNERS for area ${area}"
+            return 0
+        fi
         OWNERS_AREA_APPROVERS="${OWNERS_AREA_APPROVERS}${area} ${_AREA_APPROVERS}
 "
         all_approvers="${all_approvers} ${_AREA_APPROVERS}"
     done
     OWNERS_AREA_APPROVERS="$(echo "${OWNERS_AREA_APPROVERS}" | sed '/^$/d')"
+    # A repo with no approvers in any OWNERS file (or no OWNERS at all)
+    # keeps the stateless approval path: no per-area state to track.
+    if echo "${OWNERS_AREA_APPROVERS}" | awk 'NF >= 2 { exit 1 }'; then
+        OWNERS_AREA_APPROVERS=""
+    fi
     export OWNERS_AREA_APPROVERS
 
     echo "OWNERS: changed areas:" >&2
