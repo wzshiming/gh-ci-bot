@@ -125,6 +125,24 @@ For example, if `pkg/api/handler.go` and `pkg/util/helper.go` are both changed a
 
 The `/auto-cc` command and the automatic blunderbuss behavior share the same logic: they walk up from each individual changed file to find the nearest OWNERS file with available reviewers.
 
+## Testing
+
+The test suite in [`test/`](test/) runs the real scripts (`bin/*.sh`, `plugins/**/*.plugin.sh`, `entrypoint.sh`) against a mocked `gh` (and `curl`) that logs every invocation and serves canned JSON fixtures, so nothing ever talks to GitHub. It is pure bash with no dependencies beyond `bash` and `jq`, and runs on every push and pull request via [`.github/workflows/test.yml`](.github/workflows/test.yml).
+
+Run the whole suite locally:
+
+```bash
+./test/run.sh
+```
+
+Or only some specs, by name:
+
+```bash
+./test/run.sh release-note check-wip
+```
+
+Specs live in [`test/specs/`](test/specs/); the assertion, log and fixture helpers they use are documented in [`test/lib.sh`](test/lib.sh). On macOS, install GNU coreutils first (`brew install coreutils`) because the scripts use `realpath -m`; CI's ubuntu runners work out of the box.
+
 ## Roadmap
 
 - https://github.com/kubernetes/test-infra/tree/master/prow

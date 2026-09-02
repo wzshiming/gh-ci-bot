@@ -1,0 +1,17 @@
+name: Test
+on:
+  push:
+  pull_request:
+
+permissions: {}
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Run the test suite
+        run: ./test/run.sh
