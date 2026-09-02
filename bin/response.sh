@@ -2,7 +2,9 @@
 
 command.sh 2>&1 | tee ./ci-bot.log
 
-LOG=$(cat ./ci-bot.log | grep -e "^\[FAIL\] " | sed -e "s/^\[FAIL\] //g" | sed "s#${GH_TOKEN}#***#g")
+# The placeholder keeps sed from erroring out on an empty pattern when
+# GH_TOKEN is unset, which would drop the reply entirely.
+LOG=$(cat ./ci-bot.log | grep -e "^\[FAIL\] " | sed -e "s/^\[FAIL\] //g" | sed "s#${GH_TOKEN:-__no_token__}#***#g")
 
 function reply() {
     echo "@${LOGIN}"

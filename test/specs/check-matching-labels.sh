@@ -95,3 +95,11 @@ mkrepolabels "needs-kind"
 run check-matching-labels.sh
 assert_status 0
 log_has_line "gh pr -R wzshiming/example edit 1 --add-label needs-kind"
+
+begin_case "never mutates labels when the label query fails"
+stub_label_scripts
+export MOCK_GH_FAIL=1
+run check-matching-labels.sh
+assert_status 0
+assert_out_has "skipping"
+log_lacks "stub"

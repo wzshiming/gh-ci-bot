@@ -28,9 +28,19 @@ function size_label() {
     fi
 }
 
-info="$(gh pr -R "${GH_REPOSITORY}" view "${ISSUE_NUMBER}" --json additions,deletions,labels)"
+if ! info="$(gh pr -R "${GH_REPOSITORY}" view "${ISSUE_NUMBER}" --json additions,deletions,labels)"; then
+    # Never mutate labels from missing PR data.
+    echo "Failed to get the pull request, skipping the size sync."
+    return 0 2>/dev/null || exit 0
+fi
 
 total="$(echo "${info}" | jq -r '.additions + .deletions')"
+
+# An empty or null count would silently label the PR size/XS.
+if [[ ! "${total}" =~ ^[0-9]+$ ]]; then
+    echo "Failed to get the changed lines, skipping the size sync."
+    return 0 2>/dev/null || exit 0
+fi
 
 want="$(size_label "${total}")"
 
