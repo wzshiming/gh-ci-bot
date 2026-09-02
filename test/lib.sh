@@ -75,7 +75,6 @@ function begin_case() {
     export MOCK_WIP_JSON="${CASE_DIR}/wip.json"
     export MOCK_SIZE_JSON="${CASE_DIR}/size.json"
     export MOCK_MERGEABLE_JSON="${CASE_DIR}/mergeable.json"
-    export MOCK_COMMENTS_JSON="${CASE_DIR}/comments.json"
     export MOCK_LABELS_JSON="${CASE_DIR}/labels.json"
     export MOCK_LABEL_LIST_JSON="${CASE_DIR}/label-list.json"
     export PATH="${STUB_DIR}:${MOCK_DIR}:${BIN_DIR}:${BASE_PATH}"
@@ -202,15 +201,6 @@ function mkmergeable() {
     jq -n --arg state "${state}" --arg mergeable "${mergeable}" --args \
         '{mergeable: $mergeable, state: $state, labels: [$ARGS.positional[] | {name: .}]}' \
         "${@}" >"${MOCK_MERGEABLE_JSON}"
-}
-
-# mkcomments [login=body...] builds the reply to
-# `gh api /repos/<repo>/issues/<n>/comments`: the issue comments, with ids
-# assigned sequentially from 1.
-function mkcomments() {
-    jq -n --args \
-        '[$ARGS.positional | to_entries[] | {id: (.key + 1), user: {login: (.value | .[0:index("=")])}, body: (.value | .[index("=")+1:])}]' \
-        "${@}" >"${MOCK_COMMENTS_JSON}"
 }
 
 # mkrepolabels [label...] builds the reply to

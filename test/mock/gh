@@ -85,17 +85,6 @@ case "$*" in
         exit 1
     fi
     ;;
-"api /repos/"*"/issues/comments/"*)
-    # Editing or deleting a single issue comment: log only.
-    ;;
-*"/issues/"*"/comments"*)
-    # Issue comments of the PR; defaults to no comments.
-    if [[ -n "${MOCK_COMMENTS_JSON:-}" && -f "${MOCK_COMMENTS_JSON:-}" ]]; then
-        serve "${MOCK_COMMENTS_JSON}"
-    else
-        echo "[]"
-    fi
-    ;;
 "api /repos/"*)
     # Repository metadata, used to resolve the default branch.
     echo '{"default_branch":"main"}'
