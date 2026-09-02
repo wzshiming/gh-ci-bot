@@ -30,6 +30,7 @@ It supports [Kubernetes Prow OWNERS](https://github.com/kubernetes/test-infra/tr
 | `/[remove-]invalid`               | `/invalid`</br>`/remove-invalid`                       | Applies or removes the 'invalid' labels to an PR or issue.                                                                                                                           | label-invalid          |
 | `/[remove-]question`              | `/question`</br>`/remove-question`                     | Applies or removes the 'question' labels to an PR or issue.                                                                                                                          | label-question         |
 | `/[remove-]wontfix`               | `/wontfix`</br>`/remove-wontfix`                       | Applies or removes the 'wontfix' labels to an PR or issue.                                                                                                                           | label-wontfix          |
+| `/release-note-none`              | `/release-note-none`                                   | Applies the 'release-note-none' label, marking the PR as not needing a release note. Fails if the PR body's release-note block contains a note.   | release-note           |
 | `/base [branch]`                  | `/base main`                                           | Change to which branch this PR is to be merged into                                                                                                                                  | base                   |
 | `/rebase`                         | `/rebase`                                              | Rebase the this PR to the latest of the branch                                                                                                                                       | rebase                 |
 | `/cherry-pick [branch]`           | `/cherry-pick release-1.0`                             | Cherry-pick a merged PR to a target branch and create a new PR                                                                                                                       | cherry-pick            |
@@ -65,6 +66,26 @@ env:
 ```
 
 The comment is optional; a default explanatory comment is used when omitted. Set `REQUIRE_MATCHING_LABELS` to an empty string to disable the check.
+
+### Release notes
+
+Like prow's `release-note` plugin, when the `RELEASE_NOTE_REQUIRED` environment variable is set to a non-empty value (it is unset by default), the bot parses a fenced code block from the PR body whenever a PR is opened, edited or pushed to:
+
+````
+```release-note
+Added a feature.
+```
+````
+
+and applies exactly one of these mutually exclusive labels, removing the others:
+
+| Block content             | Label                                    |
+| ------------------------- | ---------------------------------------- |
+| `NONE` (case-insensitive) | `release-note-none`                      |
+| any other non-empty text  | `release-note`                           |
+| block missing or empty    | `do-not-merge/release-note-label-needed` |
+
+`do-not-merge/release-note-label-needed` blocks `/merge` and auto-merge like any other `do-not-merge/*` label, until a valid block is added or `/release-note-none` is used. The `/release-note-none` command is available to whoever the `release-note` plugin is enabled for, even when `RELEASE_NOTE_REQUIRED` is unset.
 
 ### Troubleshooting
 

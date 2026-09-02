@@ -68,6 +68,14 @@ function sync_wip_label() {
     fi
 }
 
+# sync_release_note_label keeps the release-note labels in sync with the
+# release-note block in the PR body, mirroring prow's release-note plugin.
+function sync_release_note_label() {
+    if [[ "${ISSUE_KIND}" == "pr" ]]; then
+        check-release-note.sh
+    fi
+}
+
 # sync_size_label keeps the size/* label in sync with the PR's diff size,
 # mirroring prow's size plugin.
 function sync_size_label() {
@@ -95,6 +103,7 @@ function main() {
         echo "Greetings to ${LOGIN}!"
         greeting.sh
         sync_wip_label
+        sync_release_note_label
         sync_size_label
         sync_approve_status
         auto_request_reviewers
@@ -109,11 +118,13 @@ function main() {
         echo "PR synchronized, removing lgtm label"
         remove-labels.sh lgtm
         sync_wip_label
+        sync_release_note_label
         sync_size_label
         sync_approve_status
     elif [[ "${TYPE}" == "edited" ]]; then
         echo "PR edited, syncing work-in-progress label"
         sync_wip_label
+        sync_release_note_label
     elif [[ "${TYPE}" == "labeled" || "${TYPE}" == "unlabeled" ]]; then
         echo "Labels changed, syncing needs-* labels"
         sync_matching_labels
