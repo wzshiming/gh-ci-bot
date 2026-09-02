@@ -44,8 +44,6 @@ kind/flake
 kind/regression
 kind/support
 needs-kind
-needs-ok-to-test
-ok-to-test
 release-note
 release-note-none
 size/XS
@@ -113,12 +111,6 @@ function label_color() {
     ;;
   kind/*)
     echo "c7def8"
-    ;;
-  needs-ok-to-test)
-    echo "b60205"
-    ;;
-  ok-to-test)
-    echo "15dd18"
     ;;
   release-note | release-note-none)
     echo "c2e0c6"
@@ -238,14 +230,8 @@ function label_description() {
   needs-kind)
     echo "Indicates an issue or PR lacks a \`kind/foo\` label and requires one."
     ;;
-  needs-ok-to-test)
-    echo "Indicates a PR that requires an org member to verify it is safe to test."
-    ;;
   needs-*)
     echo "Indicates an issue or PR lacks a \`${1#needs-}/foo\` label and requires one."
-    ;;
-  ok-to-test)
-    echo "Indicates a non-member PR verified by an org member that is safe to test."
     ;;
   release-note)
     echo "Denotes a PR that will be considered when it comes time to generate release notes."
