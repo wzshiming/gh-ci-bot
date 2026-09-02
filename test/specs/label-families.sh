@@ -21,7 +21,7 @@ function family_case() {
     begin_case "/${family} and /remove-${family} map to the ${family}/ label family"
     member "label-${family}"
     export ISSUE_KIND="issue"
-    export MESSAGE=$"/${family} ${value}"$'\n'"/remove-${family} ${value}"
+    export MESSAGE="/${family} ${value}"$'\n'"/remove-${family} ${value}"
     stub add-labels.sh
     stub remove-labels.sh
     run command.sh
