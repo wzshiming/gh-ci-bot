@@ -44,6 +44,13 @@ kind/flake
 kind/regression
 kind/support
 needs-kind
+needs-sig
+needs-triage
+priority/awaiting-more-evidence
+priority/backlog
+priority/critical-urgent
+priority/important-longterm
+priority/important-soon
 release-note
 release-note-none
 size/XS
@@ -52,6 +59,11 @@ size/M
 size/L
 size/XL
 size/XXL
+triage/accepted
+triage/duplicate
+triage/needs-information
+triage/not-reproducible
+triage/unresolved
 bug
 documentation
 duplicate
@@ -112,6 +124,27 @@ function label_color() {
   kind/*)
     echo "c7def8"
     ;;
+  area/*)
+    echo "0052cc"
+    ;;
+  committee/*)
+    echo "c0ff4a"
+    ;;
+  sig/* | wg/*)
+    echo "d2b48c"
+    ;;
+  priority/awaiting-more-evidence)
+    echo "fef2c0"
+    ;;
+  priority/backlog)
+    echo "fbca04"
+    ;;
+  priority/critical-urgent)
+    echo "e11d21"
+    ;;
+  priority/important-longterm | priority/important-soon)
+    echo "eb6420"
+    ;;
   release-note | release-note-none)
     echo "c2e0c6"
     ;;
@@ -132,6 +165,12 @@ function label_color() {
     ;;
   size/XXL)
     echo "ee0000"
+    ;;
+  triage/accepted)
+    echo "8fc951"
+    ;;
+  triage/*)
+    echo "d455d0"
     ;;
   bug)
     echo "d73a4a"
@@ -227,11 +266,38 @@ function label_description() {
   kind/*)
     echo "Categorizes issue or PR as related to ${1#kind/}."
     ;;
+  area/*)
+    echo "Categorizes an issue or PR as related to ${1#area/}."
+    ;;
+  committee/*)
+    echo "Denotes an issue or PR intended to be handled by the ${1#committee/} committee."
+    ;;
+  sig/*)
+    echo "Categorizes an issue or PR as relevant to SIG ${1#sig/}."
+    ;;
+  wg/*)
+    echo "Categorizes an issue or PR as relevant to WG ${1#wg/}."
+    ;;
   needs-kind)
     echo "Indicates an issue or PR lacks a \`kind/foo\` label and requires one."
     ;;
   needs-*)
     echo "Indicates an issue or PR lacks a \`${1#needs-}/foo\` label and requires one."
+    ;;
+  priority/awaiting-more-evidence)
+    echo "Lowest priority. Possibly useful, but not yet enough support to actually get it done."
+    ;;
+  priority/backlog)
+    echo "Higher priority than priority/awaiting-more-evidence."
+    ;;
+  priority/critical-urgent)
+    echo "Highest priority. Must be actively worked on as someone's top priority right now."
+    ;;
+  priority/important-longterm)
+    echo "Important over the long term, but may not be staffed and/or may need multiple releases to complete."
+    ;;
+  priority/important-soon)
+    echo "Must be staffed and worked on either currently, or very soon, ideally in time for the next release."
     ;;
   release-note)
     echo "Denotes a PR that will be considered when it comes time to generate release notes."
@@ -256,6 +322,21 @@ function label_description() {
     ;;
   size/XXL)
     echo "Denotes a PR that changes 1000+ lines."
+    ;;
+  triage/accepted)
+    echo "Indicates an issue or PR is ready to be actively worked on."
+    ;;
+  triage/duplicate)
+    echo "Indicates an issue is a duplicate of other open issue."
+    ;;
+  triage/needs-information)
+    echo "Indicates an issue needs more information in order to work on it."
+    ;;
+  triage/not-reproducible)
+    echo "Indicates an issue can not be reproduced as described."
+    ;;
+  triage/unresolved)
+    echo "Indicates an issue that can not or will not be resolved."
     ;;
   bug)
     echo "Something isn't working"
