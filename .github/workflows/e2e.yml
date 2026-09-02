@@ -1,0 +1,42 @@
+name: E2E
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    name: E2E
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: test/package-lock.json
+
+      # gh only speaks plain HTTP to a host without a port suffix, so the
+      # mock GitHub API server must bind 127.0.0.1:80.
+      - name: Allow binding port 80
+        run: sudo sysctl -w net.ipv4.ip_unprivileged_port_start=80
+
+      - name: Install dependencies
+        working-directory: test
+        run: npm ci
+
+      - name: Typecheck
+        working-directory: test
+        run: npm run typecheck
+
+      - name: Run e2e tests
+        working-directory: test
+        run: npm test
