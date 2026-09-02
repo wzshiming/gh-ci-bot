@@ -36,11 +36,19 @@ for workflow_run_id in ${workflow_run_ids}; do
         continue
     fi
     echo "Approve workflow run ID: ${workflow_run_id}"
-    gh api \
+    if ! gh api \
         --method POST \
         -H "Accept: application/vnd.github+json" \
-        "/repos/${GH_REPOSITORY}/actions/runs/${workflow_run_id}/approve" ||
-        failed+=("https://github.com/${GH_REPOSITORY}/actions/runs/${workflow_run_id}")
+        "/repos/${GH_REPOSITORY}/actions/runs/${workflow_run_id}/approve"; then
+        # The approve endpoint only accepts runs of fork pull requests;
+        # held runs of same-repo pull requests are started by a rerun.
+        echo "Approve rejected, falling back to rerun for workflow run ID: ${workflow_run_id}"
+        gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/${GH_REPOSITORY}/actions/runs/${workflow_run_id}/rerun" ||
+            failed+=("https://github.com/${GH_REPOSITORY}/actions/runs/${workflow_run_id}")
+    fi
 done
 
 if [[ ${#failed[@]} -eq 0 ]]; then
