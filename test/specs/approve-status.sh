@@ -240,13 +240,13 @@ assert_out_has "area_approvers=<>"
 
 # --- a repo legitimately without OWNERS files keeps working -----------
 
-begin_case "changed files but no OWNERS anywhere: approve stays stateless"
+begin_case "changed files but no OWNERS anywhere: 404s are not load failures"
 stub_reconcile
 mkfiles "src/main.go"
 run_owned approve-status.sh approve alice
-assert_status 0
-log_has_line "stub add-labels.sh approved"
-log_has_line "stub check-auto-merge.sh"
+assert_status 1
+assert_out_has "[FAIL] You are not an approver of any changed area."
+log_lacks "stub add-labels.sh"
 log_lacks "-X POST"
 
 begin_case "no changed files and no OWNERS: approve stays stateless"

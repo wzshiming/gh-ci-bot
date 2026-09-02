@@ -109,8 +109,7 @@ function clearComment() {
         }
         return out line
     }
-    # fenceTicks counts leading fence characters (after up to 3 spaces);
-    # the character is left in fenceChar, the rest of the line in fenceRest.
+    # fenceTicks: number of leading fence chars; sets fenceChar and fenceRest.
     function fenceTicks(line,    i, n, ch) {
         i = 1
         while (i <= 3 && substr(line, i, 1) == " ") i++
@@ -134,12 +133,11 @@ function clearComment() {
         }
         n = fenceTicks(line)
         if (inFence) {
-            # A closer needs the same character, at least as many of it,
-            # and no info string.
+            # Closer: same char, at least as many, nothing else on the line.
             if (n >= fenceOpen && fenceChar == openChar && fenceRest ~ /^[ \t\r]*$/) inFence = 0
             next
         }
-        # A backtick opener whose info string has a backtick is literal text.
+        # A backtick opener with a backtick in its info string is plain text.
         if (n >= 3 && !(fenceChar == "`" && index(fenceRest, "`") > 0)) {
             inFence = 1
             fenceOpen = n

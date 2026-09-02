@@ -69,7 +69,7 @@ case "$*" in
     if [[ -n "${MOCK_PR_BASE_JSON:-}" && -f "${MOCK_PR_BASE_JSON:-}" ]]; then
         serve "${MOCK_PR_BASE_JSON}"
     else
-        echo '{"baseRefName":"main"}'
+        jq -r "${jq_filter:-.}" <<<'{"baseRefName":"main"}'
     fi
     ;;
 "api /user"*)
@@ -142,7 +142,7 @@ case "$*" in
     ;;
 "api /repos/"*)
     # Repository metadata, used to resolve the default branch.
-    echo '{"default_branch":"main"}'
+    jq -r "${jq_filter:-.}" <<<'{"default_branch":"main"}'
     ;;
 *)
     # Mutations (label edits, comments, label create, ...): log only.

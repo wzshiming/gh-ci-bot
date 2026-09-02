@@ -19,52 +19,34 @@
 # The "approved" label is kept in sync with the state after every command,
 # mirroring prow's approve plugin: approvals are sticky across new commits.
 #
-# Requires OWNERS_AREA_APPROVERS (exported by owners.sh) for all commands.
-# When OWNERS_LOAD_FAILED is non-empty (exported by owners.sh on API
-# failures) every command fails closed instead of treating the missing
-# data as "no OWNERS files".
+# Requires OWNERS_AREA_APPROVERS (exported by owners.sh) for all commands;
+# a non-empty OWNERS_LOAD_FAILED makes every command fail closed.
 # If AUTHOR is set, areas owned by the PR author are approved by default
 # (prow's implicit self-approval).
 
 STATUS_MARKER="<!-- ci-bot-approve-status"
 
 function find_status_comment() {
-    local bot_login
+    local bot_login comments
     bot_login="$(bot-login.sh)"
-    local comments
-    if ! comments="$(gh api --paginate "/repos/${GH_REPOSITORY}/issues/${ISSUE_NUMBER}/comments")"; then
-        return 1
-    fi
-    echo "${comments}" |
-        jq -r "[.[] | select(.user.login == \"${bot_login}\") | select(.body | startswith(\"${STATUS_MARKER}\"))] | first | .id // empty"
+    comments="$(gh api --paginate "/repos/${GH_REPOSITORY}/issues/${ISSUE_NUMBER}/comments")" || return 1
+    jq -r "[.[] | select(.user.login == \"${bot_login}\") | select(.body | startswith(\"${STATUS_MARKER}\"))] | first | .id // empty" <<<"${comments}"
 }
 
 # get_status_state prints the state lines ("<area> <approver>...") stored
 # in the comment with the given id.
 function get_status_state() {
-    local id="$1"
     local body
-    if ! body="$(gh api "/repos/${GH_REPOSITORY}/issues/comments/${id}" --jq '.body')"; then
-        return 1
-    fi
-    echo "${body}" |
-        sed -n "/^${STATUS_MARKER}$/,/^-->$/p" | sed '1d;$d'
+    body="$(gh api "/repos/${GH_REPOSITORY}/issues/comments/$1" --jq '.body')" || return 1
+    sed -n "/^${STATUS_MARKER}$/,/^-->$/p" <<<"${body}" | sed '1d;$d'
 }
 
-# read_status_state loads the stored state into STATUS_ID/STATUS_STATE
-# (both empty when no status comment exists). Fails when the status
-# comment cannot be read, so callers can fail closed.
-function read_status_state() {
-    STATUS_ID=""
-    STATUS_STATE=""
-    if ! STATUS_ID="$(find_status_comment)"; then
-        return 1
-    fi
-    if [[ -n "${STATUS_ID}" ]]; then
-        if ! STATUS_STATE="$(get_status_state "${STATUS_ID}")"; then
-            return 1
-        fi
-    fi
+# read_state prints the stored state: empty when there is no status
+# comment, failure when it cannot be read.
+function read_state() {
+    local id
+    id="$(find_status_comment)" || return 1
+    [[ -z "${id}" ]] || get_status_state "${id}"
 }
 
 # state_approved_for prints the approvers recorded in the state for an area.
@@ -176,16 +158,13 @@ function render_body() {
     fi
 }
 
-# save_status_comment creates or updates the status comment. Fails when
-# the comment cannot be read or written.
+# save_status_comment creates or updates the status comment.
 function save_status_comment() {
     local state="$1"
     local body
     body="$(render_body "${state}")"
     local id
-    if ! id="$(find_status_comment)"; then
-        return 1
-    fi
+    id="$(find_status_comment)" || return 1
     if [[ -n "${id}" ]]; then
         gh api --silent -X PATCH "/repos/${GH_REPOSITORY}/issues/comments/${id}" -f body="${body}"
     else
@@ -200,20 +179,17 @@ function save_status_comment() {
 function build_state() {
     local old_state="$1"
     local state=""
-    local area approvers approved
+    local area approvers approved u
     while read -r area approvers; do
         [[ -z "${area}" ]] && continue
         if echo "${old_state}" | awk -v a="${area}" '$1 == a { found = 1 } END { exit !found }'; then
-            approved="$(state_approved_for "${old_state}" "${area}")"
-            approved="$(awk -v cur="${approvers}" -v old="${approved}" 'BEGIN {
-                n = split(cur, c, " ")
-                for (i = 1; i <= n; i++) allowed[tolower(c[i])] = 1
-                m = split(old, o, " ")
-                for (j = 1; j <= m; j++)
-                    if (tolower(o[j]) in allowed)
-                        out = out (out ? " " : "") o[j]
-                print out
-            }')"
+            approved=""
+            for u in $(state_approved_for "${old_state}" "${area}"); do
+                if echo "${approvers}" | tr ' ' '\n' | grep -qixF -e "${u}"; then
+                    approved="${approved} ${u}"
+                fi
+            done
+            approved="${approved# }"
         elif [[ -n "${AUTHOR:-}" ]] && echo "${approvers}" | tr ' ' '\n' | grep -qixF -e "${AUTHOR}"; then
             approved="${AUTHOR}"
             echo "Area '${area}' approved by default: PR author ${AUTHOR} is an approver" >&2
@@ -245,11 +221,6 @@ function reconcile_label() {
 function cmd_approve() {
     local login="$1"
 
-    if [[ -n "${OWNERS_LOAD_FAILED:-}" ]]; then
-        echo "[FAIL] Failed to load OWNERS data, not changing approval state."
-        return 1
-    fi
-
     if [[ -z "${OWNERS_AREA_APPROVERS}" ]]; then
         # No OWNERS areas: fall back to stateless approval.
         reconcile_label true
@@ -261,12 +232,11 @@ function cmd_approve() {
         return 1
     fi
 
-    local old_state=""
-    if ! read_status_state; then
+    local old_state
+    old_state="$(read_state)" || {
         echo "[FAIL] Failed to read the approval status, not changing approval state."
         return 1
-    fi
-    old_state="${STATUS_STATE}"
+    }
 
     local state
     state="$(build_state "${old_state}")"
@@ -292,10 +262,10 @@ function cmd_approve() {
     done <<<"${state}"
     new_state="$(echo "${new_state}" | sed '/^$/d' | sed 's/ *$//')"
 
-    if ! save_status_comment "${new_state}"; then
+    save_status_comment "${new_state}" || {
         echo "[FAIL] Failed to save the approval status, not changing approval state."
         return 1
-    fi
+    }
     reconcile_label "${all_approved}"
 
     if [[ "${all_approved}" == "true" ]]; then
@@ -310,22 +280,16 @@ function cmd_approve() {
 function cmd_unapprove() {
     local login="$1"
 
-    if [[ -n "${OWNERS_LOAD_FAILED:-}" ]]; then
-        echo "[FAIL] Failed to load OWNERS data, not changing approval state."
-        return 1
-    fi
-
     if [[ -z "${OWNERS_AREA_APPROVERS}" ]]; then
         reconcile_label false
         return 0
     fi
 
-    local old_state=""
-    if ! read_status_state; then
+    local old_state
+    old_state="$(read_state)" || {
         echo "[FAIL] Failed to read the approval status, not changing approval state."
         return 1
-    fi
-    old_state="${STATUS_STATE}"
+    }
 
     local state
     state="$(build_state "${old_state}")"
@@ -340,10 +304,10 @@ function cmd_unapprove() {
     done <<<"${state}"
     new_state="$(echo "${new_state}" | sed '/^$/d' | sed 's/ *$//')"
 
-    if ! save_status_comment "${new_state}"; then
+    save_status_comment "${new_state}" || {
         echo "[FAIL] Failed to save the approval status, not changing approval state."
         return 1
-    fi
+    }
     if state_all_approved "${new_state}"; then
         reconcile_label true
     else
@@ -355,29 +319,15 @@ function cmd_unapprove() {
 # recording any new approval. Used when the PR is opened or synchronized:
 # approvals are sticky, but new areas may need approval again.
 function cmd_sync() {
-    if [[ -n "${OWNERS_LOAD_FAILED:-}" ]]; then
-        echo "Failed to load OWNERS data, skipping the approval-state sync." >&2
-        return 0
-    fi
-
     if [[ -z "${OWNERS_AREA_APPROVERS}" ]]; then
         return 0
     fi
 
-    local old_state=""
-    if ! read_status_state; then
-        echo "Failed to read the approval status, not syncing." >&2
-        return 1
-    fi
-    old_state="${STATUS_STATE}"
-
-    local state
+    local old_state state
+    old_state="$(read_state)" || return 1
     state="$(build_state "${old_state}")"
 
-    if ! save_status_comment "${state}"; then
-        echo "Failed to save the approval status, not syncing." >&2
-        return 1
-    fi
+    save_status_comment "${state}" || return 1
     if state_all_approved "${state}"; then
         reconcile_label true
     else
@@ -388,24 +338,31 @@ function cmd_sync() {
 # cmd_check succeeds only when every changed area is approved (or no
 # OWNERS areas are defined). Used as a gate by check-auto-merge.sh.
 function cmd_check() {
-    if [[ -n "${OWNERS_LOAD_FAILED:-}" ]]; then
-        echo "Failed to load OWNERS data, cannot verify the approval state." >&2
-        return 1
-    fi
-
     if [[ -z "${OWNERS_AREA_APPROVERS}" ]]; then
         return 0
     fi
 
-    local old_state=""
-    if ! read_status_state; then
-        echo "Failed to read the approval status, cannot verify the approval state." >&2
-        return 1
-    fi
-    old_state="${STATUS_STATE}"
-
+    local old_state
+    old_state="$(read_state)" || return 1
     state_all_approved "$(build_state "${old_state}")"
 }
+
+# A failed OWNERS load fails closed: no approval change, no auto-merge.
+if [[ -n "${OWNERS_LOAD_FAILED:-}" ]]; then
+    case "$1" in
+    approve | unapprove)
+        echo "[FAIL] Failed to load OWNERS data, not changing approval state."
+        exit 1
+        ;;
+    sync)
+        echo "Failed to load OWNERS data, skipping the approval-state sync." >&2
+        exit 0
+        ;;
+    check)
+        exit 1
+        ;;
+    esac
+fi
 
 case "$1" in
 approve)
