@@ -73,29 +73,6 @@ case "$*" in
         serve "${MOCK_PR_FILES_JSON}"
     fi
     ;;
-*"/actions/runs/"*"/approve"*)
-    # Approving a held workflow run; MOCK_GH_APPROVE_FAIL simulates the
-    # 403 the endpoint returns for runs not from fork pull requests.
-    if [[ -n "${MOCK_GH_APPROVE_FAIL:-}" ]]; then
-        echo "mock gh: simulated approve failure: gh $*" >&2
-        exit 1
-    fi
-    ;;
-*"/actions/runs/"*"/rerun"*)
-    # Re-running a workflow run; MOCK_GH_RERUN_FAIL simulates a failure.
-    if [[ -n "${MOCK_GH_RERUN_FAIL:-}" ]]; then
-        echo "mock gh: simulated rerun failure: gh $*" >&2
-        exit 1
-    fi
-    ;;
-*"/actions/runs?"*)
-    # The repository's workflow runs matching a filter query.
-    serve "${MOCK_RUNS_JSON:-}"
-    ;;
-*"/pulls/"*)
-    # The pull request itself, e.g. for its head SHA.
-    serve "${MOCK_PULL_JSON:-}"
-    ;;
 *"/contents/"*)
     # OWNERS file fetches; fail like a 404 unless a fixture is given.
     if [[ -n "${MOCK_OWNERS_FILE:-}" && -f "${MOCK_OWNERS_FILE:-}" ]]; then
