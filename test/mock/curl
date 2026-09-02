@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+# Mock curl: logs every invocation to ${MOCK_LOG} and succeeds silently,
+# for scripts that call the GitHub REST API directly (e.g.
+# bin/add-assignee.sh). Setting MOCK_CURL_FAIL to a non-empty value makes
+# every call fail, to simulate API failures.
+
+if [[ -n "${MOCK_LOG:-}" ]]; then
+    echo "curl $*" >>"${MOCK_LOG}"
+fi
+
+if [[ -n "${MOCK_CURL_FAIL:-}" ]]; then
+    echo "mock curl: simulated failure: curl $*" >&2
+    exit 1
+fi
+
+echo '{}'

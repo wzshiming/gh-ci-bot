@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+
+# Mock gh: logs every invocation to ${MOCK_LOG}, serves canned JSON for
+# view/list queries from the per-case fixture files exported by the
+# harness (test/lib.sh), and lets mutating calls (label edits, comments,
+# ...) succeed silently so the log is the only trace of them.
+#
+# Setting MOCK_GH_FAIL to a non-empty value makes every call fail, to
+# simulate API failures.
+#
+# This is an executable, not a shell function, and it is only ever put on
+# PATH by the spec process, so it cannot leak into an interactive shell.
+
+if [[ -n "${MOCK_LOG:-}" ]]; then
+    echo "gh $*" >>"${MOCK_LOG}"
+fi
+
+if [[ -n "${MOCK_GH_FAIL:-}" ]]; then
+    echo "mock gh: simulated failure: gh $*" >&2
+    exit 1
+fi
+
+# The real gh applies the --jq filter to the JSON reply; do the same to
+# the fixture so scripts using --jq see what they expect.
+jq_filter=""
+prev=""
+for arg in "$@"; do
+    if [[ "${prev}" == "--jq" || "${prev}" == "-q" ]]; then
+        jq_filter="${arg}"
+    fi
+    prev="${arg}"
+done
+
+# serve <fixture-file>: print a fixture, through the --jq filter if one
+# was given. A query without a fixture fails like a 404 so that specs
+# never silently run against missing data.
+function serve() {
+    local fixture="${1:-}"
+    if [[ -z "${fixture}" || ! -f "${fixture}" ]]; then
+        echo "mock gh: no fixture for: gh $*" >&2
+        exit 1
+    fi
+    if [[ -n "${jq_filter}" ]]; then
+        jq -r "${jq_filter}" "${fixture}"
+    else
+        cat "${fixture}"
+    fi
+}
+
+case "$*" in
+*"--json body,labels"*)
+    serve "${MOCK_PR_JSON:-}"
+    ;;
+*"--json isDraft,title,labels"*)
+    serve "${MOCK_WIP_JSON:-}"
+    ;;
+*"--json additions,deletions,labels"*)
+    serve "${MOCK_SIZE_JSON:-}"
+    ;;
+*"--json labels"*)
+    serve "${MOCK_LABELS_JSON:-}"
+    ;;
+*"--json name"*)
+    # gh label list --json name: the repository's existing labels.
+    serve "${MOCK_LABEL_LIST_JSON:-}"
+    ;;
+"api /user"*)
+    echo '{"login":"mock-bot"}'
+    ;;
+*"/pulls/"*"/files"*)
+    # Changed files of the PR; defaults to no changed files.
+    if [[ -n "${MOCK_PR_FILES_JSON:-}" && -f "${MOCK_PR_FILES_JSON:-}" ]]; then
+        serve "${MOCK_PR_FILES_JSON}"
+    fi
+    ;;
+*"/contents/"*)
+    # OWNERS file fetches; fail like a 404 unless a fixture is given.
+    if [[ -n "${MOCK_OWNERS_FILE:-}" && -f "${MOCK_OWNERS_FILE:-}" ]]; then
+        cat "${MOCK_OWNERS_FILE}"
+    else
+        echo "mock gh: no fixture for: gh $*" >&2
+        exit 1
+    fi
+    ;;
+"api /repos/"*)
+    # Repository metadata, used to resolve the default branch.
+    echo '{"default_branch":"main"}'
+    ;;
+*)
+    # Mutations (label edits, comments, label create, ...): log only.
+    ;;
+esac
