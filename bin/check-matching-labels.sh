@@ -2,17 +2,20 @@
 
 # Sync "needs-*" labels on an issue or PR, mirroring prow's
 # require-matching-label plugin: when no label matching a configured regex
-# is present, the configured missing label (e.g. needs-kind) is added along
-# with an explanatory comment, and the missing label is removed once a
-# matching label is added.
+# is present, the configured missing label (e.g. needs-kind) is added, and
+# the missing label is removed once a matching label is added.
 #
-# Rules are configured via the REQUIRE_MATCHING_LABELS environment variable,
-# one rule per line in the format:
-#   <missing-label> <regexp> [comment...]
-# The comment is optional; a default explanatory comment is used when omitted.
+# Rules are configured via the ISSUE_REQUIRE_MATCHING_LABELS (issues) and
+# PR_REQUIRE_MATCHING_LABELS (PRs) environment variables, selected by
+# ISSUE_KIND. One rule per line in the format:
+#   <missing-label> <regexp>
 # Defaults to requiring a kind/* label via the needs-kind label.
 
-RULES="${REQUIRE_MATCHING_LABELS-needs-kind ^kind/}"
+if [[ "${ISSUE_KIND}" == "pr" ]]; then
+    RULES="${PR_REQUIRE_MATCHING_LABELS-needs-kind ^kind/}"
+else
+    RULES="${ISSUE_REQUIRE_MATCHING_LABELS-needs-kind ^kind/}"
+fi
 
 if [[ -z "${RULES}" ]]; then
     return 0 2>/dev/null || exit 0
@@ -20,7 +23,7 @@ fi
 
 labels="$(gh "${ISSUE_KIND}" -R "${GH_REPOSITORY}" view "${ISSUE_NUMBER}" --json labels --jq '.labels[].name')"
 
-while read -r missing_label regexp comment; do
+while read -r missing_label regexp _; do
     if [[ -z "${missing_label}" || -z "${regexp}" ]]; then
         continue
     fi
@@ -46,6 +49,5 @@ while read -r missing_label regexp comment; do
     elif [[ "${has_missing}" != "true" ]]; then
         echo "No label matching \`${regexp}\`, adding ${missing_label}"
         add-labels.sh "${missing_label}"
-        comment.sh "${comment:-This ${ISSUE_KIND} is currently missing a label matching the regular expression \`${regexp}\`, so the \`${missing_label}\` label has been applied. It will be removed automatically once a matching label is added.}"
     fi
 done <<<"${RULES}"

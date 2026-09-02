@@ -101,11 +101,14 @@ env:
   BLUNDERBUSS_REVIEWER_COUNT: 2
 
   # Rules for the require-matching-label check, one per line in the format:
-  #   <missing-label> <regexp> [comment...]
-  # When an issue or PR has no label matching the regexp, the missing label
-  # is applied with an explanatory comment, and removed once a matching
-  # label is added. Set to an empty string to disable.
-  REQUIRE_MATCHING_LABELS: |-
+  #   <missing-label> <regexp>
+  # When an issue (ISSUE_REQUIRE_MATCHING_LABELS) or PR
+  # (PR_REQUIRE_MATCHING_LABELS) has no label matching the regexp, the
+  # missing label is applied, and removed once a matching label is added.
+  # Set to an empty string to disable.
+  ISSUE_REQUIRE_MATCHING_LABELS: |-
+    needs-kind ^kind/
+  PR_REQUIRE_MATCHING_LABELS: |-
     needs-kind ^kind/
 
   # Additional labels the bot is allowed to create, one entry per line.
