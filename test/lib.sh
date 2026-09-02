@@ -242,6 +242,23 @@ function log_has_line() {
     fi
 }
 
+# log_before <first> <second> checks that the first invocation containing
+# <first> appears before the first invocation containing <second>, proving
+# one action happened before another. Either text missing entirely is also
+# a failure.
+function log_before() {
+    local first second
+    first="$(grep -nF -e "${1}" "${MOCK_LOG}" | head -1 | cut -d: -f1)"
+    second="$(grep -nF -e "${2}" "${MOCK_LOG}" | head -1 | cut -d: -f1)"
+    if [[ -z "${first}" ]]; then
+        fail_case "expected an invocation containing \"${1}\""
+    elif [[ -z "${second}" ]]; then
+        fail_case "expected an invocation containing \"${2}\""
+    elif [[ "${first}" -ge "${second}" ]]; then
+        fail_case "expected an invocation containing \"${1}\" before one containing \"${2}\""
+    fi
+}
+
 # log_lacks <text> checks that no gh/curl/stub invocation contains the
 # given text, proving a mutation did not happen.
 function log_lacks() {
