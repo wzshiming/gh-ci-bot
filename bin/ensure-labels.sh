@@ -31,6 +31,7 @@ approved
 do-not-merge
 do-not-merge/hold
 do-not-merge/work-in-progress
+do-not-merge/release-note-label-needed
 kind/api-change
 kind/bug
 kind/cleanup
@@ -42,6 +43,8 @@ kind/flake
 kind/regression
 kind/support
 needs-kind
+release-note
+release-note-none
 size/XS
 size/S
 size/M
@@ -107,6 +110,9 @@ function label_color() {
     ;;
   kind/*)
     echo "c7def8"
+    ;;
+  release-note | release-note-none)
+    echo "c2e0c6"
     ;;
   size/XS)
     echo "009900"
@@ -178,6 +184,9 @@ function label_description() {
   do-not-merge/work-in-progress)
     echo "Indicates that a PR should not merge because it is a work in progress."
     ;;
+  do-not-merge/release-note-label-needed)
+    echo "Indicates that a PR should not merge because it's missing one of the release note labels."
+    ;;
   do-not-merge/*)
     echo "Indicates that a PR should not merge."
     ;;
@@ -219,6 +228,12 @@ function label_description() {
     ;;
   needs-*)
     echo "Indicates an issue or PR lacks a \`${1#needs-}/foo\` label and requires one."
+    ;;
+  release-note)
+    echo "Denotes a PR that will be considered when it comes time to generate release notes."
+    ;;
+  release-note-none)
+    echo "Denotes a PR that doesn't merit a release note."
     ;;
   size/XS)
     echo "Denotes a PR that changes 0-9 lines."
