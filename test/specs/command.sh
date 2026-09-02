@@ -246,6 +246,36 @@ assert_out_has "Exec command: hold"
 assert_out_lacks "Exec command: merge"
 log_has_line "stub add-labels.sh ${HOLD_LABEL}"
 
+begin_case "tilde fences suppress commands"
+member hold
+export ISSUE_KIND="issue"
+export MESSAGE=$'~~~\n/hold\n~~~'
+stub add-labels.sh
+run command.sh
+assert_status 0
+assert_out_lacks "Exec command"
+log_empty
+
+begin_case "a tilde line does not close a backtick fence"
+member hold
+export MESSAGE=$'```\n~~~\n/merge\n```\n/hold'
+stub add-labels.sh
+run command.sh
+assert_status 0
+assert_out_has "Exec command: hold"
+assert_out_lacks "Exec command: merge"
+log_has_line "stub add-labels.sh ${HOLD_LABEL}"
+
+begin_case "an invalid backtick opener stays literal text"
+member hold
+export ISSUE_KIND="issue"
+export MESSAGE=$'```lang```\ntext\n```\n/hold\n```'
+stub add-labels.sh
+run command.sh
+assert_status 0
+assert_out_lacks "Exec command"
+log_empty
+
 begin_case "arguments are never glob-expanded"
 member label
 export MESSAGE="/label *"

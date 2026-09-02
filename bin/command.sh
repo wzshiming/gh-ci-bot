@@ -109,13 +109,18 @@ function clearComment() {
         }
         return out line
     }
-    # fenceTicks counts leading backticks (after up to 3 spaces); the
-    # remainder of the line is left in fenceRest.
-    function fenceTicks(line,    i, n) {
+    # fenceTicks counts leading fence characters (after up to 3 spaces);
+    # the character is left in fenceChar, the rest of the line in fenceRest.
+    function fenceTicks(line,    i, n, ch) {
         i = 1
         while (i <= 3 && substr(line, i, 1) == " ") i++
+        ch = substr(line, i, 1)
+        fenceChar = ""
+        fenceRest = ""
+        if (ch != "`" && ch != "~") return 0
         n = 0
-        while (substr(line, i + n, 1) == "`") n++
+        while (substr(line, i + n, 1) == ch) n++
+        fenceChar = ch
         fenceRest = substr(line, i + n)
         return n
     }
@@ -129,13 +134,16 @@ function clearComment() {
         }
         n = fenceTicks(line)
         if (inFence) {
-            # A closer needs at least as many backticks and no info string.
-            if (n >= fenceOpen && fenceRest ~ /^[ \t\r]*$/) inFence = 0
+            # A closer needs the same character, at least as many of it,
+            # and no info string.
+            if (n >= fenceOpen && fenceChar == openChar && fenceRest ~ /^[ \t\r]*$/) inFence = 0
             next
         }
-        if (n >= 3) {
+        # A backtick opener whose info string has a backtick is literal text.
+        if (n >= 3 && !(fenceChar == "`" && index(fenceRest, "`") > 0)) {
             inFence = 1
             fenceOpen = n
+            openChar = fenceChar
             next
         }
         print stripComments(line)
