@@ -44,10 +44,8 @@ kind/flake
 kind/regression
 kind/support
 needs-kind
-needs-ok-to-test
 needs-sig
 needs-triage
-ok-to-test
 priority/awaiting-more-evidence
 priority/backlog
 priority/critical-urgent
@@ -134,12 +132,6 @@ function label_color() {
     ;;
   sig/* | wg/*)
     echo "d2b48c"
-    ;;
-  needs-ok-to-test)
-    echo "b60205"
-    ;;
-  ok-to-test)
-    echo "15dd18"
     ;;
   priority/awaiting-more-evidence)
     echo "fef2c0"
@@ -289,14 +281,8 @@ function label_description() {
   needs-kind)
     echo "Indicates an issue or PR lacks a \`kind/foo\` label and requires one."
     ;;
-  needs-ok-to-test)
-    echo "Indicates a PR that requires an org member to verify it is safe to test."
-    ;;
   needs-*)
     echo "Indicates an issue or PR lacks a \`${1#needs-}/foo\` label and requires one."
-    ;;
-  ok-to-test)
-    echo "Indicates a non-member PR verified by an org member that is safe to test."
     ;;
   priority/awaiting-more-evidence)
     echo "Lowest priority. Possibly useful, but not yet enough support to actually get it done."
