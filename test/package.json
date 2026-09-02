@@ -1,0 +1,16 @@
+{
+  "name": "gh-ci-bot-e2e",
+  "version": "0.0.0",
+  "private": true,
+  "description": "e2e tests driving the real bin/ scripts against a local mock GitHub API server",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.11"
+  }
+}
