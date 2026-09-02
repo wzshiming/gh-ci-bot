@@ -73,11 +73,14 @@ function exec_cmd() {
     local cmd="$1"
     local cmdpath="$(which "${cmd}.plugin.sh")"
     if [[ -z "${cmdpath}" ]]; then
-        if compgen -G "${PLUGINS_DIR}/*/${cmd}.plugin.sh" >/dev/null; then
-            echo "[FAIL] You don't have permission to use the \`/${cmd}\` command. Please contact a maintainer for access."
-        else
-            echo "[FAIL] Unknown command \`/${cmd}\`. Please check the available commands and try again."
-        fi
+        local dir
+        for dir in "${PLUGINS_DIR}"/*/; do
+            if [[ -e "${dir}${cmd}.plugin.sh" ]]; then
+                echo "[FAIL] You don't have permission to use the \`/${cmd}\` command. Please contact a maintainer for access."
+                return 1
+            fi
+        done
+        echo "[FAIL] Unknown command \`/${cmd}\`. Please check the available commands and try again."
         return 1
     fi
 
@@ -106,6 +109,16 @@ function clearComment() {
         }
         return out line
     }
+    # fenceTicks counts leading backticks (after up to 3 spaces); the
+    # remainder of the line is left in fenceRest.
+    function fenceTicks(line,    i, n) {
+        i = 1
+        while (i <= 3 && substr(line, i, 1) == " ") i++
+        n = 0
+        while (substr(line, i + n, 1) == "`") n++
+        fenceRest = substr(line, i + n)
+        return n
+    }
     {
         line = $0
         if (inComment) {
@@ -114,12 +127,15 @@ function clearComment() {
             inComment = 0
             line = "COMMENT" substr(line, e + 3)
         }
+        n = fenceTicks(line)
         if (inFence) {
-            if (line ~ /^ ? ? ?```/) inFence = 0
+            # A closer needs at least as many backticks and no info string.
+            if (n >= fenceOpen && fenceRest ~ /^[ \t\r]*$/) inFence = 0
             next
         }
-        if (line ~ /^ ? ? ?```/) {
+        if (n >= 3) {
             inFence = 1
+            fenceOpen = n
             next
         }
         print stripComments(line)

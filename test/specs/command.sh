@@ -226,6 +226,26 @@ assert_status 0
 assert_out_lacks "Exec command"
 log_empty
 
+begin_case "a longer fence is not closed by a shorter one"
+member hold
+export MESSAGE=$'````\n```\n/merge\n````\n/hold'
+stub add-labels.sh
+run command.sh
+assert_status 0
+assert_out_has "Exec command: hold"
+assert_out_lacks "Exec command: merge"
+log_has_line "stub add-labels.sh ${HOLD_LABEL}"
+
+begin_case "a fence line with an info string does not close the fence"
+member hold
+export MESSAGE=$'```\n```bash\n/merge\n```\n/hold'
+stub add-labels.sh
+run command.sh
+assert_status 0
+assert_out_has "Exec command: hold"
+assert_out_lacks "Exec command: merge"
+log_has_line "stub add-labels.sh ${HOLD_LABEL}"
+
 begin_case "arguments are never glob-expanded"
 member label
 export MESSAGE="/label *"
@@ -253,6 +273,14 @@ export MESSAGE="/erg"
 run command.sh
 assert_status 0
 assert_out_has "[FAIL] Unknown command \`/erg\`."
+log_empty
+
+begin_case "glob characters in a command name are not expanded"
+export ISSUE_KIND="issue"
+export MESSAGE='/h*'
+run command.sh
+assert_status 0
+assert_out_has "[FAIL] Unknown command \`/h*\`."
 log_empty
 
 begin_case "reviewer matching is login-case-insensitive"
