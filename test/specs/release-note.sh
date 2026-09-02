@@ -414,25 +414,25 @@ assert_out_has "[SKIP] Label \`totally-bogus\` is not listed in LABELS, not crea
 log_lacks " create "
 
 begin_case "ensure-labels.sh: an exact LABELS entry allows the label"
-export LABELS="triage/accepted"
+export LABELS="language/go"
 mkrepolabels
-run ensure-labels.sh triage/accepted
+run ensure-labels.sh language/go
 assert_status 0
-log_has "create triage/accepted --color ededed"
+log_has "create language/go --color ededed"
 
 begin_case "ensure-labels.sh: a LABELS prefix entry allows the whole prefix"
-export LABELS="priority/"
+export LABELS="language/"
 mkrepolabels
-run ensure-labels.sh priority/critical-urgent
+run ensure-labels.sh language/rust
 assert_status 0
-log_has "create priority/critical-urgent"
+log_has "create language/rust"
 
 begin_case "ensure-labels.sh: a prefix entry does not allow the bare prefix name"
-export LABELS="priority/"
+export LABELS="language/"
 mkrepolabels
-run ensure-labels.sh priority
+run ensure-labels.sh language
 assert_status 0
-assert_out_has "[SKIP] Label \`priority\`"
+assert_out_has "[SKIP] Label \`language\`"
 log_lacks " create "
 
 begin_case "ensure-labels.sh: leaves existing labels alone"

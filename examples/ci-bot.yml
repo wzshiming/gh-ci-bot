@@ -48,11 +48,17 @@ env:
 
   # This plugins is for organization member or repository member
   MEMBERS_PLUGINS: |-
+    label-area
+    label-committee
     label-duplicate
     label-good-first-issue
     label-help-wanted
     label-invalid
     label-kind
+    label-priority
+    label-sig
+    label-triage
+    label-wg
     label-wontfix
     label-bug
     label-documentation
