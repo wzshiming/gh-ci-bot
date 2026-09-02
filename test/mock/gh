@@ -57,6 +57,9 @@ case "$*" in
 *"--json additions,deletions,labels"*)
     serve "${MOCK_SIZE_JSON:-}"
     ;;
+*"--json mergeable,state,labels"*)
+    serve "${MOCK_MERGEABLE_JSON:-}"
+    ;;
 *"--json labels"*)
     serve "${MOCK_LABELS_JSON:-}"
     ;;
@@ -80,6 +83,17 @@ case "$*" in
     else
         echo "mock gh: no fixture for: gh $*" >&2
         exit 1
+    fi
+    ;;
+"api /repos/"*"/issues/comments/"*)
+    # Editing or deleting a single issue comment: log only.
+    ;;
+*"/issues/"*"/comments"*)
+    # Issue comments of the PR; defaults to no comments.
+    if [[ -n "${MOCK_COMMENTS_JSON:-}" && -f "${MOCK_COMMENTS_JSON:-}" ]]; then
+        serve "${MOCK_COMMENTS_JSON}"
+    else
+        echo "[]"
     fi
     ;;
 "api /repos/"*)

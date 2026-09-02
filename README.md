@@ -106,6 +106,12 @@ jobs:
       contains(github.event.pull_request.labels.*.name, 'ok-to-test')
 ```
 
+### Needs rebase
+
+Like prow's [`needs-rebase`](https://github.com/kubernetes/test-infra/tree/master/prow/external-plugins/needs-rebase) external plugin, when the `NEEDS_REBASE` environment variable is set to a non-empty value (it is unset by default), the bot checks the PR's mergeability whenever a PR is opened, pushed to, edited or commented on. A PR that has merge conflicts with its base branch gets the `needs-rebase` label and a comment asking the author to rebase; once the conflicts are resolved, the label is removed and the stale rebase-request comments are deleted automatically. This complements the `/rebase` command, which updates a conflict-free branch to the latest base branch but cannot resolve conflicts.
+
+GitHub computes mergeability lazily, so a conflict caused by another PR merging into the base branch may only be noticed the next time the PR is pushed to, edited or commented on.
+
 ### Troubleshooting
 
 - `/cherry-pick`

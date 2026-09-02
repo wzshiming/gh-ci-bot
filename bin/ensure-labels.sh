@@ -45,6 +45,7 @@ kind/regression
 kind/support
 needs-kind
 needs-ok-to-test
+needs-rebase
 ok-to-test
 release-note
 release-note-none
@@ -116,6 +117,9 @@ function label_color() {
     ;;
   needs-ok-to-test)
     echo "b60205"
+    ;;
+  needs-rebase)
+    echo "e11d21"
     ;;
   ok-to-test)
     echo "15dd18"
@@ -240,6 +244,9 @@ function label_description() {
     ;;
   needs-ok-to-test)
     echo "Indicates a PR that requires an org member to verify it is safe to test."
+    ;;
+  needs-rebase)
+    echo "Indicates a PR cannot be merged because it has merge conflicts with HEAD."
     ;;
   needs-*)
     echo "Indicates an issue or PR lacks a \`${1#needs-}/foo\` label and requires one."

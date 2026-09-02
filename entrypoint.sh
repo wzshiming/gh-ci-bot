@@ -93,6 +93,14 @@ function sync_size_label() {
     fi
 }
 
+# sync_needs_rebase_label keeps the needs-rebase label in sync with the
+# PR's mergeability, mirroring prow's needs-rebase external plugin.
+function sync_needs_rebase_label() {
+    if [[ "${ISSUE_KIND}" == "pr" ]]; then
+        check-needs-rebase.sh
+    fi
+}
+
 # auto_request_reviewers requests reviewers from OWNERS files when a PR is
 # opened, mirroring prow's blunderbuss plugin.
 function auto_request_reviewers() {
@@ -115,6 +123,7 @@ function main() {
         sync_wip_label
         sync_release_note_label
         sync_size_label
+        sync_needs_rebase_label
         sync_approve_status
         auto_request_reviewers
         sync_matching_labels
@@ -123,6 +132,7 @@ function main() {
     elif [[ "${TYPE}" == "comment" ]]; then
         echo "Response to action"
         response.sh
+        sync_needs_rebase_label
         sync_matching_labels
     elif [[ "${TYPE}" == "synchronize" ]]; then
         echo "PR synchronized, removing lgtm label"
@@ -131,11 +141,13 @@ function main() {
         sync_wip_label
         sync_release_note_label
         sync_size_label
+        sync_needs_rebase_label
         sync_approve_status
     elif [[ "${TYPE}" == "edited" ]]; then
         echo "PR edited, syncing work-in-progress label"
         sync_wip_label
         sync_release_note_label
+        sync_needs_rebase_label
     elif [[ "${TYPE}" == "labeled" || "${TYPE}" == "unlabeled" ]]; then
         echo "Labels changed, syncing needs-* labels"
         sync_matching_labels
