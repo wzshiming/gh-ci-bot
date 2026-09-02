@@ -21,7 +21,11 @@ if [[ -z "${RULES}" ]]; then
     return 0 2>/dev/null || exit 0
 fi
 
-labels="$(gh "${ISSUE_KIND}" -R "${GH_REPOSITORY}" view "${ISSUE_NUMBER}" --json labels --jq '.labels[].name')"
+if ! labels="$(gh "${ISSUE_KIND}" -R "${GH_REPOSITORY}" view "${ISSUE_NUMBER}" --json labels --jq '.labels[].name')"; then
+    # Never mutate labels from missing data.
+    echo "Failed to get the labels, skipping the matching-labels sync."
+    return 0 2>/dev/null || exit 0
+fi
 
 while read -r missing_label regexp _; do
     if [[ -z "${missing_label}" || -z "${regexp}" ]]; then
