@@ -7,15 +7,14 @@
 #
 # Rules are configured via the ISSUE_REQUIRE_MATCHING_LABELS (issues) and
 # PR_REQUIRE_MATCHING_LABELS (PRs) environment variables, selected by
-# ISSUE_KIND, falling back to REQUIRE_MATCHING_LABELS for both when the
-# scoped variable is unset. One rule per line in the format:
+# ISSUE_KIND. One rule per line in the format:
 #   <missing-label> <regexp>
 # Defaults to requiring a kind/* label via the needs-kind label.
 
 if [[ "${ISSUE_KIND}" == "pr" ]]; then
-    RULES="${PR_REQUIRE_MATCHING_LABELS-${REQUIRE_MATCHING_LABELS-needs-kind ^kind/}}"
+    RULES="${PR_REQUIRE_MATCHING_LABELS-needs-kind ^kind/}"
 else
-    RULES="${ISSUE_REQUIRE_MATCHING_LABELS-${REQUIRE_MATCHING_LABELS-needs-kind ^kind/}}"
+    RULES="${ISSUE_REQUIRE_MATCHING_LABELS-needs-kind ^kind/}"
 fi
 
 if [[ -z "${RULES}" ]]; then

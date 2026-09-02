@@ -55,11 +55,11 @@ Like prow's `blunderbuss` plugin, the bot automatically requests reviewers when 
 
 Like prow's `require-matching-label` plugin, the bot automatically applies a `needs-X` label when an issue or PR is missing a label matching a configured regular expression, and removes it once a matching label is added. By default, an issue or PR without a `kind/*` label gets the `needs-kind` label, which is removed as soon as a `kind/*` label is applied (e.g. via `/kind bug`).
 
-The rules are configured through the `ISSUE_REQUIRE_MATCHING_LABELS` (issues) and `PR_REQUIRE_MATCHING_LABELS` (PRs) environment variables, one rule per line in the format `<missing-label> <regexp>`. When a scoped variable is unset, `REQUIRE_MATCHING_LABELS` is used as the fallback for both, so a single set of rules can be shared:
+The rules are configured through the `ISSUE_REQUIRE_MATCHING_LABELS` (issues) and `PR_REQUIRE_MATCHING_LABELS` (PRs) environment variables, one rule per line in the format `<missing-label> <regexp>`:
 
 ```yaml
 env:
-  REQUIRE_MATCHING_LABELS: |-
+  ISSUE_REQUIRE_MATCHING_LABELS: |-
     needs-kind ^kind/
   PR_REQUIRE_MATCHING_LABELS: |-
     needs-kind ^kind/
