@@ -75,6 +75,7 @@ function begin_case() {
     export MOCK_WIP_JSON="${CASE_DIR}/wip.json"
     export MOCK_SIZE_JSON="${CASE_DIR}/size.json"
     export MOCK_LABELS_JSON="${CASE_DIR}/labels.json"
+    export MOCK_AUTOMERGE_JSON="${CASE_DIR}/automerge.json"
     export MOCK_LABEL_LIST_JSON="${CASE_DIR}/label-list.json"
     export PATH="${STUB_DIR}:${MOCK_DIR}:${BIN_DIR}:${BASE_PATH}"
     reset_env
@@ -189,6 +190,16 @@ function mksize() {
 # mklabels [label...] builds the reply to `gh <kind> view --json labels`.
 function mklabels() {
     jq -n --args '{labels: [$ARGS.positional[] | {name: .}]}' "${@}" >"${MOCK_LABELS_JSON}"
+}
+
+# mkautomerge <queued true|false> [label...] builds the reply to
+# `gh pr view --json autoMergeRequest,labels`.
+function mkautomerge() {
+    local queued="${1}"
+    shift
+    jq -n --argjson queued "${queued}" --args \
+        '{autoMergeRequest: (if $queued then {mergeMethod: "SQUASH"} else null end), labels: [$ARGS.positional[] | {name: .}]}' \
+        "${@}" >"${MOCK_AUTOMERGE_JSON}"
 }
 
 # mkrepolabels [label...] builds the reply to

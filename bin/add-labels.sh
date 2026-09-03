@@ -35,3 +35,12 @@ if ! gh "${ISSUE_KIND}" -R "${GH_REPOSITORY}" edit "${ISSUE_NUMBER}" --add-label
       echo "[FAIL] Failed to add label \`${labels[*]}\`."
   fi
 fi
+
+# A do-not-merge/* label must also disarm a merge queued by /merge --auto.
+read -r -a requested <<<"${label}"
+for l in "${requested[@]}"; do
+  if [[ "${l}" == do-not-merge/* ]]; then
+    disable-auto-merge.sh
+    break
+  fi
+done

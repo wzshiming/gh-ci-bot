@@ -57,6 +57,9 @@ case "$*" in
 *"--json additions,deletions,labels"*)
     serve "${MOCK_SIZE_JSON:-}"
     ;;
+*"--json autoMergeRequest,labels"*)
+    serve "${MOCK_AUTOMERGE_JSON:-}"
+    ;;
 *"--json labels"*)
     serve "${MOCK_LABELS_JSON:-}"
     ;;
