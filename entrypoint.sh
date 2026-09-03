@@ -93,6 +93,32 @@ function sync_size_label() {
     fi
 }
 
+# sync_needs_rebase_label keeps the needs-rebase label in sync with the
+# PR's mergeability, mirroring prow's needs-rebase external plugin.
+function sync_needs_rebase_label() {
+    if [[ "${ISSUE_KIND}" == "pr" ]]; then
+        check-needs-rebase.sh
+    fi
+}
+
+# sync_merge_commits_label keeps the do-not-merge/contains-merge-commits
+# label in sync with the PR's commits, mirroring prow's mergecommitblocker
+# plugin.
+function sync_merge_commits_label() {
+    if [[ "${ISSUE_KIND}" == "pr" ]]; then
+        check-merge-commits.sh
+    fi
+}
+
+# sync_commit_messages_label keeps the do-not-merge/invalid-commit-message
+# label in sync with the PR's commit messages and title, mirroring prow's
+# invalidcommitmsg plugin.
+function sync_commit_messages_label() {
+    if [[ "${ISSUE_KIND}" == "pr" ]]; then
+        check-commit-messages.sh
+    fi
+}
+
 # auto_request_reviewers requests reviewers from OWNERS files when a PR is
 # opened or marked ready for review, mirroring prow's blunderbuss plugin.
 function auto_request_reviewers() {
@@ -129,6 +155,9 @@ function main() {
         sync_release_note_label
         sync_dco_label
         sync_size_label
+        sync_needs_rebase_label
+        sync_merge_commits_label
+        sync_commit_messages_label
         sync_approve_status
         auto_request_reviewers
         echo "Response to action"
@@ -138,6 +167,7 @@ function main() {
     elif [[ "${TYPE}" == "comment" ]]; then
         echo "Response to action"
         response.sh
+        sync_needs_rebase_label
         sync_matching_labels
         sync_auto_merge
     elif [[ "${TYPE}" == "synchronize" ]]; then
@@ -147,6 +177,9 @@ function main() {
         sync_release_note_label
         sync_dco_label
         sync_size_label
+        sync_needs_rebase_label
+        sync_merge_commits_label
+        sync_commit_messages_label
         sync_approve_status
         sync_matching_labels
         sync_auto_merge
@@ -154,6 +187,8 @@ function main() {
         echo "PR edited, syncing work-in-progress label"
         sync_wip_label
         sync_release_note_label
+        sync_needs_rebase_label
+        sync_commit_messages_label
         sync_matching_labels
         sync_auto_merge
     elif [[ "${TYPE}" == "ready_for_review" ]]; then

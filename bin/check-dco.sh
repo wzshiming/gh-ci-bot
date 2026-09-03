@@ -32,14 +32,16 @@ if ! commits="$(gh api --paginate "/repos/${GH_REPOSITORY}/pulls/${ISSUE_NUMBER}
     return 0 2>/dev/null || exit 0
 fi
 
+server_url="${GITHUB_SERVER_URL:-https://github.com}"
+
 # The markdown list of commits missing a signoff: every non-merge commit
 # whose message has no line starting with "Signed-off-by:", like prow's
 # (?mi)^signed-off-by: check.
-missing="$(echo "${commits}" | jq -r '
+missing="$(echo "${commits}" | jq -r --arg repo_url "${server_url%/}/${GH_REPOSITORY}" '
     .[]
     | select((.parents | length) < 2)
     | select(any(.commit.message // "" | split("\n")[]; test("^signed-off-by:"; "i")) | not)
-    | "- [" + .sha[0:7] + "](" + .html_url + ") " + (.commit.message // "" | split("\n")[0])')"
+    | "- [" + .sha[0:7] + "](" + $repo_url + "/commit/" + .sha + ") " + (.commit.message // "" | split("\n")[0])')"
 
 if ! labels="$(gh pr -R "${GH_REPOSITORY}" view "${ISSUE_NUMBER}" --json labels --jq '.labels[].name')"; then
     echo "Failed to get the pull request labels, skipping the DCO sync."
@@ -84,7 +86,6 @@ fi
 # Replace any previous comment with the latest list of unsigned commits.
 prune_dco_comments
 
-server_url="${GITHUB_SERVER_URL:-https://github.com}"
 branch="${branch:-$(gh api /repos/${GH_REPOSITORY} | jq -r '.default_branch')}"
 
 comment.sh "$(cat <<EOF

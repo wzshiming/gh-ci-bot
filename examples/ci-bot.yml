@@ -128,6 +128,20 @@ env:
   # Sync release-note labels from the ```release-note block in PR bodies, blocking merge until one applies (prow's release-note plugin). Unset to disable.
   RELEASE_NOTE_REQUIRED: "true"
 
+  # Label PRs that have merge conflicts with needs-rebase, removing the label automatically once the conflicts are resolved (prow's needs-rebase plugin, labels only). Unset to disable.
+  NEEDS_REBASE: "true"
+
+  # Block PRs containing merge commits with the
+  # do-not-merge/contains-merge-commits label (prow's mergecommitblocker
+  # plugin). Unset to disable.
+  BLOCK_MERGE_COMMITS: "true"
+
+  # Block PRs whose commit messages or title contain @mentions or keywords
+  # that can automatically close issues (e.g. "fixes #42") with the
+  # do-not-merge/invalid-commit-message label (prow's invalidcommitmsg
+  # plugin). Unset to disable.
+  BLOCK_INVALID_COMMIT_MESSAGES: "true"
+
   # Require a Signed-off-by line on every PR commit, syncing the "dco-signoff: yes"/"dco-signoff: no" labels and blocking merge until every commit is signed off (prow's dco plugin). Unset to disable.
   DCO_REQUIRED: "true"
 

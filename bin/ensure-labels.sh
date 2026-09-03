@@ -33,6 +33,8 @@ do-not-merge/hold
 do-not-merge/work-in-progress
 do-not-merge/release-note-label-needed
 do-not-merge/needs-kind
+do-not-merge/contains-merge-commits
+do-not-merge/invalid-commit-message
 dco-signoff: yes
 dco-signoff: no
 kind/api-change
@@ -46,6 +48,7 @@ kind/flake
 kind/regression
 kind/support
 needs-kind
+needs-rebase
 needs-sig
 needs-triage
 priority/awaiting-more-evidence
@@ -140,6 +143,9 @@ function label_color() {
     ;;
   sig/* | wg/*)
     echo "d2b48c"
+    ;;
+  needs-rebase)
+    echo "e11d21"
     ;;
   priority/awaiting-more-evidence)
     echo "fef2c0"
@@ -238,6 +244,12 @@ function label_description() {
   do-not-merge/needs-kind)
     echo "Indicates a PR lacks a \`kind/foo\` label and requires one."
     ;;
+  do-not-merge/contains-merge-commits)
+    echo "Indicates a PR which contains merge commits."
+    ;;
+  do-not-merge/invalid-commit-message)
+    echo "Indicates that a PR should not merge because it has an invalid commit message."
+    ;;
   do-not-merge/*)
     echo "Indicates that a PR should not merge."
     ;;
@@ -294,6 +306,9 @@ function label_description() {
     ;;
   needs-kind)
     echo "Indicates an issue or PR lacks a \`kind/foo\` label and requires one."
+    ;;
+  needs-rebase)
+    echo "Indicates a PR cannot be merged because it has merge conflicts with HEAD."
     ;;
   needs-*)
     echo "Indicates an issue or PR lacks a \`${1#needs-}/foo\` label and requires one."

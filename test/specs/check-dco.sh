@@ -53,7 +53,7 @@ log_lacks "stub"
 begin_case "check-dco.sh: never mutates labels when the labels query fails"
 export DCO_REQUIRED=1
 stub_dco_scripts
-mkcommits "abc1234567" "${SIGNED_MSG}"
+mkcommits "1:${SIGNED_MSG}"
 run check-dco.sh
 assert_status 0
 assert_out_has "Failed to get the pull request labels"
@@ -62,7 +62,7 @@ log_lacks "stub"
 begin_case "check-dco.sh: labels an all-signed PR dco-signoff: yes"
 export DCO_REQUIRED=1
 stub_dco_scripts
-mkcommits "abc1234567" "${SIGNED_MSG}" "def5678901" "${SIGNED_MSG}"
+mkcommits "1:${SIGNED_MSG}" "1:${SIGNED_MSG}"
 mklabels
 run check-dco.sh
 assert_status 0
@@ -75,7 +75,7 @@ log_lacks "DELETE"
 begin_case "check-dco.sh: leaves a correctly labeled signed PR alone"
 export DCO_REQUIRED=1
 stub_dco_scripts
-mkcommits "abc1234567" "${SIGNED_MSG}"
+mkcommits "1:${SIGNED_MSG}"
 mklabels "${YES_LABEL}" "kind/bug"
 run check-dco.sh
 assert_status 0
@@ -85,7 +85,7 @@ log_lacks "DELETE"
 begin_case "check-dco.sh: signoffs arriving swap the labels and delete only the stale bot comment"
 export DCO_REQUIRED=1
 stub_dco_scripts
-mkcommits "abc1234567" "${SIGNED_MSG}"
+mkcommits "1:${SIGNED_MSG}"
 mklabels "${NO_LABEL}"
 mkissuecomments \
     "mock-bot" "${DCO_MARKER} Old list of commits." \
@@ -103,7 +103,7 @@ log_lacks "stub comment.sh"
 begin_case "check-dco.sh: adds dco-signoff: no and comments on an unsigned commit"
 export DCO_REQUIRED=1
 stub_dco_scripts
-mkcommits "abc1234567" "${UNSIGNED_MSG}"
+mkcommits "1:${UNSIGNED_MSG}"
 mklabels
 run check-dco.sh
 assert_status 0
@@ -111,24 +111,24 @@ assert_out_has "Commits in PR missing Signed-off-by."
 log_has_line "stub add-labels.sh ${NO_LABEL}"
 log_lacks "stub remove-labels.sh"
 log_has "stub comment.sh ${DCO_MARKER}"
-log_has "- [abc1234](https://github.com/wzshiming/example/commit/abc1234567) Fix the fonts"
+log_has "- [sha-1](https://github.com/wzshiming/example/commit/sha-1) Fix the fonts"
 log_has "https://github.com/wzshiming/example/blob/main/CONTRIBUTING.md"
 log_has "developercertificate.org"
 
 begin_case "check-dco.sh: lists only the commits missing a signoff"
 export DCO_REQUIRED=1
 stub_dco_scripts
-mkcommits "abc1234567" "${SIGNED_MSG}" "def5678901" "${UNSIGNED_MSG}"
+mkcommits "1:${SIGNED_MSG}" "1:${UNSIGNED_MSG}"
 mklabels
 run check-dco.sh
 assert_status 0
-log_has "- [def5678]"
-log_lacks "- [abc1234]"
+log_has "- [sha-2]"
+log_lacks "- [sha-1]("
 
 begin_case "check-dco.sh: a push losing the signoff swaps the labels and comments"
 export DCO_REQUIRED=1
 stub_dco_scripts
-mkcommits "abc1234567" "${UNSIGNED_MSG}"
+mkcommits "1:${UNSIGNED_MSG}"
 mklabels "${YES_LABEL}"
 run check-dco.sh
 assert_status 0
@@ -139,7 +139,7 @@ log_has "stub comment.sh ${DCO_MARKER}"
 begin_case "check-dco.sh: an unsigned push replaces the previous comment without label edits"
 export DCO_REQUIRED=1
 stub_dco_scripts
-mkcommits "abc1234567" "${UNSIGNED_MSG}"
+mkcommits "1:${UNSIGNED_MSG}"
 mklabels "${NO_LABEL}"
 mkissuecomments "mock-bot" "${DCO_MARKER} Old list of commits."
 run check-dco.sh
@@ -153,7 +153,7 @@ log_before "DELETE" "stub comment.sh"
 begin_case "check-dco.sh: merge commits are exempt"
 export DCO_REQUIRED=1
 stub_dco_scripts
-mkcommits "merge:aaa1111222" "Merge branch 'main' into feature" "bbb2222333" "${SIGNED_MSG}"
+mkcommits "2:Merge branch 'main' into feature" "1:${SIGNED_MSG}"
 mklabels
 run check-dco.sh
 assert_status 0
@@ -163,7 +163,7 @@ log_lacks "stub comment.sh"
 begin_case "check-dco.sh: a lowercase signoff counts"
 export DCO_REQUIRED=1
 stub_dco_scripts
-mkcommits "ccc3333444" $'Fix the fonts\n\nsigned-off-by: Bob <bob@example.com>'
+mkcommits "1:"$'Fix the fonts\n\nsigned-off-by: Bob <bob@example.com>'
 mklabels
 run check-dco.sh
 assert_status 0
@@ -172,7 +172,7 @@ log_has_line "stub add-labels.sh ${YES_LABEL}"
 begin_case "check-dco.sh: an indented signoff does not count"
 export DCO_REQUIRED=1
 stub_dco_scripts
-mkcommits "ddd4444555" $'Fix the fonts\n\n  Signed-off-by: Bob <bob@example.com>'
+mkcommits "1:"$'Fix the fonts\n\n  Signed-off-by: Bob <bob@example.com>'
 mklabels
 run check-dco.sh
 assert_status 0
@@ -181,7 +181,7 @@ log_has_line "stub add-labels.sh ${NO_LABEL}"
 begin_case "check-dco.sh: a signoff in the middle of a line does not count"
 export DCO_REQUIRED=1
 stub_dco_scripts
-mkcommits "eee5555666" "Fix Signed-off-by: Bob <bob@example.com>"
+mkcommits "1:Fix Signed-off-by: Bob <bob@example.com>"
 mklabels
 run check-dco.sh
 assert_status 0
@@ -216,7 +216,7 @@ log_has_line "stub check-dco.sh"
 
 begin_case "/check-dco: full stack, labels an unsigned PR via gh"
 export DCO_REQUIRED=1
-mkcommits "abc1234567" "${UNSIGNED_MSG}"
+mkcommits "1:${UNSIGNED_MSG}"
 mklabels
 run "${CHECK_DCO_PLUGIN}"
 assert_status 0
@@ -244,7 +244,7 @@ export PR_REQUIRE_MATCHING_LABELS=""
 mkwip false "Add a feature"
 mksize 1 0
 mklabels
-mkcommits "abc1234567" "${UNSIGNED_MSG}"
+mkcommits "1:${UNSIGNED_MSG}"
 run "${ENTRYPOINT}"
 assert_status 0
 log_has "/pulls/1/commits"
