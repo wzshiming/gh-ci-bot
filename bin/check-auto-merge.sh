@@ -12,7 +12,10 @@ labels="$(gh pr -R "${GH_REPOSITORY}" view "${ISSUE_NUMBER}" --json labels --jq 
 has_lgtm=false
 has_approved=false
 
-for label in ${labels}; do
+while read -r label; do
+    if [[ -z "${label}" ]]; then
+        continue
+    fi
     if [[ "${label}" == "lgtm" ]]; then
         has_lgtm=true
     fi
@@ -23,7 +26,7 @@ for label in ${labels}; do
         echo "PR has the '${label}' label. Skipping auto-merge."
         return 0 2>/dev/null || exit 0
     fi
-done
+done <<<"${labels}"
 
 if [[ "${has_lgtm}" == "true" && "${has_approved}" == "true" ]]; then
     if ! approve-status.sh check; then
