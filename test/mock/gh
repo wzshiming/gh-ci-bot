@@ -48,6 +48,17 @@ function serve() {
 }
 
 case "$*" in
+"api /repos/"*"/issues/comments/"*)
+    # One comment by id, from the issue comments fixture (mkissuecomments);
+    # MOCK_COMMENT_FAIL fails the read like an API error.
+    if [[ -n "${MOCK_COMMENT_FAIL:-}" ]]; then
+        echo "gh: Not Found (HTTP 404)" >&2
+        exit 1
+    fi
+    if [[ -n "${MOCK_ISSUE_COMMENTS_JSON:-}" && -f "${MOCK_ISSUE_COMMENTS_JSON:-}" ]]; then
+        jq -r --argjson id "${2##*/}" ".[] | select(.id == \$id) | ${jq_filter:-.}" "${MOCK_ISSUE_COMMENTS_JSON}"
+    fi
+    ;;
 *"--json body,labels"*)
     serve "${MOCK_PR_JSON:-}"
     ;;
