@@ -132,19 +132,21 @@ files="$(gh api \
     sort -u)"
 
 echo "Modify files:" >&2
-for f in ${files}; do
+while read -r f; do
+    [[ -z "${f}" ]] && continue
     echo "- ${f}" >&2
-done
+done <<<"${files}"
 
 # Collect the areas (nearest directories with reviewers) of the changed files.
 areas=""
-for f in ${files}; do
+while read -r f; do
+    [[ -z "${f}" ]] && continue
     get_area_for_file "${f}"
     if [[ -n "${_FILE_AREA}" ]]; then
         areas="${areas}
 ${_FILE_AREA}"
     fi
-done
+done <<<"${files}"
 areas="$(echo "${areas}" | sed '/^$/d' | sort -u)"
 
 picked=()
@@ -166,7 +168,8 @@ function in_picked() {
 # reviewer before any area gets a second one, until count is reached.
 while [[ "${#picked[@]}" -lt "${count}" && -n "${areas}" ]]; do
     added=0
-    for area in ${areas}; do
+    while read -r area; do
+        [[ -z "${area}" ]] && continue
         if [[ "${#picked[@]}" -ge "${count}" ]]; then
             break
         fi
@@ -178,7 +181,7 @@ while [[ "${#picked[@]}" -lt "${count}" && -n "${areas}" ]]; do
                 break
             fi
         done
-    done
+    done <<<"${areas}"
     if [[ "${added}" -eq 0 ]]; then
         break
     fi
