@@ -50,7 +50,7 @@ Each command in the table above belongs to a plugin, named in the last column. P
 | --- | --- |
 | `PLUGINS` | Anyone |
 | `AUTHOR_PLUGINS` | The author of the issue or PR |
-| `MEMBERS_PLUGINS` | Anyone whose author association is not `NONE` (members, collaborators, previous contributors) |
+| `MEMBERS_PLUGINS` | Anyone whose author association is `OWNER`, `MEMBER`, `COLLABORATOR` or `CONTRIBUTOR` (previous contributors); first-time contributors are not members |
 | `REVIEWERS_PLUGINS` | Members also listed in `REVIEWERS` (for PRs, merged with `reviewers` from matching OWNERS files) |
 | `APPROVERS_PLUGINS` | Members also listed in `APPROVERS` (for PRs, merged with `approvers` from matching OWNERS files) |
 | `MAINTAINERS_PLUGINS` | Members also listed in `MAINTAINERS` |

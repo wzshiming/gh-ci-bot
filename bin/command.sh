@@ -14,7 +14,7 @@ if [[ "${ISSUE_KIND}" == "pr" && "${ISSUE_NUMBER}" != "" && "${GH_REPOSITORY}" !
 fi
 
 # Added more plugins for members
-if [[ "${LOGIN}" != "" && "${AUTHOR_ASSOCIATION}" != "NONE" && "${AUTHOR_ASSOCIATION}" != "" ]]; then
+if [[ "${LOGIN}" != "" ]] && [[ "${AUTHOR_ASSOCIATION}" =~ ^(OWNER|MEMBER|COLLABORATOR|CONTRIBUTOR)$ ]]; then
     PLUGINS="${PLUGINS}
 ${MEMBERS_PLUGINS:-}"
     echo "${LOGIN} is a member"

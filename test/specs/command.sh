@@ -81,6 +81,33 @@ assert_status 0
 assert_out_has "[FAIL] This command is only available on pull requests, not on issues."
 log_lacks "stub add-labels.sh"
 
+# The member tier is granted to these associations only; the other values
+# GitHub uses (FIRST_TIME_CONTRIBUTOR, FIRST_TIMER, MANNEQUIN) are strangers.
+for association in OWNER MEMBER COLLABORATOR CONTRIBUTOR; do
+    begin_case "the ${association} association gets the member tier"
+    member hold
+    export AUTHOR_ASSOCIATION="${association}"
+    export MESSAGE="/hold"
+    stub add-labels.sh
+    run command.sh
+    assert_status 0
+    assert_out_has "alice is a member"
+    log_has_line "stub add-labels.sh ${HOLD_LABEL}"
+done
+
+for association in FIRST_TIME_CONTRIBUTOR FIRST_TIMER MANNEQUIN; do
+    begin_case "the ${association} association does not get the member tier"
+    member hold
+    export AUTHOR_ASSOCIATION="${association}"
+    export MESSAGE="/hold"
+    stub add-labels.sh
+    run command.sh
+    assert_status 0
+    assert_out_lacks "alice is a member"
+    assert_out_has "[FAIL] You don't have permission to use the \`/hold\` command."
+    log_lacks "stub add-labels.sh"
+done
+
 begin_case "/lgtm by a reviewer adds lgtm and re-checks auto-merge"
 reviewer label-lgtm
 export MESSAGE="/lgtm"
