@@ -93,7 +93,10 @@ function auto_request_reviewers() {
 }
 
 # sync_matching_labels keeps needs-* labels in sync with the issue/PR labels,
-# mirroring prow's require-matching-label plugin.
+# mirroring prow's require-matching-label plugin. It runs at the end of
+# every event, ahead of the auto-merge check: labels applied by the run
+# itself (e.g. from OWNERS files on a push) trigger no new workflow run,
+# so the run that applied them has to re-sync the needs-* labels too.
 function sync_matching_labels() {
     check-matching-labels.sh
 }
@@ -134,17 +137,20 @@ function main() {
         sync_release_note_label
         sync_size_label
         sync_approve_status
+        sync_matching_labels
         sync_auto_merge
     elif [[ "${TYPE}" == "edited" || "${TYPE}" == "converted_to_draft" ]]; then
         echo "PR edited, syncing work-in-progress label"
         sync_wip_label
         sync_release_note_label
+        sync_matching_labels
         sync_auto_merge
     elif [[ "${TYPE}" == "ready_for_review" ]]; then
         echo "PR ready for review, syncing work-in-progress label and requesting reviewers"
         sync_wip_label
         sync_release_note_label
         auto_request_reviewers
+        sync_matching_labels
         sync_auto_merge
     elif [[ "${TYPE}" == "labeled" || "${TYPE}" == "unlabeled" ]]; then
         echo "Labels changed, syncing needs-* labels"

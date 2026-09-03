@@ -474,6 +474,9 @@ log_has_line "gh pr -R wzshiming/example edit 1 --add-label ${RELEASE_NOTE_LABEL
 
 begin_case "entrypoint.sh: TYPE=edited leaves release notes alone when the gate is off"
 export TYPE="edited"
+# Disable the matching-labels sync, which also runs on edited, so the
+# only label edit the entrypoint could make is the release-note one.
+export PR_REQUIRE_MATCHING_LABELS=""
 mkwip false "Fix the fonts"
 mkpr "${NOTE_BODY}"
 mklabels
@@ -483,13 +486,16 @@ log_has "view 1 --json isDraft,title,labels"
 log_lacks "--json body,labels"
 log_lacks "edit"
 
-begin_case "entrypoint.sh: TYPE=edited on an issue makes no calls at all"
+begin_case "entrypoint.sh: TYPE=edited on an issue only syncs the matching labels"
 export TYPE="edited"
 export ISSUE_KIND="issue"
 export RELEASE_NOTE_REQUIRED=1
+mklabels kind/bug
 run "${ENTRYPOINT}"
 assert_status 0
-log_empty
+log_has "issue -R wzshiming/example view 1 --json labels"
+log_lacks "gh pr"
+log_lacks " edit "
 
 begin_case "entrypoint.sh: refuses to run without LOGIN"
 export LOGIN=""
