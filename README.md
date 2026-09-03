@@ -124,6 +124,12 @@ The missing labels are created automatically if they do not exist, provided they
 
 Like prow's [`release-note`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugins/releasenote) plugin, when the `RELEASE_NOTE_REQUIRED` environment variable is set to a non-empty value (it is unset by default), the bot classifies the ```` ```release-note ```` block in the PR body whenever a PR is opened, edited or pushed to, and applies exactly one of the `release-note`, `release-note-none` or `do-not-merge/release-note-label-needed` labels, blocking merge until a valid block is added or `/release-note-none` is used. See [release-note](plugins/release-note/README.md#automatic-behavior) for details.
 
+### Needs rebase
+
+Like prow's [`needs-rebase`](https://github.com/kubernetes-sigs/prow/tree/main/cmd/external-plugins/needs-rebase) external plugin, when the `NEEDS_REBASE` environment variable is set to a non-empty value (it is unset by default), the bot checks the PR's mergeability whenever a PR is opened, pushed to, edited or commented on. A PR that has merge conflicts with its base branch gets the `needs-rebase` label; once the conflicts are resolved, the label is removed automatically. Labels only, no comments. This complements the [`/rebase`](plugins/rebase/README.md) command, which updates a conflict-free branch to the latest base branch but cannot resolve conflicts.
+
+GitHub computes mergeability lazily, so a conflict caused by another PR merging into the base branch may only be noticed the next time the PR is pushed to, edited or commented on.
+
 ## Troubleshooting
 
 - Changes to `.github/**`
