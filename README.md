@@ -87,7 +87,7 @@ Like prow's [`blunderbuss`](https://github.com/kubernetes-sigs/prow/tree/main/pk
 
 ### Require matching label
 
-Like prow's [`require-matching-label`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugins/require-matching-label) plugin, the bot automatically applies a `needs-X` label when an issue or PR is missing a label matching a configured regular expression, and removes it once a matching label is added. By default, an issue or PR without a `kind/*` label gets the `needs-kind` label, which is removed as soon as a `kind/*` label is applied (e.g. via [`/kind bug`](plugins/label-kind/README.md)). The labels are re-synced whenever the issue or PR is opened, commented on, labeled or unlabeled.
+Like prow's [`require-matching-label`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugins/require-matching-label) plugin, the bot automatically applies a `needs-X` label when an issue or PR is missing a label matching a configured regular expression, and removes it once a matching label is added. By default, an issue or PR without a `kind/*` label gets the `needs-kind` label, which is removed as soon as a `kind/*` label is applied (e.g. via [`/kind bug`](plugins/label-kind/README.md)). The labels are re-synced at the end of every event the bot handles, so labels the bot applies itself (e.g. from [OWNERS files](#owners-files) on a push) are also taken into account, even though they trigger no new workflow run.
 
 The rules are configured through the `ISSUE_REQUIRE_MATCHING_LABELS` (issues) and `PR_REQUIRE_MATCHING_LABELS` (PRs) environment variables, one rule per line in the format `<missing-label> <regexp>`:
 

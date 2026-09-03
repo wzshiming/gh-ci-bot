@@ -5,6 +5,11 @@
 # body never keeps a stale do-not-merge/needs-kind label (the bot's own
 # labeled event does not retrigger the workflow).
 #
+# For the same reason the matching-labels sync tails every branch of
+# main(), ahead of the auto-merge check: a push or an edit changes labels
+# too (owners-label, wip, size, release-note), and the labels the run
+# applies itself start no run of their own.
+#
 # It also dispatches the draft-state TYPEs: blunderbuss skips drafts when
 # a PR is opened, so ready_for_review must request reviewers, while
 # edited and converted_to_draft only sync labels.
@@ -93,6 +98,34 @@ run "${ENTRYPOINT}"
 assert_status 0
 log_has "--add-label do-not-merge/work-in-progress"
 log_lacks "--add-reviewer"
+
+begin_case "a push re-syncs the matching labels after applying the owners labels"
+export TYPE="synchronize"
+export PR_REQUIRE_MATCHING_LABELS="needs-sig ^sig/"
+mkwip false "Add a feature"
+mksize 1 0
+mkfiles "pkg/foo/x.go"
+mkowners $'approvers:\n  - carol\nlabels:\n  - sig/foo'
+# The label fixture is the state right after apply_owners_labels added
+# sig/foo: the bot's own labeled event starts no run, so the same run
+# must drop the now-satisfied needs-sig.
+mklabels needs-sig sig/foo
+mkrepolabels needs-sig sig/foo
+cd "${CASE_DIR}"
+run "${ENTRYPOINT}"
+assert_status 0
+log_has "--add-label sig/foo"
+log_has "--remove-label needs-sig"
+log_before "--add-label sig/foo" "--remove-label needs-sig"
+
+begin_case "an edit re-syncs the matching labels"
+export TYPE="edited"
+mkwip false "Add a feature"
+mklabels kind/feature needs-kind
+cd "${CASE_DIR}"
+run "${ENTRYPOINT}"
+assert_status 0
+log_has "--remove-label needs-kind"
 
 begin_case "an unlabeled event evaluates auto-merge and still respects blockers"
 export TYPE="unlabeled"
