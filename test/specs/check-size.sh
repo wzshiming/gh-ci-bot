@@ -78,3 +78,19 @@ run check-size.sh
 assert_status 0
 log_has_line "gh pr -R wzshiming/example edit 1 --remove-label size/M"
 log_has_line "gh pr -R wzshiming/example edit 1 --add-label size/L"
+
+begin_case "never mutates labels when the PR query fails"
+stub_label_scripts
+export MOCK_GH_FAIL=1
+run check-size.sh
+assert_status 0
+assert_out_has "skipping"
+log_lacks "stub"
+
+begin_case "never mutates labels when the changed-line count is not a number"
+stub_label_scripts
+mksize null null
+run check-size.sh
+assert_status 0
+assert_out_has "skipping"
+log_lacks "stub"
