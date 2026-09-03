@@ -48,11 +48,14 @@ current="$(echo "${info}" | jq -r '.labels[].name | select(startswith("size/"))'
 
 echo "PR changes ${total} lines, size label: ${want}"
 
-for label in ${current}; do
+while read -r label; do
+    if [[ -z "${label}" ]]; then
+        continue
+    fi
     if [[ "${label}" != "${want}" ]]; then
         remove-labels.sh "${label}"
     fi
-done
+done <<<"${current}"
 
 if ! grep -qxF "${want}" <<<"${current}"; then
     add-labels.sh "${want}"
