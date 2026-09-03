@@ -89,6 +89,22 @@ assert_status 0
 log_has "view 1 --json isDraft,title,labels"
 log_lacks "stub"
 
+begin_case "a label merely prefixed with the WIP label does not count: draft still gets it"
+stub_label_scripts
+mkwip true "Add a renderer" "${WIP_LABEL}-docs"
+run check-wip.sh
+assert_status 0
+log_has_line "stub add-labels.sh ${WIP_LABEL}"
+log_lacks "stub remove-labels.sh"
+
+begin_case "a label merely prefixed with the WIP label does not count: ready PR is left alone"
+stub_label_scripts
+mkwip false "Add a renderer" "${WIP_LABEL}-docs"
+run check-wip.sh
+assert_status 0
+log_has "view 1 --json isDraft,title,labels"
+log_lacks "stub"
+
 begin_case "does nothing for issues"
 stub_label_scripts
 export ISSUE_KIND="issue"

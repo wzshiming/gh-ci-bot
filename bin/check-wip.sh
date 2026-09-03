@@ -14,7 +14,7 @@ info="$(gh pr -R "${GH_REPOSITORY}" view "${ISSUE_NUMBER}" --json isDraft,title,
 
 is_draft="$(echo "${info}" | jq -r '.isDraft')"
 title="$(echo "${info}" | jq -r '.title')"
-has_label="$(echo "${info}" | jq -r --arg l "${WIP_LABEL}" '[.labels[].name] | contains([$l])')"
+has_label="$(echo "${info}" | jq -r --arg l "${WIP_LABEL}" 'any(.labels[].name; . == $l)')"
 
 wip=false
 if [[ "${is_draft}" == "true" ]]; then
