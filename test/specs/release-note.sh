@@ -243,7 +243,7 @@ log_has_line "stub add-labels.sh ${RELEASE_NOTE_LABEL}"
 log_has_line "stub remove-labels.sh ${NONE_LABEL}"
 log_lacks "stub check-auto-merge.sh"
 
-begin_case "check-release-note.sh: a note replaces the needed label and re-checks auto-merge"
+begin_case "check-release-note.sh: a note replaces the needed label without evaluating auto-merge"
 export RELEASE_NOTE_REQUIRED=1
 stub_label_scripts
 mkpr "${NOTE_BODY}" "${NEEDED_LABEL}"
@@ -251,7 +251,7 @@ run check-release-note.sh
 assert_status 0
 log_has_line "stub add-labels.sh ${RELEASE_NOTE_LABEL}"
 log_has_line "stub remove-labels.sh ${NEEDED_LABEL}"
-log_has_line "stub check-auto-merge.sh"
+log_lacks "stub check-auto-merge.sh"
 
 begin_case "check-release-note.sh: an empty block adds the needed label"
 export RELEASE_NOTE_REQUIRED=1
@@ -289,7 +289,7 @@ run check-release-note.sh
 assert_status 0
 log_lacks "stub add-labels.sh"
 log_has_line "stub remove-labels.sh ${NEEDED_LABEL}"
-log_has_line "stub check-auto-merge.sh"
+log_lacks "stub check-auto-merge.sh"
 
 begin_case "check-release-note.sh: NONE replaces release-note with release-note-none"
 export RELEASE_NOTE_REQUIRED=1
@@ -312,12 +312,11 @@ log_lacks "stub remove-labels.sh"
 begin_case "check-release-note.sh: full stack, real label scripts edit the PR via gh"
 export RELEASE_NOTE_REQUIRED=1
 mkpr "${NOTE_BODY}" "${NEEDED_LABEL}" "kind/bug"
-mklabels "${RELEASE_NOTE_LABEL}" "kind/bug"
 run check-release-note.sh
 assert_status 0
 log_has_line "gh pr -R wzshiming/example edit 1 --add-label ${RELEASE_NOTE_LABEL}"
 log_has_line "gh pr -R wzshiming/example edit 1 --remove-label ${NEEDED_LABEL}"
-log_has "view 1 --json labels"
+log_lacks "view 1 --json labels"
 log_lacks " merge 1"
 
 # --- /release-note-none: the command ----------------------------------
@@ -387,14 +386,14 @@ log_has_line "stub add-labels.sh ${NONE_LABEL}"
 log_has_line "stub remove-labels.sh ${RELEASE_NOTE_LABEL}"
 log_lacks "stub check-auto-merge.sh"
 
-begin_case "/release-note-none: clears the needed label and re-checks auto-merge"
+begin_case "/release-note-none: clears the needed label without evaluating auto-merge"
 stub_label_scripts
 mkpr "${EMPTY_BODY}" "${NEEDED_LABEL}"
 run "${RELEASE_NOTE_NONE_PLUGIN}"
 assert_status 0
 log_has_line "stub add-labels.sh ${NONE_LABEL}"
 log_has_line "stub remove-labels.sh ${NEEDED_LABEL}"
-log_has_line "stub check-auto-merge.sh"
+log_lacks "stub check-auto-merge.sh"
 
 # --- ensure-labels.sh: the label creation allowlist --------------------
 
@@ -465,6 +464,7 @@ export TYPE="edited"
 export RELEASE_NOTE_REQUIRED=1
 mkwip false "Fix the fonts"
 mkpr "${NOTE_BODY}"
+mklabels
 run "${ENTRYPOINT}"
 assert_status 0
 assert_out_has "PR edited, syncing work-in-progress label"
@@ -476,6 +476,7 @@ begin_case "entrypoint.sh: TYPE=edited leaves release notes alone when the gate 
 export TYPE="edited"
 mkwip false "Fix the fonts"
 mkpr "${NOTE_BODY}"
+mklabels
 run "${ENTRYPOINT}"
 assert_status 0
 log_has "view 1 --json isDraft,title,labels"

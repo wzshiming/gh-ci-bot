@@ -17,7 +17,7 @@ Merges a pull request.
 
 ## Auto-merge
 
-A PR is merged automatically (with the default merge method) once it has both the `lgtm` ([label-lgtm](../label-lgtm/README.md)) and `approved` ([label-approve](../label-approve/README.md)) labels, every changed area is approved, and no `do-not-merge/*` label is present.
+A PR is merged automatically (with the default merge method) once it has both the `lgtm` ([label-lgtm](../label-lgtm/README.md)) and `approved` ([label-approve](../label-approve/README.md)) labels, every changed area is approved, and no `do-not-merge/*` label is present. The bot evaluates this once at the end of every PR event, so the merge happens no matter which command, label sync or UI action removed the last blocker.
 
 ## Configuration
 

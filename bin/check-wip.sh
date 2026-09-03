@@ -27,5 +27,4 @@ if [[ "${wip}" == "true" && "${has_label}" != "true" ]]; then
     add-labels.sh "${WIP_LABEL}"
 elif [[ "${wip}" != "true" && "${has_label}" == "true" ]]; then
     remove-labels.sh "${WIP_LABEL}"
-    check-auto-merge.sh
 fi

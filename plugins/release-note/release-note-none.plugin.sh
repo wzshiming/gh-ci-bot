@@ -32,5 +32,4 @@ if grep -qxF "${RELEASE_NOTE_LABEL}" <<<"${labels}"; then
 fi
 if grep -qxF "${RELEASE_NOTE_NEEDED_LABEL}" <<<"${labels}"; then
     remove-labels.sh "${RELEASE_NOTE_NEEDED_LABEL}"
-    check-auto-merge.sh
 fi

@@ -196,7 +196,6 @@ function reconcile_label() {
     local all_approved="$1"
     if [[ "${all_approved}" == "true" ]]; then
         add-labels.sh approved
-        check-auto-merge.sh
     else
         remove-labels.sh approved
     fi

@@ -98,6 +98,17 @@ function sync_matching_labels() {
     check-matching-labels.sh
 }
 
+# sync_auto_merge merges the PR once it has both the lgtm and approved
+# labels, every area is approved and no do-not-merge/* label is left. It
+# runs as the last step of every PR event, the way tide reconciles its
+# pool, so the merge happens no matter which command, sync or UI action
+# removed the last blocker.
+function sync_auto_merge() {
+    if [[ "${ISSUE_KIND}" == "pr" ]]; then
+        check-auto-merge.sh
+    fi
+}
+
 function main() {
     if [[ "${TYPE}" == "created" ]]; then
         echo "Greetings to ${LOGIN}!"
@@ -110,10 +121,12 @@ function main() {
         echo "Response to action"
         response.sh
         sync_matching_labels
+        sync_auto_merge
     elif [[ "${TYPE}" == "comment" ]]; then
         echo "Response to action"
         response.sh
         sync_matching_labels
+        sync_auto_merge
     elif [[ "${TYPE}" == "synchronize" ]]; then
         echo "PR synchronized, removing lgtm label"
         remove-labels.sh lgtm
@@ -121,18 +134,22 @@ function main() {
         sync_release_note_label
         sync_size_label
         sync_approve_status
+        sync_auto_merge
     elif [[ "${TYPE}" == "edited" || "${TYPE}" == "converted_to_draft" ]]; then
         echo "PR edited, syncing work-in-progress label"
         sync_wip_label
         sync_release_note_label
+        sync_auto_merge
     elif [[ "${TYPE}" == "ready_for_review" ]]; then
         echo "PR ready for review, syncing work-in-progress label and requesting reviewers"
         sync_wip_label
         sync_release_note_label
         auto_request_reviewers
+        sync_auto_merge
     elif [[ "${TYPE}" == "labeled" || "${TYPE}" == "unlabeled" ]]; then
         echo "Labels changed, syncing needs-* labels"
         sync_matching_labels
+        sync_auto_merge
     fi
 }
 

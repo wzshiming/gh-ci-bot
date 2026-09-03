@@ -8,6 +8,11 @@
 # It also dispatches the draft-state TYPEs: blunderbuss skips drafts when
 # a PR is opened, so ready_for_review must request reviewers, while
 # edited and converted_to_draft only sync labels.
+#
+# Auto-merge is evaluated once, at the end of every PR event
+# (sync_auto_merge), so a qualifying PR is merged no matter which
+# command, sync or UI action removed its last blocker; issue events
+# never run the check.
 
 source "$(dirname "${BASH_SOURCE[0]}")/../lib.sh"
 
@@ -61,6 +66,7 @@ begin_case "still skips reviewer requests while the PR is a draft"
 export TYPE="ready_for_review"
 export REVIEWERS="carol"
 mkwip true "Add a feature"
+mklabels
 cd "${CASE_DIR}"
 run "${ENTRYPOINT}"
 assert_status 0
@@ -71,6 +77,7 @@ begin_case "does not request reviewers when a PR is edited"
 export TYPE="edited"
 export REVIEWERS="carol"
 mkwip false "Add a feature"
+mklabels
 cd "${CASE_DIR}"
 run "${ENTRYPOINT}"
 assert_status 0
@@ -80,8 +87,50 @@ begin_case "syncs the wip label without requesting reviewers on converted_to_dra
 export TYPE="converted_to_draft"
 export REVIEWERS="carol"
 mkwip true "Add a feature"
+mklabels
 cd "${CASE_DIR}"
 run "${ENTRYPOINT}"
 assert_status 0
 log_has "--add-label do-not-merge/work-in-progress"
 log_lacks "--add-reviewer"
+
+begin_case "an unlabeled event evaluates auto-merge and still respects blockers"
+export TYPE="unlabeled"
+mklabels lgtm approved kind/feature do-not-merge/hold
+run "${ENTRYPOINT}"
+assert_status 0
+assert_out_has "PR has the 'do-not-merge/hold' label. Skipping auto-merge."
+log_lacks " merge 1"
+
+begin_case "full stack: an unlabeled event on a qualifying PR merges it"
+export TYPE="unlabeled"
+mklabels lgtm approved kind/feature
+run "${ENTRYPOINT}"
+assert_status 0
+assert_out_has "Auto-merging."
+log_has "merge 1 --merge"
+
+begin_case "a /kind comment runs the auto-merge check after the matching-labels sync"
+export TYPE="comment"
+export PLUGINS="label-kind"
+export MESSAGE="/kind feature"
+export PR_REQUIRE_MATCHING_LABELS="needs-kind ^kind/"
+mklabels lgtm approved kind/feature needs-kind
+cd "${CASE_DIR}"
+run "${ENTRYPOINT}"
+assert_status 0
+log_has "--add-label kind/feature"
+log_before "--add-label kind/feature" "--remove-label needs-kind"
+log_before "--remove-label needs-kind" " merge 1 --merge"
+assert_out_has "Auto-merging."
+
+begin_case "an issue label event never evaluates auto-merge"
+export TYPE="labeled"
+export ISSUE_KIND="issue"
+mklabels lgtm approved kind/feature
+run "${ENTRYPOINT}"
+assert_status 0
+log_has "issue -R wzshiming/example view 1 --json labels"
+log_lacks "gh pr"
+assert_out_lacks "Auto-merging."
+assert_out_lacks "Skipping auto-merge."
