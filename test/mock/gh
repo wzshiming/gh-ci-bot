@@ -64,6 +64,9 @@ case "$*" in
 *"--json mergeable,state,labels"*)
     serve "${MOCK_MERGEABLE_JSON:-}"
     ;;
+*"--json state,mergeCommit,title"*)
+    serve "${MOCK_MERGED_JSON:-}"
+    ;;
 *"--json title,labels"*)
     serve "${MOCK_TITLE_JSON:-}"
     ;;

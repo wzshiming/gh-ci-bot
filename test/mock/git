@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+# Mock git: logs every invocation to ${MOCK_LOG} and succeeds silently, for
+# the cherry-pick plugin, which clones the repository and picks commits.
+# Specs drive it through the environment:
+#   MOCK_GIT_PARENTS     reply to `rev-list --parents -n 1 <sha>`
+#   MOCK_GIT_LOG         "<ref>=<message>" lines, served by `log -1 --format=%B <ref>`
+#   MOCK_GIT_LOG_FAIL    exit code of `log` (default 0)
+#   MOCK_GIT_CLONE_FAIL  exit code of `clone` (default 0)
+#   MOCK_GIT_PICK_FAIL   exit code of `cherry-pick` (default 0)
+#   MOCK_GIT_PUSH_FAIL   exit code of `push` (default 0)
+# A failing clone or push names the authenticated URL with ${GH_TOKEN} on
+# stderr, like the real git, so specs can check that the token is masked.
+
+if [[ -n "${MOCK_LOG:-}" ]]; then
+    echo "git $*" >>"${MOCK_LOG}"
+fi
+
+rc=0
+case "${1:-}" in
+clone)
+    rc="${MOCK_GIT_CLONE_FAIL:-0}"
+    ;;
+push)
+    rc="${MOCK_GIT_PUSH_FAIL:-0}"
+    ;;
+cherry-pick)
+    exit "${MOCK_GIT_PICK_FAIL:-0}"
+    ;;
+rev-list)
+    echo "${MOCK_GIT_PARENTS:-}"
+    ;;
+log)
+    if [[ "${MOCK_GIT_LOG_FAIL:-0}" -ne 0 ]]; then
+        echo "fatal: bad revision '${!#}'" >&2
+        exit "${MOCK_GIT_LOG_FAIL}"
+    fi
+    while IFS= read -r line; do
+        if [[ "${line}" == "${!#}="* ]]; then
+            echo "${line#*=}"
+        fi
+    done <<<"${MOCK_GIT_LOG:-}"
+    ;;
+esac
+
+if [[ "${rc}" -ne 0 ]]; then
+    echo "fatal: unable to access 'https://x-access-token:${GH_TOKEN:-mock-token}@github.com/wzshiming/example.git/'" >&2
+fi
+exit "${rc}"
