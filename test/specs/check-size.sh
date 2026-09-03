@@ -65,6 +65,15 @@ assert_status 0
 log_lacks "kind/bug"
 log_lacks "lgtm"
 
+begin_case "removes a stale size label with a space whole"
+stub_label_scripts
+mksize 4 5 "size/XS legacy"
+run check-size.sh
+assert_status 0
+log_has_line "stub remove-labels.sh size/XS legacy"
+log_has_line "stub add-labels.sh size/XS"
+log_lacks "stub remove-labels.sh legacy"
+
 begin_case "does nothing for issues"
 stub_label_scripts
 export ISSUE_KIND="issue"
