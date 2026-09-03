@@ -61,6 +61,9 @@ case "$*" in
 *"--json additions,deletions,labels"*)
     serve "${MOCK_SIZE_JSON:-}"
     ;;
+*"--json headRefName,isCrossRepository,state"*)
+    serve "${MOCK_BRANCH_JSON:-}"
+    ;;
 *"--json labels"*)
     serve "${MOCK_LABELS_JSON:-}"
     ;;

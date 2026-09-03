@@ -50,7 +50,7 @@ function reset_env() {
     unset MESSAGE PLUGINS AUTHOR_PLUGINS CONTRIBUTORS_PLUGINS MEMBERS_PLUGINS REVIEWERS_PLUGINS \
         APPROVERS_PLUGINS MAINTAINERS_PLUGINS OWNERS_PLUGINS \
         REVIEWERS APPROVERS MAINTAINERS \
-        RELEASE_NOTE_REQUIRED LABELS \
+        RELEASE_NOTE_REQUIRED LABELS BRANCH_CLEANER \
         ISSUE_REQUIRE_MATCHING_LABELS PR_REQUIRE_MATCHING_LABELS \
         BLUNDERBUSS_REVIEWER_COUNT DEFAULT_MERGE_METHOD DETAILS GREETING \
         OWNERS_AREAS OWNERS_AREA_APPROVERS OWNERS_LABELS branch \
@@ -74,6 +74,7 @@ function begin_case() {
     export MOCK_PR_JSON="${CASE_DIR}/pr.json"
     export MOCK_WIP_JSON="${CASE_DIR}/wip.json"
     export MOCK_SIZE_JSON="${CASE_DIR}/size.json"
+    export MOCK_BRANCH_JSON="${CASE_DIR}/branch.json"
     export MOCK_LABELS_JSON="${CASE_DIR}/labels.json"
     export MOCK_LABEL_LIST_JSON="${CASE_DIR}/label-list.json"
     export PATH="${STUB_DIR}:${MOCK_DIR}:${BIN_DIR}:${BASE_PATH}"
@@ -185,6 +186,16 @@ function mksize() {
     jq -n --argjson additions "${additions}" --argjson deletions "${deletions}" --args \
         '{additions: $additions, deletions: $deletions, labels: [$ARGS.positional[] | {name: .}]}' \
         "${@}" >"${MOCK_SIZE_JSON}"
+}
+
+# mkbranch <state> <isCrossRepository> <headRefName> builds the reply to
+# `gh pr view --json headRefName,isCrossRepository,state`.
+function mkbranch() {
+    local state="${1}"
+    local cross="${2}"
+    local head="${3}"
+    jq -n --arg state "${state}" --argjson cross "${cross}" --arg head "${head}" \
+        '{headRefName: $head, isCrossRepository: $cross, state: $state}' >"${MOCK_BRANCH_JSON}"
 }
 
 # mklabels [label...] builds the reply to `gh <kind> view --json labels`.

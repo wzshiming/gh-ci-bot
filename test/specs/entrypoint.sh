@@ -143,6 +143,17 @@ assert_status 0
 assert_out_has "Auto-merging."
 log_has "merge 1 --merge"
 
+begin_case "full stack: an auto-merged PR gets its source branch cleaned up"
+export TYPE="unlabeled"
+export BRANCH_CLEANER="true"
+mklabels lgtm approved kind/feature
+mkbranch MERGED false feature-x
+run "${ENTRYPOINT}"
+assert_status 0
+assert_out_has "Auto-merging."
+assert_out_has "Deleted source branch 'feature-x' of the merged PR."
+log_before "merge 1 --merge" "DELETE /repos/wzshiming/example/git/refs/heads/feature-x"
+
 begin_case "a /kind comment runs the auto-merge check after the matching-labels sync"
 export TYPE="comment"
 export PLUGINS="label-kind"
@@ -167,3 +178,24 @@ log_has "issue -R wzshiming/example view 1 --json labels"
 log_lacks "gh pr"
 assert_out_lacks "Auto-merging."
 assert_out_lacks "Skipping auto-merge."
+
+begin_case "a closed merged PR gets its source branch cleaned up"
+export TYPE="closed"
+export BRANCH_CLEANER="true"
+mkbranch MERGED false feature-x
+run "${ENTRYPOINT}"
+assert_status 0
+assert_out_has "Deleted source branch 'feature-x' of the merged PR."
+log_has_line "gh api --silent -X DELETE /repos/wzshiming/example/git/refs/heads/feature-x"
+log_lacks " merge 1"
+
+begin_case "a closed event never syncs labels or evaluates auto-merge"
+export TYPE="closed"
+export BRANCH_CLEANER="true"
+mkbranch CLOSED false feature-x
+mklabels lgtm approved
+run "${ENTRYPOINT}"
+assert_status 0
+log_lacks "DELETE"
+log_lacks "--json labels"
+log_lacks " merge 1"

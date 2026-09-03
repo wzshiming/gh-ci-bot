@@ -46,9 +46,14 @@ function try_merge() {
   return 1
 }
 
-if ! try_merge "${args}"; then
+if try_merge "${args}"; then
+  # Merges made with the default GITHUB_TOKEN trigger no closed event
+  # run, so the run that merges also cleans up the source branch.
+  branch-cleaner.sh
+else
   # A direct merge fails when required checks are still pending; fall back
-  # to enabling auto-merge so GitHub merges once they pass.
+  # to enabling auto-merge so GitHub merges once they pass. The branch
+  # must survive until GitHub merges; the closed event cleans it up.
   if ! try_merge --auto "${args}"; then
     echo "[FAIL] Failed to merge the PR: ${merge_error:-unknown error}"
   fi

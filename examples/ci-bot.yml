@@ -29,6 +29,7 @@ on:
       - ready_for_review
       - labeled
       - unlabeled
+      - closed
 
 env:
   # This plugins is for anyone who can use it
@@ -126,6 +127,9 @@ env:
 
   # Sync release-note labels from the ```release-note block in PR bodies, blocking merge until one applies (prow's release-note plugin). Unset to disable.
   RELEASE_NOTE_REQUIRED: "true"
+
+  # Delete the source branch of merged PRs when it lives in the same repository (prow's branchcleaner plugin). Unset to disable.
+  BRANCH_CLEANER: "true"
 
   # Additional labels the bot is allowed to create, one entry per line.
   # Each entry is either an exact label name, or a prefix ending in a
@@ -247,6 +251,18 @@ jobs:
           AUTHOR_ASSOCIATION: ${{ github.event.pull_request.author_association }}
           ISSUE_KIND: pr
           TYPE: ${{ github.event.action }}
+
+      - name: PR Closed
+        uses: wzshiming/gh-ci-bot@v1.6.0
+        if: ${{ github.event_name == 'pull_request_target' && github.event.action == 'closed' }}
+        env:
+          LOGIN: ${{ github.event.sender.login }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
+          MESSAGE: ""
+          ISSUE_NUMBER: ${{ github.event.pull_request.number }}
+          AUTHOR_ASSOCIATION: ${{ github.event.pull_request.author_association }}
+          ISSUE_KIND: pr
+          TYPE: closed
 
       - name: Issue Commented
         uses: wzshiming/gh-ci-bot@v1.6.0

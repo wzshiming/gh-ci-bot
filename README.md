@@ -124,6 +124,12 @@ The missing labels are created automatically if they do not exist, provided they
 
 Like prow's [`release-note`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugins/releasenote) plugin, when the `RELEASE_NOTE_REQUIRED` environment variable is set to a non-empty value (it is unset by default), the bot classifies the ```` ```release-note ```` block in the PR body whenever a PR is opened, edited or pushed to, and applies exactly one of the `release-note`, `release-note-none` or `do-not-merge/release-note-label-needed` labels, blocking merge until a valid block is added or `/release-note-none` is used. See [release-note](plugins/release-note/README.md#automatic-behavior) for details.
 
+### Branch cleanup
+
+Like prow's [`branchcleaner`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugins/branchcleaner) plugin, when the `BRANCH_CLEANER` environment variable is set to a non-empty value (it is unset by default), the bot automatically deletes the source branch of a merged PR when the branch lives in the same repository. Branches on forks and the repository's default branch are never touched, and a PR closed without merging keeps its branch.
+
+When the bot merges a PR itself (via [`/merge`](plugins/merge/README.md) or [auto-merge](plugins/merge/README.md#auto-merge)), it cleans up the branch in the same run, because merges performed with the default `GITHUB_TOKEN` trigger no `closed` event run (see [Troubleshooting](#troubleshooting)). Merges made from the GitHub UI or with a PAT/GitHub App token are cleaned up by the `closed` event instead. The one gap is a merge performed by GitHub's own auto-merge that the bot enabled with the default `GITHUB_TOKEN` (the fallback when required checks were still pending): no workflow run fires for it, so the branch stays; use a PAT or GitHub App token if you need that case covered.
+
 ## Troubleshooting
 
 - Changes to `.github/**`

@@ -112,6 +112,17 @@ function sync_auto_merge() {
     fi
 }
 
+# clean_source_branch deletes the source branch of a merged PR when it
+# lives in the same repository, mirroring prow's branchcleaner plugin.
+# The closed event covers merges from the UI or made with a PAT/GitHub
+# App token; pr-merge.sh runs the cleaner itself because merges made
+# with the default GITHUB_TOKEN trigger no closed event run.
+function clean_source_branch() {
+    if [[ "${ISSUE_KIND}" == "pr" ]]; then
+        branch-cleaner.sh
+    fi
+}
+
 function main() {
     if [[ "${TYPE}" == "created" ]]; then
         echo "Greetings to ${LOGIN}!"
@@ -156,6 +167,12 @@ function main() {
         echo "Labels changed, syncing needs-* labels"
         sync_matching_labels
         sync_auto_merge
+    elif [[ "${TYPE}" == "closed" ]]; then
+        # A closed PR can no longer be merged and the cleanup edits no
+        # labels, so this branch skips the matching-labels and
+        # auto-merge syncs that tail every other branch.
+        echo "PR closed, cleaning up the source branch"
+        clean_source_branch
     fi
 }
 
