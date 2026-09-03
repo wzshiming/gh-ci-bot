@@ -13,6 +13,13 @@ function member() {
     export MEMBERS_PLUGINS="${*}"
 }
 
+# contributor <plugins...> grants alice the contributors tier with the given
+# plugins.
+function contributor() {
+    export AUTHOR_ASSOCIATION="CONTRIBUTOR"
+    export CONTRIBUTORS_PLUGINS="${*}"
+}
+
 # reviewer <plugins...> grants alice the reviewers tier with the given
 # plugins (the reviewers tier requires the members tier).
 function reviewer() {
@@ -81,9 +88,8 @@ assert_status 0
 assert_out_has "[FAIL] This command is only available on pull requests, not on issues."
 log_lacks "stub add-labels.sh"
 
-# The member tier is granted to these associations only; the other values
-# GitHub uses (FIRST_TIME_CONTRIBUTOR, FIRST_TIMER, MANNEQUIN) are strangers.
-for association in OWNER MEMBER COLLABORATOR CONTRIBUTOR; do
+# The member tier is granted to these associations only.
+for association in OWNER MEMBER COLLABORATOR; do
     begin_case "the ${association} association gets the member tier"
     member hold
     export AUTHOR_ASSOCIATION="${association}"
@@ -95,7 +101,9 @@ for association in OWNER MEMBER COLLABORATOR CONTRIBUTOR; do
     log_has_line "stub add-labels.sh ${HOLD_LABEL}"
 done
 
-for association in FIRST_TIME_CONTRIBUTOR FIRST_TIMER MANNEQUIN; do
+# Previous contributors are not members, and neither are the other values
+# GitHub uses (FIRST_TIME_CONTRIBUTOR, FIRST_TIMER, MANNEQUIN).
+for association in CONTRIBUTOR FIRST_TIME_CONTRIBUTOR FIRST_TIMER MANNEQUIN; do
     begin_case "the ${association} association does not get the member tier"
     member hold
     export AUTHOR_ASSOCIATION="${association}"
@@ -107,6 +115,44 @@ for association in FIRST_TIME_CONTRIBUTOR FIRST_TIMER MANNEQUIN; do
     assert_out_has "[FAIL] You don't have permission to use the \`/hold\` command."
     log_lacks "stub add-labels.sh"
 done
+
+# The contributors tier covers previous contributors and every member: GitHub
+# reports a single association, so members never show up as CONTRIBUTOR.
+for association in CONTRIBUTOR COLLABORATOR MEMBER OWNER; do
+    begin_case "the ${association} association gets the contributors tier"
+    contributor hold
+    export AUTHOR_ASSOCIATION="${association}"
+    export MESSAGE="/hold"
+    stub add-labels.sh
+    run command.sh
+    assert_status 0
+    assert_out_has "alice is a contributor"
+    log_has_line "stub add-labels.sh ${HOLD_LABEL}"
+done
+
+for association in FIRST_TIME_CONTRIBUTOR FIRST_TIMER MANNEQUIN NONE; do
+    begin_case "the ${association} association does not get the contributors tier"
+    contributor hold
+    export AUTHOR_ASSOCIATION="${association}"
+    export MESSAGE="/hold"
+    stub add-labels.sh
+    run command.sh
+    assert_status 0
+    assert_out_lacks "alice is a contributor"
+    assert_out_has "[FAIL] You don't have permission to use the \`/hold\` command."
+    log_lacks "stub add-labels.sh"
+done
+
+begin_case "a CONTRIBUTOR listed in REVIEWERS does not get the reviewer tier"
+reviewer label-lgtm
+export AUTHOR_ASSOCIATION="CONTRIBUTOR"
+export MESSAGE="/lgtm"
+stub add-labels.sh
+run command.sh
+assert_status 0
+assert_out_lacks "alice is a reviewer"
+assert_out_has "[FAIL] You don't have permission to use the \`/lgtm\` command."
+log_lacks "stub add-labels.sh"
 
 begin_case "/lgtm by a reviewer adds lgtm and re-checks auto-merge"
 reviewer label-lgtm
