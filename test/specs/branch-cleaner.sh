@@ -59,6 +59,14 @@ assert_status 0
 assert_out_has "is the default branch, skipping the branch cleanup."
 log_lacks "DELETE"
 
+begin_case "fails open when the source branch cannot be resolved"
+export BRANCH_CLEANER="true"
+mkbranch MERGED false ""
+run branch-cleaner.sh
+assert_status 0
+assert_out_has "Failed to resolve the source or default branch, skipping the branch cleanup."
+log_lacks "DELETE"
+
 begin_case "fails open when the PR query fails"
 export BRANCH_CLEANER="true"
 export MOCK_GH_FAIL=1

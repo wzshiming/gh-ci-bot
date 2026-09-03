@@ -24,9 +24,9 @@ if ! info="$(gh pr -R "${GH_REPOSITORY}" view "${ISSUE_NUMBER}" --json headRefNa
     return 0 2>/dev/null || exit 0
 fi
 
-state="$(echo "${info}" | jq -r '.state')"
+state="$(echo "${info}" | jq -r '.state // ""')"
 cross_repository="$(echo "${info}" | jq -r '.isCrossRepository')"
-head_branch="$(echo "${info}" | jq -r '.headRefName')"
+head_branch="$(echo "${info}" | jq -r '.headRefName // ""')"
 
 if [[ "${state}" != "MERGED" ]]; then
     echo "PR is not merged, skipping the branch cleanup."
@@ -38,8 +38,14 @@ if [[ "${cross_repository}" != "false" ]]; then
     return 0 2>/dev/null || exit 0
 fi
 
-default_branch="$(gh api "/repos/${GH_REPOSITORY}" | jq -r '.default_branch')"
-if [[ -z "${head_branch}" || "${head_branch}" == "${default_branch}" ]]; then
+# Fail open: without the default branch resolved, the guard below could
+# not protect it.
+default_branch="$(gh api "/repos/${GH_REPOSITORY}" | jq -r '.default_branch // ""')"
+if [[ -z "${head_branch}" || -z "${default_branch}" ]]; then
+    echo "Failed to resolve the source or default branch, skipping the branch cleanup."
+    return 0 2>/dev/null || exit 0
+fi
+if [[ "${head_branch}" == "${default_branch}" ]]; then
     echo "PR source branch '${head_branch}' is the default branch, skipping the branch cleanup."
     return 0 2>/dev/null || exit 0
 fi
