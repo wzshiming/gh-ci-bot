@@ -192,11 +192,12 @@ function load_owners_for_pr() {
 
     local areas=""
     local f
-    for f in ${files}; do
+    while read -r f; do
+        [[ -z "${f}" ]] && continue
         get_file_area "${f}"
         areas="${areas}
 ${_FILE_AREA}"
-    done
+    done <<<"${files}"
     areas="$(echo "${areas}" | sed '/^$/d' | sort -u)"
 
     OWNERS_AREAS="${areas}"
@@ -205,12 +206,13 @@ ${_FILE_AREA}"
     OWNERS_AREA_APPROVERS=""
     local all_approvers=""
     local area
-    for area in ${areas}; do
+    while read -r area; do
+        [[ -z "${area}" ]] && continue
         collect_area_approvers "${area}"
         OWNERS_AREA_APPROVERS="${OWNERS_AREA_APPROVERS}${area} ${_AREA_APPROVERS}
 "
         all_approvers="${all_approvers} ${_AREA_APPROVERS}"
-    done
+    done <<<"${areas}"
     OWNERS_AREA_APPROVERS="$(echo "${OWNERS_AREA_APPROVERS}" | sed '/^$/d')"
     export OWNERS_AREA_APPROVERS
 

@@ -198,6 +198,21 @@ function mkrepolabels() {
     jq -n --args '[$ARGS.positional[] | {name: .}]' "${@}" >"${MOCK_LABEL_LIST_JSON}"
 }
 
+# mkfiles [path...] builds the reply to the changed-files query
+# `gh api /repos/<repo>/pulls/<n>/files`, one changed file per argument.
+function mkfiles() {
+    export MOCK_PR_FILES_JSON="${CASE_DIR}/pr-files.json"
+    jq -n --args '[$ARGS.positional[] | {filename: .}]' "${@}" >"${MOCK_PR_FILES_JSON}"
+}
+
+# mkowners <yaml> builds the OWNERS file content served for every
+# directory of the repository by the mocked
+# `gh api /repos/<repo>/contents/<dir>/OWNERS`.
+function mkowners() {
+    export MOCK_OWNERS_FILE="${CASE_DIR}/owners"
+    printf '%s\n' "${1}" >"${MOCK_OWNERS_FILE}"
+}
+
 # assert_status <expected> checks the exit code of the last run.
 function assert_status() {
     if [[ "${STATUS}" -ne "${1}" ]]; then
