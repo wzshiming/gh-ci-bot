@@ -9,7 +9,9 @@
 #   -->
 # followed by a human-readable summary table. An area is approved when at
 # least one of its approvers has approved it. The PR gets the "approved"
-# label once every changed area is approved.
+# label once every changed area is approved. Overlapping workflow runs can
+# leave duplicate status comments; the next update merges their approvals
+# into the oldest comment and deletes the others.
 #
 # Usage:
 #   approve-status.sh approve <login>    Record approval for the areas <login> owns
@@ -25,19 +27,23 @@
 
 STATUS_MARKER="<!-- ci-bot-approve-status"
 
-function find_status_comment() {
-    local bot_login
+# find_status_comments prints the ids of the bot's status comments, oldest
+# first. There is normally one; overlapping runs can leave duplicates.
+function find_status_comments() {
+    local bot_login comments
     bot_login="$(bot-login.sh)"
-    gh api --paginate "/repos/${GH_REPOSITORY}/issues/${ISSUE_NUMBER}/comments" |
-        jq -r "[.[] | select(.user.login == \"${bot_login}\") | select(.body | startswith(\"${STATUS_MARKER}\"))] | first | .id // empty"
+    comments="$(gh api --paginate "/repos/${GH_REPOSITORY}/issues/${ISSUE_NUMBER}/comments")" || return 1
+    jq -r --arg login "${bot_login}" --arg marker "${STATUS_MARKER}" \
+        '.[] | select(.user.login == $login) | select(.body | startswith($marker)) | .id' <<<"${comments}"
 }
 
 # get_status_state prints the state lines ("<area> <approver>...") stored
 # in the comment with the given id.
 function get_status_state() {
     local id="$1"
-    gh api "/repos/${GH_REPOSITORY}/issues/comments/${id}" --jq '.body' |
-        sed -n "/^${STATUS_MARKER}$/,/^-->$/p" | sed '1d;$d'
+    local body
+    body="$(gh api "/repos/${GH_REPOSITORY}/issues/comments/${id}" --jq '.body')" || return 1
+    sed -n "/^${STATUS_MARKER}$/,/^-->$/p" <<<"${body}" | sed '1d;$d'
 }
 
 # state_approved_for prints the approvers recorded in the state for an area.
@@ -45,6 +51,26 @@ function state_approved_for() {
     local state="$1"
     local area="$2"
     echo "${state}" | awk -v a="${area}" '$1 == a { $1 = ""; print substr($0, 2) }'
+}
+
+# load_state reads the stored state: STATE_ID is the oldest status comment
+# (empty if none) and OLD_STATE its state lines, merged with the approvals
+# recorded in any duplicate; the duplicates' ids go to STATE_DUPLICATES
+# for save_status_comment to delete. Fails when a comment cannot be read,
+# since an unread comment would pass for an empty state.
+function load_state() {
+    local ids
+    ids="$(find_status_comments)" || return 1
+    STATE_ID="$(head -n 1 <<<"${ids}")"
+    STATE_DUPLICATES="$(tail -n +2 <<<"${ids}")"
+    local id lines states=""
+    while read -r id; do
+        [[ -z "${id}" ]] && continue
+        lines="$(get_status_state "${id}")" || return 1
+        states="${states}
+${lines}"
+    done <<<"${ids}"
+    OLD_STATE="$(awk 'NF { if (!($1 in a)) a[$1] = ""; for (i = 2; i <= NF; i++) if (!seen[$1, $i]++) a[$1] = a[$1] " " $i } END { for (k in a) print k a[k] }' <<<"${states}")"
 }
 
 # render_body renders the full comment body from the state lines.
@@ -149,18 +175,22 @@ function render_body() {
     fi
 }
 
-# save_status_comment creates or updates the status comment.
+# save_status_comment creates or updates the status comment, then deletes
+# the duplicates found by load_state.
 function save_status_comment() {
     local state="$1"
     local body
     body="$(render_body "${state}")"
-    local id
-    id="$(find_status_comment)"
-    if [[ -n "${id}" ]]; then
-        gh api --silent -X PATCH "/repos/${GH_REPOSITORY}/issues/comments/${id}" -f body="${body}"
+    if [[ -n "${STATE_ID}" ]]; then
+        gh api --silent -X PATCH "/repos/${GH_REPOSITORY}/issues/comments/${STATE_ID}" -f body="${body}" || return 1
     else
-        gh api --silent -X POST "/repos/${GH_REPOSITORY}/issues/${ISSUE_NUMBER}/comments" -f body="${body}"
+        gh api --silent -X POST "/repos/${GH_REPOSITORY}/issues/${ISSUE_NUMBER}/comments" -f body="${body}" || return 1
     fi
+    local id
+    while read -r id; do
+        [[ -z "${id}" ]] && continue
+        gh api --silent -X DELETE "/repos/${GH_REPOSITORY}/issues/comments/${id}"
+    done <<<"${STATE_DUPLICATES}"
 }
 
 # build_state merges the stored state with the current areas: stale areas
@@ -215,15 +245,12 @@ function cmd_approve() {
         return 1
     fi
 
-    local old_state=""
-    local id
-    id="$(find_status_comment)"
-    if [[ -n "${id}" ]]; then
-        old_state="$(get_status_state "${id}")"
+    if ! load_state; then
+        echo "[FAIL] Could not read the approval status of this PR. Please try again later."
+        return 1
     fi
-
     local state
-    state="$(build_state "${old_state}")"
+    state="$(build_state "${OLD_STATE}")"
 
     local new_state=""
     local all_approved=true
@@ -266,15 +293,12 @@ function cmd_unapprove() {
         return 0
     fi
 
-    local old_state=""
-    local id
-    id="$(find_status_comment)"
-    if [[ -n "${id}" ]]; then
-        old_state="$(get_status_state "${id}")"
+    if ! load_state; then
+        echo "[FAIL] Could not read the approval status of this PR. Please try again later."
+        return 1
     fi
-
     local state
-    state="$(build_state "${old_state}")"
+    state="$(build_state "${OLD_STATE}")"
 
     local new_state=""
     local area approved
@@ -302,15 +326,12 @@ function cmd_sync() {
         return 0
     fi
 
-    local old_state=""
-    local id
-    id="$(find_status_comment)"
-    if [[ -n "${id}" ]]; then
-        old_state="$(get_status_state "${id}")"
+    if ! load_state; then
+        echo "Could not read the approval status, skipping the approval sync." >&2
+        return 1
     fi
-
     local state
-    state="$(build_state "${old_state}")"
+    state="$(build_state "${OLD_STATE}")"
 
     save_status_comment "${state}"
     if state_all_approved "${state}"; then
@@ -327,14 +348,8 @@ function cmd_check() {
         return 0
     fi
 
-    local old_state=""
-    local id
-    id="$(find_status_comment)"
-    if [[ -n "${id}" ]]; then
-        old_state="$(get_status_state "${id}")"
-    fi
-
-    state_all_approved "$(build_state "${old_state}")"
+    load_state || return 1
+    state_all_approved "$(build_state "${OLD_STATE}")"
 }
 
 case "$1" in
