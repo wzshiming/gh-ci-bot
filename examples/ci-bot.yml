@@ -130,6 +130,17 @@ env:
   # Label PRs that have merge conflicts with needs-rebase, removing the label automatically once the conflicts are resolved (prow's needs-rebase plugin, labels only). Unset to disable.
   NEEDS_REBASE: "true"
 
+  # Block PRs containing merge commits with the
+  # do-not-merge/contains-merge-commits label (prow's mergecommitblocker
+  # plugin). Unset to disable.
+  BLOCK_MERGE_COMMITS: "true"
+
+  # Block PRs whose commit messages or title contain @mentions or keywords
+  # that can automatically close issues (e.g. "fixes #42") with the
+  # do-not-merge/invalid-commit-message label (prow's invalidcommitmsg
+  # plugin). Unset to disable.
+  BLOCK_INVALID_COMMIT_MESSAGES: "true"
+
   # Additional labels the bot is allowed to create, one entry per line.
   # Each entry is either an exact label name, or a prefix ending in a
   # slash (e.g. kind/) which allows any label with that prefix. These are

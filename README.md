@@ -130,6 +130,14 @@ Like prow's [`needs-rebase`](https://github.com/kubernetes-sigs/prow/tree/main/c
 
 GitHub computes mergeability lazily, so a conflict caused by another PR merging into the base branch may only be noticed the next time the PR is pushed to, edited or commented on.
 
+### Merge commits
+
+Like prow's [`mergecommitblocker`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugins/mergecommitblocker) plugin, when the `BLOCK_MERGE_COMMITS` environment variable is set to a non-empty value (it is unset by default), the bot applies the `do-not-merge/contains-merge-commits` label to a PR while it contains merge commits (commits with more than one parent), blocking merge until the branch is rebased, and removes the label once the merge commits are gone.
+
+### Invalid commit messages
+
+Like prow's [`invalidcommitmsg`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugins/invalidcommitmsg) plugin, when the `BLOCK_INVALID_COMMIT_MESSAGES` environment variable is set to a non-empty value (it is unset by default), the bot applies the `do-not-merge/invalid-commit-message` label to a PR while any of its commit messages or its title contains an `@mention` or a [keyword which can automatically close issues](https://docs.github.com/articles/closing-issues-using-keywords) (e.g. `fixes #42`), and removes the label once they are fixed. An invalid title can be fixed with [`/retitle`](plugins/retitle/README.md); invalid commit messages require rewording the commits.
+
 ## Troubleshooting
 
 - Changes to `.github/**`

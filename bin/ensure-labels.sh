@@ -33,6 +33,8 @@ do-not-merge/hold
 do-not-merge/work-in-progress
 do-not-merge/release-note-label-needed
 do-not-merge/needs-kind
+do-not-merge/contains-merge-commits
+do-not-merge/invalid-commit-message
 kind/api-change
 kind/bug
 kind/cleanup
@@ -233,6 +235,12 @@ function label_description() {
     ;;
   do-not-merge/needs-kind)
     echo "Indicates a PR lacks a \`kind/foo\` label and requires one."
+    ;;
+  do-not-merge/contains-merge-commits)
+    echo "Indicates a PR which contains merge commits."
+    ;;
+  do-not-merge/invalid-commit-message)
+    echo "Indicates that a PR should not merge because it has an invalid commit message."
     ;;
   do-not-merge/*)
     echo "Indicates that a PR should not merge."

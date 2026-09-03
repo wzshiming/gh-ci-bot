@@ -64,6 +64,9 @@ case "$*" in
 *"--json mergeable,state,labels"*)
     serve "${MOCK_MERGEABLE_JSON:-}"
     ;;
+*"--json title,labels"*)
+    serve "${MOCK_TITLE_JSON:-}"
+    ;;
 *"--json labels"*)
     serve "${MOCK_LABELS_JSON:-}"
     ;;
@@ -79,6 +82,10 @@ case "$*" in
     if [[ -n "${MOCK_PR_FILES_JSON:-}" && -f "${MOCK_PR_FILES_JSON:-}" ]]; then
         serve "${MOCK_PR_FILES_JSON}"
     fi
+    ;;
+*"/pulls/"*"/commits"*)
+    # Commits of the PR; specs must provide a fixture with mkcommits.
+    serve "${MOCK_PR_COMMITS_JSON:-}"
     ;;
 *"/contents/"*)
     # OWNERS file fetches; fail like a 404 unless a fixture is given.

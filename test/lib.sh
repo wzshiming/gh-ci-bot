@@ -51,6 +51,7 @@ function reset_env() {
         APPROVERS_PLUGINS MAINTAINERS_PLUGINS OWNERS_PLUGINS \
         REVIEWERS APPROVERS MAINTAINERS \
         RELEASE_NOTE_REQUIRED NEEDS_REBASE LABELS \
+        BLOCK_MERGE_COMMITS BLOCK_INVALID_COMMIT_MESSAGES \
         ISSUE_REQUIRE_MATCHING_LABELS PR_REQUIRE_MATCHING_LABELS \
         BLUNDERBUSS_REVIEWER_COUNT DEFAULT_MERGE_METHOD DETAILS GREETING \
         OWNERS_AREAS OWNERS_AREA_APPROVERS OWNERS_LABELS branch \
@@ -75,8 +76,10 @@ function begin_case() {
     export MOCK_WIP_JSON="${CASE_DIR}/wip.json"
     export MOCK_SIZE_JSON="${CASE_DIR}/size.json"
     export MOCK_MERGEABLE_JSON="${CASE_DIR}/mergeable.json"
+    export MOCK_TITLE_JSON="${CASE_DIR}/title.json"
     export MOCK_LABELS_JSON="${CASE_DIR}/labels.json"
     export MOCK_LABEL_LIST_JSON="${CASE_DIR}/label-list.json"
+    export MOCK_PR_COMMITS_JSON="${CASE_DIR}/pr-commits.json"
     export PATH="${STUB_DIR}:${MOCK_DIR}:${BIN_DIR}:${BASE_PATH}"
     reset_env
     OUTPUT=""
@@ -202,6 +205,32 @@ function mkmergeable() {
     jq -n --arg state "${state}" --arg mergeable "${mergeable}" --args \
         '{mergeable: $mergeable, state: $state, labels: [$ARGS.positional[] | {name: .}]}' \
         "${@}" >"${MOCK_MERGEABLE_JSON}"
+}
+
+# mktitle <title> [label...] builds the reply to
+# `gh pr view --json title,labels`.
+function mktitle() {
+    local title="${1}"
+    shift
+    jq -n --arg title "${title}" --args \
+        '{title: $title, labels: [$ARGS.positional[] | {name: .}]}' \
+        "${@}" >"${MOCK_TITLE_JSON}"
+}
+
+# mkcommits [<parents>:<message>...] builds the reply to the PR commits
+# query `gh api /repos/<repo>/pulls/<n>/commits`, one commit per argument
+# with the given number of parents (more than 1 makes it a merge commit)
+# and commit message.
+function mkcommits() {
+    jq -n --args \
+        '[$ARGS.positional[] | capture("^(?<parents>[0-9]+):(?<message>.*)"; "m")] |
+            to_entries |
+            map({
+                sha: ("sha-" + ((.key + 1) | tostring)),
+                parents: [range(.value.parents | tonumber) | {sha: ("parent-" + tostring)}],
+                commit: {message: .value.message}
+            })' \
+        "${@}" >"${MOCK_PR_COMMITS_JSON}"
 }
 
 # mkrepolabels [label...] builds the reply to
