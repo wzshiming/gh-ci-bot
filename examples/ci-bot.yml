@@ -127,6 +127,9 @@ env:
   # Sync release-note labels from the ```release-note block in PR bodies, blocking merge until one applies (prow's release-note plugin). Unset to disable.
   RELEASE_NOTE_REQUIRED: "true"
 
+  # Label PRs that have merge conflicts with needs-rebase, removing the label automatically once the conflicts are resolved (prow's needs-rebase plugin, labels only). Unset to disable.
+  NEEDS_REBASE: "true"
+
   # Additional labels the bot is allowed to create, one entry per line.
   # Each entry is either an exact label name, or a prefix ending in a
   # slash (e.g. kind/) which allows any label with that prefix. These are

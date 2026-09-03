@@ -44,6 +44,7 @@ kind/flake
 kind/regression
 kind/support
 needs-kind
+needs-rebase
 needs-sig
 needs-triage
 priority/awaiting-more-evidence
@@ -132,6 +133,9 @@ function label_color() {
     ;;
   sig/* | wg/*)
     echo "d2b48c"
+    ;;
+  needs-rebase)
+    echo "e11d21"
     ;;
   priority/awaiting-more-evidence)
     echo "fef2c0"
@@ -280,6 +284,9 @@ function label_description() {
     ;;
   needs-kind)
     echo "Indicates an issue or PR lacks a \`kind/foo\` label and requires one."
+    ;;
+  needs-rebase)
+    echo "Indicates a PR cannot be merged because it has merge conflicts with HEAD."
     ;;
   needs-*)
     echo "Indicates an issue or PR lacks a \`${1#needs-}/foo\` label and requires one."
