@@ -28,20 +28,32 @@ function reviewer() {
     export REVIEWERS_PLUGINS="${*}"
 }
 
+# No-command comments are the common case and ISSUE_KIND stays "pr" here:
+# command.sh must do nothing at all, in particular not fetch the changed
+# files and the OWNERS chain of the PR.
 begin_case "an empty message does nothing"
-export ISSUE_KIND="issue"
 run command.sh
 assert_status 0
-assert_out_has "PLUGINS:"
+assert_out_is ""
 log_empty
 
 begin_case "a message without commands does nothing"
-export ISSUE_KIND="issue"
 export MESSAGE="Nice work, thanks!"
 run command.sh
 assert_status 0
-assert_out_lacks "Exec command"
+assert_out_is ""
 log_empty
+
+# The counterpart: a comment that does carry a command still loads the
+# OWNERS chain of the PR, starting with its changed files.
+begin_case "a command on a PR fetches the changed files for the OWNERS chain"
+member hold
+export MESSAGE="/hold"
+stub add-labels.sh
+run command.sh
+assert_status 0
+log_has "/pulls/1/files"
+log_has_line "stub add-labels.sh ${HOLD_LABEL}"
 
 begin_case "an unknown command gets an unknown-command reply"
 export ISSUE_KIND="issue"
@@ -233,7 +245,6 @@ log_has '{"assignees":["carol"]}'
 
 begin_case "commands inside HTML comments are ignored"
 member hold
-export ISSUE_KIND="issue"
 export MESSAGE=$'<!--\n/hold\n-->'
 stub add-labels.sh
 run command.sh
@@ -261,7 +272,6 @@ log_has '{"assignees":["alice"]}'
 
 begin_case "a command after an unterminated comment is ignored"
 member hold
-export ISSUE_KIND="issue"
 export MESSAGE=$'<!--\n/hold'
 stub add-labels.sh
 run command.sh
@@ -271,7 +281,6 @@ log_empty
 
 begin_case "commands inside fenced code blocks are ignored"
 member hold
-export ISSUE_KIND="issue"
 export MESSAGE=$'```\n/hold\n```'
 stub add-labels.sh
 run command.sh
@@ -291,7 +300,6 @@ log_has_line "stub add-labels.sh ${HOLD_LABEL}"
 
 begin_case "an unterminated fence suppresses commands to the end"
 member hold
-export ISSUE_KIND="issue"
 export MESSAGE=$'```bash\n/hold'
 stub add-labels.sh
 run command.sh
@@ -321,7 +329,6 @@ log_has_line "stub add-labels.sh ${HOLD_LABEL}"
 
 begin_case "tilde fences suppress commands"
 member hold
-export ISSUE_KIND="issue"
 export MESSAGE=$'~~~\n/hold\n~~~'
 stub add-labels.sh
 run command.sh
@@ -341,7 +348,6 @@ log_has_line "stub add-labels.sh ${HOLD_LABEL}"
 
 begin_case "an invalid backtick opener stays literal text"
 member hold
-export ISSUE_KIND="issue"
 export MESSAGE=$'```lang```\ntext\n```\n/hold\n```'
 stub add-labels.sh
 run command.sh
