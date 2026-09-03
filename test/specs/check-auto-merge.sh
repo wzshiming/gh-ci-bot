@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 # check-auto-merge.sh: a PR with both the "lgtm" and "approved" labels and
-# every changed area approved is auto-merged, unless a do-not-merge/*
-# label blocks it.
+# every changed area approved is auto-merged, unless a do-not-merge/* or
+# "dco-signoff: no" label blocks it.
 
 source "$(dirname "${BASH_SOURCE[0]}")/../lib.sh"
 
@@ -73,6 +73,22 @@ run check-auto-merge.sh
 assert_status 0
 assert_out_has "PR has the 'do-not-merge/hold requested' label. Skipping auto-merge."
 log_lacks "stub"
+
+begin_case "the dco-signoff: no label skips auto-merge"
+stub_merge_scripts
+mklabels "lgtm" "approved" "dco-signoff: no"
+run check-auto-merge.sh
+assert_status 0
+assert_out_has "PR has the 'dco-signoff: no' label. Skipping auto-merge."
+log_lacks "stub"
+
+begin_case "the dco-signoff: yes label does not block auto-merge"
+stub_merge_scripts
+mklabels "lgtm" "approved" "dco-signoff: yes"
+run check-auto-merge.sh
+assert_status 0
+assert_out_has "Auto-merging"
+log_has_line "stub pr-merge.sh"
 
 begin_case "does nothing for issues"
 stub_merge_scripts

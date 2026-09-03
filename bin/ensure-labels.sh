@@ -35,6 +35,8 @@ do-not-merge/release-note-label-needed
 do-not-merge/needs-kind
 do-not-merge/contains-merge-commits
 do-not-merge/invalid-commit-message
+dco-signoff: yes
+dco-signoff: no
 kind/api-change
 kind/bug
 kind/cleanup
@@ -113,6 +115,12 @@ function label_color() {
     echo "0ffa16"
     ;;
   do-not-merge | do-not-merge/*)
+    echo "e11d21"
+    ;;
+  "dco-signoff: yes")
+    echo "bfe5bf"
+    ;;
+  "dco-signoff: no")
     echo "e11d21"
     ;;
   kind/api-change | kind/bug | kind/deprecation | kind/failing-test | kind/regression)
@@ -244,6 +252,12 @@ function label_description() {
     ;;
   do-not-merge/*)
     echo "Indicates that a PR should not merge."
+    ;;
+  "dco-signoff: yes")
+    echo "Indicates the PR's author has DCO signed all their commits."
+    ;;
+  "dco-signoff: no")
+    echo "Indicates the PR's author has not DCO signed all their commits."
     ;;
   kind/api-change)
     echo "Categorizes issue or PR as related to adding, removing, or otherwise changing an API"

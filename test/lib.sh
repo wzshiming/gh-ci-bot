@@ -50,14 +50,15 @@ function reset_env() {
     unset MESSAGE PLUGINS AUTHOR_PLUGINS CONTRIBUTORS_PLUGINS MEMBERS_PLUGINS REVIEWERS_PLUGINS \
         APPROVERS_PLUGINS MAINTAINERS_PLUGINS OWNERS_PLUGINS \
         REVIEWERS APPROVERS MAINTAINERS \
-        RELEASE_NOTE_REQUIRED NEEDS_REBASE LABELS \
+        RELEASE_NOTE_REQUIRED NEEDS_REBASE DCO_REQUIRED LABELS \
         BLOCK_MERGE_COMMITS BLOCK_INVALID_COMMIT_MESSAGES \
         ISSUE_REQUIRE_MATCHING_LABELS PR_REQUIRE_MATCHING_LABELS \
         BLUNDERBUSS_REVIEWER_COUNT DEFAULT_MERGE_METHOD DETAILS GREETING \
         OWNERS_AREAS OWNERS_AREA_APPROVERS OWNERS_LABELS branch \
         GITHUB_RUN_ID GITHUB_REPOSITORY GITHUB_SERVER_URL \
         MOCK_GH_FAIL MOCK_CURL_FAIL \
-        MOCK_PR_FILES_JSON MOCK_OWNERS_FILE
+        MOCK_PR_FILES_JSON MOCK_OWNERS_FILE \
+        MOCK_ISSUE_COMMENTS_JSON
 }
 
 # begin_case <description> finishes the previous case and starts a new
@@ -252,6 +253,23 @@ function mkfiles() {
 function mkowners() {
     export MOCK_OWNERS_FILE="${CASE_DIR}/owners"
     printf '%s\n' "${1}" >"${MOCK_OWNERS_FILE}"
+}
+
+# mkissuecomments <login> <body> [<login> <body>...] builds the reply to
+# the issue comments query `gh api /repos/<repo>/issues/<n>/comments`,
+# numbering the comment ids 1, 2, ... in order.
+function mkissuecomments() {
+    export MOCK_ISSUE_COMMENTS_JSON="${CASE_DIR}/issue-comments.json"
+    local json="[]" id=0 login body
+    while [[ "${#}" -ge 2 ]]; do
+        login="${1}"
+        body="${2}"
+        shift 2
+        id=$((id + 1))
+        json="$(jq --arg login "${login}" --arg body "${body}" --argjson id "${id}" \
+            '. + [{id: $id, user: {login: $login}, body: $body}]' <<<"${json}")"
+    done
+    printf '%s\n' "${json}" >"${MOCK_ISSUE_COMMENTS_JSON}"
 }
 
 # assert_status <expected> checks the exit code of the last run.

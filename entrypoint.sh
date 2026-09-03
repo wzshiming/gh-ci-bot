@@ -76,6 +76,15 @@ function sync_release_note_label() {
     fi
 }
 
+# sync_dco_label keeps the dco-signoff labels in sync with the signoff
+# state of the PR's commits, mirroring prow's dco plugin. Only runs when
+# the commits can have changed: on open and on push.
+function sync_dco_label() {
+    if [[ "${ISSUE_KIND}" == "pr" ]]; then
+        check-dco.sh
+    fi
+}
+
 # sync_size_label keeps the size/* label in sync with the PR's diff size,
 # mirroring prow's size plugin.
 function sync_size_label() {
@@ -144,6 +153,7 @@ function main() {
         greeting.sh
         sync_wip_label
         sync_release_note_label
+        sync_dco_label
         sync_size_label
         sync_needs_rebase_label
         sync_merge_commits_label
@@ -165,6 +175,7 @@ function main() {
         remove-labels.sh lgtm
         sync_wip_label
         sync_release_note_label
+        sync_dco_label
         sync_size_label
         sync_needs_rebase_label
         sync_merge_commits_label

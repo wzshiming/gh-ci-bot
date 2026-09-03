@@ -12,12 +12,12 @@ Merges a pull request.
 
 - Only available on pull requests.
 - Without an argument, the merge method comes from the `DEFAULT_MERGE_METHOD` environment variable (`merge`, `rebase` or `squash`; default `merge`).
-- Merging is refused while the PR carries any `do-not-merge/*` label (e.g. from [hold](../hold/README.md), [wip](../../README.md#work-in-progress), [release-note](../release-note/README.md) or [require-matching-label](../../README.md#require-matching-label)); the blocking labels are listed in the reply.
+- Merging is refused while the PR carries any `do-not-merge/*` label (e.g. from [hold](../hold/README.md), [wip](../../README.md#work-in-progress), [release-note](../release-note/README.md) or [require-matching-label](../../README.md#require-matching-label)) or the `dco-signoff: no` label ([check-dco](../check-dco/README.md)); the blocking labels are listed in the reply.
 - If a direct merge fails (for example because required checks are still pending), the bot falls back to enabling GitHub auto-merge so the PR merges once they pass.
 
 ## Auto-merge
 
-A PR is merged automatically (with the default merge method) once it has both the `lgtm` ([label-lgtm](../label-lgtm/README.md)) and `approved` ([label-approve](../label-approve/README.md)) labels, every changed area is approved, and no `do-not-merge/*` label is present. The bot evaluates this once at the end of every PR event, so the merge happens no matter which command, label sync or UI action removed the last blocker.
+A PR is merged automatically (with the default merge method) once it has both the `lgtm` ([label-lgtm](../label-lgtm/README.md)) and `approved` ([label-approve](../label-approve/README.md)) labels, every changed area is approved, and no `do-not-merge/*` or `dco-signoff: no` label is present. The bot evaluates this once at the end of every PR event, so the merge happens no matter which command, label sync or UI action removed the last blocker.
 
 ## Configuration
 
