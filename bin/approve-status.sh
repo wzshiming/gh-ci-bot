@@ -25,19 +25,23 @@
 
 STATUS_MARKER="<!-- ci-bot-approve-status"
 
+# find_status_comment prints the id of the bot's status comment, empty if
+# there is none; fails when the comments cannot be listed.
 function find_status_comment() {
-    local bot_login
+    local bot_login comments
     bot_login="$(bot-login.sh)"
-    gh api --paginate "/repos/${GH_REPOSITORY}/issues/${ISSUE_NUMBER}/comments" |
-        jq -r "[.[] | select(.user.login == \"${bot_login}\") | select(.body | startswith(\"${STATUS_MARKER}\"))] | first | .id // empty"
+    comments="$(gh api --paginate "/repos/${GH_REPOSITORY}/issues/${ISSUE_NUMBER}/comments")" || return 1
+    jq -r --arg login "${bot_login}" --arg marker "${STATUS_MARKER}" \
+        '[.[] | select(.user.login == $login) | select(.body | startswith($marker))] | first | .id // empty' <<<"${comments}"
 }
 
 # get_status_state prints the state lines ("<area> <approver>...") stored
-# in the comment with the given id.
+# in the comment with the given id; fails when the comment cannot be read.
 function get_status_state() {
     local id="$1"
-    gh api "/repos/${GH_REPOSITORY}/issues/comments/${id}" --jq '.body' |
-        sed -n "/^${STATUS_MARKER}$/,/^-->$/p" | sed '1d;$d'
+    local body
+    body="$(gh api "/repos/${GH_REPOSITORY}/issues/comments/${id}" --jq '.body')" || return 1
+    sed -n "/^${STATUS_MARKER}$/,/^-->$/p" <<<"${body}" | sed '1d;$d'
 }
 
 # state_approved_for prints the approvers recorded in the state for an area.
@@ -45,6 +49,18 @@ function state_approved_for() {
     local state="$1"
     local area="$2"
     echo "${state}" | awk -v a="${area}" '$1 == a { $1 = ""; print substr($0, 2) }'
+}
+
+# load_state reads the stored state into STATE_ID (the status comment, empty
+# if none) and OLD_STATE (its state lines). Fails when the comment cannot be
+# listed or read: an unread comment would pass for an empty state and its
+# approvals would be overwritten.
+function load_state() {
+    STATE_ID="$(find_status_comment)" || return 1
+    OLD_STATE=""
+    if [[ -n "${STATE_ID}" ]]; then
+        OLD_STATE="$(get_status_state "${STATE_ID}")" || return 1
+    fi
 }
 
 # render_body renders the full comment body from the state lines.
@@ -154,10 +170,8 @@ function save_status_comment() {
     local state="$1"
     local body
     body="$(render_body "${state}")"
-    local id
-    id="$(find_status_comment)"
-    if [[ -n "${id}" ]]; then
-        gh api --silent -X PATCH "/repos/${GH_REPOSITORY}/issues/comments/${id}" -f body="${body}"
+    if [[ -n "${STATE_ID}" ]]; then
+        gh api --silent -X PATCH "/repos/${GH_REPOSITORY}/issues/comments/${STATE_ID}" -f body="${body}"
     else
         gh api --silent -X POST "/repos/${GH_REPOSITORY}/issues/${ISSUE_NUMBER}/comments" -f body="${body}"
     fi
@@ -215,15 +229,12 @@ function cmd_approve() {
         return 1
     fi
 
-    local old_state=""
-    local id
-    id="$(find_status_comment)"
-    if [[ -n "${id}" ]]; then
-        old_state="$(get_status_state "${id}")"
+    if ! load_state; then
+        echo "[FAIL] Could not read the approval status of this PR. Please try again later."
+        return 1
     fi
-
     local state
-    state="$(build_state "${old_state}")"
+    state="$(build_state "${OLD_STATE}")"
 
     local new_state=""
     local all_approved=true
@@ -266,15 +277,12 @@ function cmd_unapprove() {
         return 0
     fi
 
-    local old_state=""
-    local id
-    id="$(find_status_comment)"
-    if [[ -n "${id}" ]]; then
-        old_state="$(get_status_state "${id}")"
+    if ! load_state; then
+        echo "[FAIL] Could not read the approval status of this PR. Please try again later."
+        return 1
     fi
-
     local state
-    state="$(build_state "${old_state}")"
+    state="$(build_state "${OLD_STATE}")"
 
     local new_state=""
     local area approved
@@ -302,15 +310,12 @@ function cmd_sync() {
         return 0
     fi
 
-    local old_state=""
-    local id
-    id="$(find_status_comment)"
-    if [[ -n "${id}" ]]; then
-        old_state="$(get_status_state "${id}")"
+    if ! load_state; then
+        echo "Could not read the approval status, skipping the approval sync." >&2
+        return 1
     fi
-
     local state
-    state="$(build_state "${old_state}")"
+    state="$(build_state "${OLD_STATE}")"
 
     save_status_comment "${state}"
     if state_all_approved "${state}"; then
@@ -327,14 +332,8 @@ function cmd_check() {
         return 0
     fi
 
-    local old_state=""
-    local id
-    id="$(find_status_comment)"
-    if [[ -n "${id}" ]]; then
-        old_state="$(get_status_state "${id}")"
-    fi
-
-    state_all_approved "$(build_state "${old_state}")"
+    load_state || return 1
+    state_all_approved "$(build_state "${OLD_STATE}")"
 }
 
 case "$1" in
