@@ -12,6 +12,6 @@ Blocks and unblocks merging with the `do-not-merge/hold` label.
 ## Behavior
 
 - Only available on pull requests.
-- Any label starting with `do-not-merge/` blocks both `/merge` and auto-merge while present.
+- The `do-not-merge` label (applied manually, e.g. with `/label do-not-merge`) and any label starting with `do-not-merge/` block both `/merge` and auto-merge while present.
 - [Auto-merge](../merge/README.md#auto-merge) is evaluated at the end of every PR event, so a PR that qualifies is merged as soon as the hold is removed, whether by `/hold cancel` or from the UI.
 - The label is created automatically if it does not exist (see [automatic label creation](../label/README.md#automatic-label-creation)).

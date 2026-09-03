@@ -76,7 +76,7 @@ Whenever the bot adds a label (via commands like `/label`, `/kind`, `/lgtm`, `/a
 
 ### Work in progress
 
-Like prow's [`wip`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugins/wip) plugin, the bot automatically applies the `do-not-merge/work-in-progress` label to a PR while it is a draft or its title starts with `WIP` (case-insensitive; leading spaces or punctuation are ignored, so `WIP: Title` and `[WIP] Title` also match), and removes the label once neither is true. Any label starting with `do-not-merge/` blocks both [`/merge`](plugins/merge/README.md) and auto-merge. The label is created automatically if it does not exist.
+Like prow's [`wip`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugins/wip) plugin, the bot automatically applies the `do-not-merge/work-in-progress` label to a PR while it is a draft or its title starts with `WIP` (case-insensitive; leading spaces or punctuation are ignored, so `WIP: Title` and `[WIP] Title` also match), and removes the label once neither is true. The `do-not-merge` label and any label starting with `do-not-merge/` block both [`/merge`](plugins/merge/README.md) and auto-merge. The label is created automatically if it does not exist.
 
 ### PR size
 

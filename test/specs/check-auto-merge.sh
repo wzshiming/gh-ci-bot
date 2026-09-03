@@ -74,6 +74,22 @@ assert_status 0
 assert_out_has "PR has the 'do-not-merge/hold requested' label. Skipping auto-merge."
 log_lacks "stub"
 
+begin_case "the bare do-not-merge label skips auto-merge"
+stub_merge_scripts
+mklabels "lgtm" "approved" "do-not-merge"
+run check-auto-merge.sh
+assert_status 0
+assert_out_has "PR has the 'do-not-merge' label. Skipping auto-merge."
+log_lacks "stub"
+
+begin_case "a label merely starting with do-not-merge does not block auto-merge"
+stub_merge_scripts
+mklabels "lgtm" "approved" "do-not-merge-later"
+run check-auto-merge.sh
+assert_status 0
+assert_out_has "Auto-merging"
+log_has_line "stub pr-merge.sh"
+
 begin_case "the dco-signoff: no label skips auto-merge"
 stub_merge_scripts
 mklabels "lgtm" "approved" "dco-signoff: no"

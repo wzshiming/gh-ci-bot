@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
-# pr-merge.sh: do-not-merge/* and "dco-signoff: no" labels block merging,
-# and a failed blocking-label query fails closed instead of merging blind.
+# pr-merge.sh: the do-not-merge, do-not-merge/* and "dco-signoff: no" labels
+# block merging, and a failed blocking-label query fails closed instead of
+# merging blind.
 
 source "$(dirname "${BASH_SOURCE[0]}")/../lib.sh"
 
@@ -18,6 +19,19 @@ run pr-merge.sh
 assert_status 1
 assert_out_has "[FAIL] This PR cannot be merged because it has the following blocking label(s): \`do-not-merge/hold\`."
 log_lacks "gh pr -R wzshiming/example merge"
+
+begin_case "refuses to merge when the bare do-not-merge label is present"
+mklabels "lgtm" "approved" "do-not-merge"
+run pr-merge.sh
+assert_status 1
+assert_out_has "[FAIL] This PR cannot be merged because it has the following blocking label(s): \`do-not-merge\`."
+log_lacks "gh pr -R wzshiming/example merge"
+
+begin_case "a label merely starting with do-not-merge does not block merging"
+mklabels "do-not-merge-later"
+run pr-merge.sh
+assert_status 0
+log_has_line "gh pr -R wzshiming/example merge 1 --merge"
 
 begin_case "refuses to merge when the dco-signoff: no label is present"
 mklabels "lgtm" "dco-signoff: no"

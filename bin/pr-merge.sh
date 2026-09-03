@@ -21,7 +21,7 @@ else
 fi
 
 # Fail closed: never merge without having seen the labels.
-if ! blocking_labels="$(gh pr -R "${GH_REPOSITORY}" view "${ISSUE_NUMBER}" --json labels --jq '[.labels[].name | select(startswith("do-not-merge/") or . == "dco-signoff: no")] | join("`, `")')"; then
+if ! blocking_labels="$(gh pr -R "${GH_REPOSITORY}" view "${ISSUE_NUMBER}" --json labels --jq '[.labels[].name | select(. == "do-not-merge" or startswith("do-not-merge/") or . == "dco-signoff: no")] | join("`, `")')"; then
   echo "[FAIL] Failed to check for blocking labels, not merging."
   exit 1
 fi
