@@ -30,6 +30,14 @@ on:
       - labeled
       - unlabeled
 
+# Runs for the same PR or issue execute one at a time, in order, so they
+# cannot race on its labels and approval status comment; runs for different
+# PRs and issues stay parallel. `queue: max` keeps every waiting run instead
+# of cancelling the older pending one, so no command is dropped.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.issue.number || github.run_id }}
+  queue: max
+
 env:
   # This plugins is for anyone who can use it
   PLUGINS: |-
