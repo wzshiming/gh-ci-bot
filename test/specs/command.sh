@@ -185,3 +185,142 @@ run command.sh
 assert_status 0
 log_has_line "stub add-labels.sh ${HOLD_LABEL}"
 log_has '{"assignees":["alice"]}'
+
+begin_case "a command after an unterminated comment is ignored"
+member hold
+export ISSUE_KIND="issue"
+export MESSAGE=$'<!--\n/hold'
+stub add-labels.sh
+run command.sh
+assert_status 0
+assert_out_lacks "Exec command"
+log_empty
+
+begin_case "commands inside fenced code blocks are ignored"
+member hold
+export ISSUE_KIND="issue"
+export MESSAGE=$'```\n/hold\n```'
+stub add-labels.sh
+run command.sh
+assert_status 0
+assert_out_lacks "Exec command"
+log_empty
+
+begin_case "a command after a closed fence still runs"
+member hold
+export MESSAGE=$'```\n/merge\n```\n/hold'
+stub add-labels.sh
+run command.sh
+assert_status 0
+assert_out_has "Exec command: hold"
+assert_out_lacks "Exec command: merge"
+log_has_line "stub add-labels.sh ${HOLD_LABEL}"
+
+begin_case "an unterminated fence suppresses commands to the end"
+member hold
+export ISSUE_KIND="issue"
+export MESSAGE=$'```bash\n/hold'
+stub add-labels.sh
+run command.sh
+assert_status 0
+assert_out_lacks "Exec command"
+log_empty
+
+begin_case "a longer fence is not closed by a shorter one"
+member hold
+export MESSAGE=$'````\n```\n/merge\n````\n/hold'
+stub add-labels.sh
+run command.sh
+assert_status 0
+assert_out_has "Exec command: hold"
+assert_out_lacks "Exec command: merge"
+log_has_line "stub add-labels.sh ${HOLD_LABEL}"
+
+begin_case "a fence line with an info string does not close the fence"
+member hold
+export MESSAGE=$'```\n```bash\n/merge\n```\n/hold'
+stub add-labels.sh
+run command.sh
+assert_status 0
+assert_out_has "Exec command: hold"
+assert_out_lacks "Exec command: merge"
+log_has_line "stub add-labels.sh ${HOLD_LABEL}"
+
+begin_case "tilde fences suppress commands"
+member hold
+export ISSUE_KIND="issue"
+export MESSAGE=$'~~~\n/hold\n~~~'
+stub add-labels.sh
+run command.sh
+assert_status 0
+assert_out_lacks "Exec command"
+log_empty
+
+begin_case "a tilde line does not close a backtick fence"
+member hold
+export MESSAGE=$'```\n~~~\n/merge\n```\n/hold'
+stub add-labels.sh
+run command.sh
+assert_status 0
+assert_out_has "Exec command: hold"
+assert_out_lacks "Exec command: merge"
+log_has_line "stub add-labels.sh ${HOLD_LABEL}"
+
+begin_case "an invalid backtick opener stays literal text"
+member hold
+export ISSUE_KIND="issue"
+export MESSAGE=$'```lang```\ntext\n```\n/hold\n```'
+stub add-labels.sh
+run command.sh
+assert_status 0
+assert_out_lacks "Exec command"
+log_empty
+
+begin_case "arguments are never glob-expanded"
+member label
+export MESSAGE="/label *"
+stub add-labels.sh
+mkdir -p "${CASE_DIR}/glob-cwd"
+touch "${CASE_DIR}/glob-cwd/glob-canary.txt"
+pushd "${CASE_DIR}/glob-cwd" >/dev/null
+run command.sh
+popd >/dev/null
+assert_status 0
+log_has_line "stub add-labels.sh *"
+log_lacks "glob-canary.txt"
+
+begin_case "an ungranted command whose dir has a different name gets a permission reply"
+export ISSUE_KIND="issue"
+export MESSAGE="/remove-approve"
+run command.sh
+assert_status 0
+assert_out_has "[FAIL] You don't have permission to use the \`/remove-approve\` command."
+log_empty
+
+begin_case "a substring of a plugin name is still an unknown command"
+export ISSUE_KIND="issue"
+export MESSAGE="/erg"
+run command.sh
+assert_status 0
+assert_out_has "[FAIL] Unknown command \`/erg\`."
+log_empty
+
+begin_case "glob characters in a command name are not expanded"
+export ISSUE_KIND="issue"
+export MESSAGE='/h*'
+run command.sh
+assert_status 0
+assert_out_has "[FAIL] Unknown command \`/h*\`."
+log_empty
+
+begin_case "reviewer matching is login-case-insensitive"
+export AUTHOR_ASSOCIATION="MEMBER"
+export REVIEWERS=$'Alice\ncarol'
+export REVIEWERS_PLUGINS="label-lgtm"
+export MESSAGE="/lgtm"
+stub add-labels.sh
+stub check-auto-merge.sh
+run command.sh
+assert_status 0
+assert_out_has "alice is a reviewer"
+log_has_line "stub add-labels.sh lgtm"
