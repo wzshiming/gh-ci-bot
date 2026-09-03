@@ -1,6 +1,6 @@
 # auto-cc
 
-Requests reviews from automatically selected reviewers, using the same reviewer-selection logic as the automatic [blunderbuss](../../README.md#auto-requesting-reviewers) behavior that runs when a PR is opened.
+Requests reviews from automatically selected reviewers, using the same reviewer-selection logic as the automatic [blunderbuss](../../README.md#auto-requesting-reviewers) behavior that runs when a PR is opened or marked ready for review.
 
 ## Commands
 

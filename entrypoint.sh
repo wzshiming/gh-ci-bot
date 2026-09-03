@@ -85,7 +85,7 @@ function sync_size_label() {
 }
 
 # auto_request_reviewers requests reviewers from OWNERS files when a PR is
-# opened, mirroring prow's blunderbuss plugin.
+# opened or marked ready for review, mirroring prow's blunderbuss plugin.
 function auto_request_reviewers() {
     if [[ "${ISSUE_KIND}" == "pr" ]]; then
         blunderbuss.sh
@@ -121,10 +121,15 @@ function main() {
         sync_release_note_label
         sync_size_label
         sync_approve_status
-    elif [[ "${TYPE}" == "edited" ]]; then
+    elif [[ "${TYPE}" == "edited" || "${TYPE}" == "converted_to_draft" ]]; then
         echo "PR edited, syncing work-in-progress label"
         sync_wip_label
         sync_release_note_label
+    elif [[ "${TYPE}" == "ready_for_review" ]]; then
+        echo "PR ready for review, syncing work-in-progress label and requesting reviewers"
+        sync_wip_label
+        sync_release_note_label
+        auto_request_reviewers
     elif [[ "${TYPE}" == "labeled" || "${TYPE}" == "unlabeled" ]]; then
         echo "Labels changed, syncing needs-* labels"
         sync_matching_labels

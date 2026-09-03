@@ -54,6 +54,10 @@ case "$*" in
 *"--json isDraft,title,labels"*)
     serve "${MOCK_WIP_JSON:-}"
     ;;
+*"--json isDraft"*)
+    # Draft state alone (blunderbuss's draft check); reuses the wip fixture.
+    serve "${MOCK_WIP_JSON:-}"
+    ;;
 *"--json additions,deletions,labels"*)
     serve "${MOCK_SIZE_JSON:-}"
     ;;

@@ -222,7 +222,7 @@ jobs:
           ISSUE_NUMBER: ${{ github.event.pull_request.number }}
           AUTHOR_ASSOCIATION: ${{ github.event.pull_request.author_association }}
           ISSUE_KIND: pr
-          TYPE: edited
+          TYPE: ${{ github.event.action }}
 
       - name: Issue Labeled or Unlabeled
         uses: wzshiming/gh-ci-bot@v1.6.0
