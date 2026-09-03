@@ -13,8 +13,16 @@ if [[ "${ISSUE_KIND}" == "pr" && "${ISSUE_NUMBER}" != "" && "${GH_REPOSITORY}" !
     load_owners_for_pr
 fi
 
+# Added more plugins for contributors: GitHub reports only the highest
+# association, so members qualify here too instead of showing as CONTRIBUTOR.
+if [[ "${LOGIN}" != "" ]] && [[ "${AUTHOR_ASSOCIATION}" =~ ^(OWNER|MEMBER|COLLABORATOR|CONTRIBUTOR)$ ]]; then
+    echo "${LOGIN} is a contributor"
+    PLUGINS="${PLUGINS}
+${CONTRIBUTORS_PLUGINS:-}"
+fi
+
 # Added more plugins for members
-if [[ "${LOGIN}" != "" && "${AUTHOR_ASSOCIATION}" != "NONE" && "${AUTHOR_ASSOCIATION}" != "" ]]; then
+if [[ "${LOGIN}" != "" ]] && [[ "${AUTHOR_ASSOCIATION}" =~ ^(OWNER|MEMBER|COLLABORATOR)$ ]]; then
     PLUGINS="${PLUGINS}
 ${MEMBERS_PLUGINS:-}"
     echo "${LOGIN} is a member"

@@ -50,11 +50,14 @@ Each command in the table above belongs to a plugin, named in the last column. P
 | --- | --- |
 | `PLUGINS` | Anyone |
 | `AUTHOR_PLUGINS` | The author of the issue or PR |
-| `MEMBERS_PLUGINS` | Anyone whose author association is not `NONE` (members, collaborators, previous contributors) |
+| `CONTRIBUTORS_PLUGINS` | Anyone whose author association is `CONTRIBUTOR` (has had commits merged into the repository), and every member |
+| `MEMBERS_PLUGINS` | Anyone whose author association is `OWNER`, `MEMBER` or `COLLABORATOR` |
 | `REVIEWERS_PLUGINS` | Members also listed in `REVIEWERS` (for PRs, merged with `reviewers` from matching OWNERS files) |
 | `APPROVERS_PLUGINS` | Members also listed in `APPROVERS` (for PRs, merged with `approvers` from matching OWNERS files) |
 | `MAINTAINERS_PLUGINS` | Members also listed in `MAINTAINERS` |
 | `OWNERS_PLUGINS` | The repository or organization owner |
+
+The other associations GitHub reports (`FIRST_TIME_CONTRIBUTOR`, `FIRST_TIMER`, `MANNEQUIN` and `NONE`) only get `PLUGINS`, plus `AUTHOR_PLUGINS` on their own issues and PRs.
 
 ## Automatic Behaviors
 

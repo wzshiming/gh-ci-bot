@@ -46,6 +46,11 @@ env:
     release-note
     retest
 
+  # This plugins is for previous contributors (had commits merged) and members
+  CONTRIBUTORS_PLUGINS: |-
+    label-kind
+    retest
+
   # This plugins is for organization member or repository member
   MEMBERS_PLUGINS: |-
     label-duplicate
