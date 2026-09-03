@@ -16,30 +16,32 @@
 #   OWNERS_AREA_APPROVERS - lines of "<area> <approver>...", one per area
 #   OWNERS_LABELS         - newline separated list of labels declared in
 #                           the OWNERS files of the changed directories
+#   OWNERS_LOAD_FAILED    - non-empty when loading failed; fail closed on it
+
+export OWNERS_LOAD_FAILED=""
 
 branch="${branch:-$(gh api /repos/${GH_REPOSITORY} | jq -r '.default_branch')}"
 export branch
 
-# fetch_owners_file fetches an OWNERS file from the given directory in the repo.
-# Outputs the file content on success, empty on failure.
+# fetch_owners_file prints the OWNERS file of a directory: nothing when it
+# does not exist (HTTP 404), failure on any other error.
 function fetch_owners_file() {
-    local dir="$1"
-    local path
-    local content
-    if [[ -z "${dir}" ]]; then
-        path="OWNERS"
-    else
-        path="${dir}/OWNERS"
-    fi
-
-    if ! content="$(gh api \
+    local path="${1:+$1/}OWNERS"
+    local err content rc msg
+    err="$(mktemp)"
+    content="$(gh api \
         --method GET \
         -H "Accept: application/vnd.github.raw+json" \
         "/repos/${GH_REPOSITORY}/contents/${path}" \
-        -f "ref=${branch}" 2>/dev/null)"; then
-        return 0
+        -f "ref=${branch}" 2>"${err}")"
+    rc=$?
+    msg="$(cat "${err}")"
+    rm -f "${err}"
+    if [[ ${rc} -ne 0 ]]; then
+        [[ "${msg}" == *"HTTP 404"* ]] && return 0
+        echo "${msg}" >&2
+        return 1
     fi
-
     printf '%s\n' "${content}"
 }
 
@@ -95,7 +97,7 @@ ${dir}"
     fi
 
     local content
-    content="$(fetch_owners_file "${fetch_dir}")"
+    content="$(fetch_owners_file "${fetch_dir}")" || return 1
 
     local a r l
     a="$(get_owners_approvers "${content}")"
@@ -142,7 +144,7 @@ function get_file_area() {
     fi
 
     while true; do
-        load_owners_dir "${dir}"
+        load_owners_dir "${dir}" || return 1
         if [[ -n "$(get_dir_approvers "${dir}")" ]]; then
             _FILE_AREA="${dir}"
             return 0
@@ -161,7 +163,7 @@ function collect_area_approvers() {
     local dir="$1"
     local users=""
     while true; do
-        load_owners_dir "${dir}"
+        load_owners_dir "${dir}" || return 1
         local a
         a="$(get_dir_approvers "${dir}")"
         if [[ -n "${a}" ]]; then
@@ -177,23 +179,30 @@ function collect_area_approvers() {
 
 # get_pr_changed_files fetches the list of changed files for the current PR.
 function get_pr_changed_files() {
-    gh api \
-        --paginate \
-        "/repos/${GH_REPOSITORY}/pulls/${ISSUE_NUMBER}/files" \
-        --jq '.[].filename' |
-        sort -u
+    gh api --paginate "/repos/${GH_REPOSITORY}/pulls/${ISSUE_NUMBER}/files" --jq '.[].filename' | sort -u
+    return "${PIPESTATUS[0]}"
 }
 
 # load_owners_for_pr fetches changed files, computes the changed areas,
-# collects per-area approvers, and merges everything with env vars.
+# collects per-area approvers, and merges everything with env vars. Any
+# API failure sets OWNERS_LOAD_FAILED (consumers fail closed) rather than
+# aborting, so command dispatch keeps working.
 function load_owners_for_pr() {
+    export OWNERS_AREAS="" OWNERS_AREA_APPROVERS="" OWNERS_LABELS=""
+    if [[ -z "${OWNERS_LOAD_FAILED}" ]] && ! compute_owners_for_pr; then
+        echo "OWNERS: failed to load OWNERS data" >&2
+        export OWNERS_AREAS="" OWNERS_AREA_APPROVERS="" OWNERS_LABELS="" OWNERS_LOAD_FAILED=1
+    fi
+}
+
+function compute_owners_for_pr() {
     local files
-    files="$(get_pr_changed_files)"
+    files="$(get_pr_changed_files)" || return 1
 
     local areas=""
     local f
     for f in ${files}; do
-        get_file_area "${f}"
+        get_file_area "${f}" || return 1
         areas="${areas}
 ${_FILE_AREA}"
     done
@@ -206,7 +215,7 @@ ${_FILE_AREA}"
     local all_approvers=""
     local area
     for area in ${areas}; do
-        collect_area_approvers "${area}"
+        collect_area_approvers "${area}" || return 1
         OWNERS_AREA_APPROVERS="${OWNERS_AREA_APPROVERS}${area} ${_AREA_APPROVERS}
 "
         all_approvers="${all_approvers} ${_AREA_APPROVERS}"

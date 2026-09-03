@@ -74,11 +74,29 @@ case "$*" in
     fi
     ;;
 *"/contents/"*)
-    # OWNERS file fetches; fail like a 404 unless a fixture is given.
-    if [[ -n "${MOCK_OWNERS_FILE:-}" && -f "${MOCK_OWNERS_FILE:-}" ]]; then
+    # OWNERS file fetches. MOCK_OWNERS_FAIL simulates a non-404 API
+    # failure (MOCK_OWNERS_FAIL_PATH: only for that path). MOCK_OWNERS_DIR
+    # serves per-path fixtures named after the path with "/" replaced by
+    # "__" (e.g. src__OWNERS); MOCK_OWNERS_FILE serves the same content
+    # for every path. Without a fixture the file is absent, reported like
+    # the real gh: HTTP 404.
+    path=""
+    for arg in "$@"; do
+        if [[ "${arg}" == *"/contents/"* ]]; then
+            path="${arg#*/contents/}"
+        fi
+    done
+    if [[ -n "${MOCK_OWNERS_FAIL:-}" ]] ||
+        [[ -n "${MOCK_OWNERS_FAIL_PATH:-}" && "${path}" == "${MOCK_OWNERS_FAIL_PATH:-}" ]]; then
+        echo "mock gh: simulated failure: gh $*" >&2
+        exit 1
+    fi
+    if [[ -n "${MOCK_OWNERS_DIR:-}" && -f "${MOCK_OWNERS_DIR}/${path//\//__}" ]]; then
+        cat "${MOCK_OWNERS_DIR}/${path//\//__}"
+    elif [[ -n "${MOCK_OWNERS_FILE:-}" && -f "${MOCK_OWNERS_FILE:-}" ]]; then
         cat "${MOCK_OWNERS_FILE}"
     else
-        echo "mock gh: no fixture for: gh $*" >&2
+        echo "gh: Not Found (HTTP 404)" >&2
         exit 1
     fi
     ;;

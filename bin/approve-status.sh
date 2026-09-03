@@ -19,7 +19,8 @@
 # The "approved" label is kept in sync with the state after every command,
 # mirroring prow's approve plugin: approvals are sticky across new commits.
 #
-# Requires OWNERS_AREA_APPROVERS (exported by owners.sh) for all commands.
+# Requires OWNERS_AREA_APPROVERS (exported by owners.sh) for all commands;
+# a non-empty OWNERS_LOAD_FAILED makes every command fail closed.
 # If AUTHOR is set, areas owned by the PR author are approved by default
 # (prow's implicit self-approval).
 
@@ -337,6 +338,23 @@ function cmd_check() {
 
     state_all_approved "$(build_state "${old_state}")"
 }
+
+# A failed OWNERS load fails closed: no approval change, no auto-merge.
+if [[ -n "${OWNERS_LOAD_FAILED:-}" ]]; then
+    case "$1" in
+    approve | unapprove)
+        echo "[FAIL] Failed to load OWNERS data, not changing approval state."
+        exit 1
+        ;;
+    sync)
+        echo "Failed to load OWNERS data, skipping the approval-state sync." >&2
+        exit 0
+        ;;
+    check)
+        exit 1
+        ;;
+    esac
+fi
 
 case "$1" in
 approve)
