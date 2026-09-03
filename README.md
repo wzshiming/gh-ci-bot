@@ -83,7 +83,7 @@ Like prow's [`size`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugi
 
 ### Auto-requesting reviewers
 
-Like prow's [`blunderbuss`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugins/blunderbuss) plugin, the bot automatically requests reviewers when a PR is opened (like [`/auto-cc`](plugins/auto-cc/README.md) but without a manual trigger; both share the same reviewer-selection logic). Reviewers are picked from the `OWNERS` files nearest to the changed files, falling back to the `REVIEWERS` environment variable, and the PR author is never picked. Draft PRs are skipped. The number of reviewers to request is configured with the `BLUNDERBUSS_REVIEWER_COUNT` environment variable (default `2`); set it to `0` to disable the behavior (the manual `/auto-cc` command keeps working).
+Like prow's [`blunderbuss`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugins/blunderbuss) plugin, the bot automatically requests reviewers when a PR is opened (like [`/auto-cc`](plugins/auto-cc/README.md) but without a manual trigger; both share the same reviewer-selection logic). Reviewers are picked from the `OWNERS` files nearest to the changed files, falling back to the `REVIEWERS` environment variable, and the PR author is never picked. Draft PRs are skipped; their reviewers are requested once the draft is marked ready for review. The number of reviewers to request is configured with the `BLUNDERBUSS_REVIEWER_COUNT` environment variable (default `2`); set it to `0` to disable the behavior (the manual `/auto-cc` command keeps working).
 
 ### Require matching label
 
