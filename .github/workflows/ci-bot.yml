@@ -127,8 +127,12 @@ env:
   # merged with the built-in default list of well-known prow and GitHub
   # labels (see bin/ensure-labels.sh). Labels not matching any entry are
   # never created automatically.
-  # LABELS: |-
-  #   kind/docs
+  LABELS: |-
+    area/bin
+    area/ci
+    area/examples
+    area/plugins
+    area/test
 
   DETAILS: |-
 
