@@ -106,6 +106,13 @@ env:
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   GH_REPOSITORY: ${{ github.repository }}
 
+  # The login the bot acts as, used to find its own comments (e.g. the
+  # sticky approve status). Set it when GH_TOKEN is a GitHub App
+  # installation token, whose login cannot be resolved via the API: use
+  # the app's bot login, i.e. "<app-slug>[bot]". When unset, the login of
+  # GH_TOKEN is used, falling back to github-actions[bot].
+  # BOT_LOGIN: my-app[bot]
+
   # It can be `merge`, `rebase`, or `squash`.
   DEFAULT_MERGE_METHOD: squash
 
