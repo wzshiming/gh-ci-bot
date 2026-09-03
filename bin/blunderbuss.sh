@@ -3,9 +3,9 @@
 # blunderbuss.sh - Selects and requests reviewers for a PR from the OWNERS
 # files nearest to the changed files, falling back to the REVIEWERS
 # environment variable. Used in two modes:
-#   auto   - on PR open, mirroring prow's blunderbuss plugin (default):
-#            skips draft PRs and exits quietly when disabled or when no
-#            reviewers are found
+#   auto   - on PR open or ready-for-review, mirroring prow's blunderbuss
+#            plugin (default): skips draft PRs and exits quietly when
+#            disabled or when no reviewers are found
 #   manual - for the /auto-cc command: always runs and reports a failure
 #            when no reviewers can be found
 #

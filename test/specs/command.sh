@@ -384,12 +384,40 @@ assert_status 0
 assert_out_has "[FAIL] Unknown command \`/erg\`."
 log_empty
 
-begin_case "glob characters in a command name are not expanded"
+begin_case "glob characters in a command name are not extracted as a command"
 export ISSUE_KIND="issue"
 export MESSAGE='/h*'
 run command.sh
 assert_status 0
-assert_out_has "[FAIL] Unknown command \`/h*\`."
+assert_out_lacks "Exec command"
+log_empty
+
+begin_case "path-like lines are not treated as commands"
+export ISSUE_KIND="issue"
+export MESSAGE=$'/usr/bin/env bash\n/var/log/syslog'
+run command.sh
+assert_status 0
+assert_out_lacks "Exec command"
+assert_out_lacks "Unknown command"
+log_empty
+
+begin_case "a command still runs alongside path-like lines"
+member hold
+export MESSAGE=$'/usr/bin/env bash\n/hold'
+stub add-labels.sh
+run command.sh
+assert_status 0
+assert_out_has "Exec command: hold"
+assert_out_lacks "Unknown command"
+log_has_line "stub add-labels.sh ${HOLD_LABEL}"
+
+begin_case "a command token with trailing non-command characters is ignored"
+export ISSUE_KIND="issue"
+export MESSAGE=$'/v1beta1 is deprecated\n/hold: on'
+run command.sh
+assert_status 0
+assert_out_lacks "Exec command"
+assert_out_lacks "Unknown command"
 log_empty
 
 begin_case "reviewer matching is login-case-insensitive"

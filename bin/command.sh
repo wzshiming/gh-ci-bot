@@ -64,8 +64,11 @@ function clearComment() {
     '
 }
 
+# A command line's first token must be a whole command name (lowercase
+# letters and hyphens) followed by whitespace or the end of the line, so
+# path-like lines such as `/usr/bin/env bash` are not mistaken for commands.
 function extractCommand() {
-    grep -e '^/[a-z]\+'
+    grep -E -e '^/[a-z][a-z-]*([[:space:]]|$)'
 }
 
 # Extract the commands before doing anything else: most comments carry no

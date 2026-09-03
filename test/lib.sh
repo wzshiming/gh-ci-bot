@@ -165,7 +165,8 @@ function mkpr() {
 }
 
 # mkwip <isDraft> <title> [label...] builds the reply to
-# `gh pr view --json isDraft,title,labels`.
+# `gh pr view --json isDraft,title,labels`, also served for the
+# `--json isDraft` draft check of blunderbuss.sh.
 function mkwip() {
     local draft="${1}"
     local title="${2}"
