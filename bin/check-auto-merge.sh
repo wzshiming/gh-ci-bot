@@ -24,7 +24,7 @@ while read -r label; do
     if [[ "${label}" == "approved" ]]; then
         has_approved=true
     fi
-    if [[ "${label}" == do-not-merge/* ]]; then
+    if [[ "${label}" == do-not-merge/* || "${label}" == "dco-signoff: no" ]]; then
         echo "PR has the '${label}' label. Skipping auto-merge."
         return 0 2>/dev/null || exit 0
     fi

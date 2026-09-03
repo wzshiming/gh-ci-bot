@@ -50,14 +50,14 @@ function reset_env() {
     unset MESSAGE PLUGINS AUTHOR_PLUGINS CONTRIBUTORS_PLUGINS MEMBERS_PLUGINS REVIEWERS_PLUGINS \
         APPROVERS_PLUGINS MAINTAINERS_PLUGINS OWNERS_PLUGINS \
         REVIEWERS APPROVERS MAINTAINERS \
-        RELEASE_NOTE_REQUIRED NEEDS_REBASE LABELS \
-        BLOCK_MERGE_COMMITS BLOCK_INVALID_COMMIT_MESSAGES \
+        RELEASE_NOTE_REQUIRED DCO_REQUIRED LABELS \
         ISSUE_REQUIRE_MATCHING_LABELS PR_REQUIRE_MATCHING_LABELS \
         BLUNDERBUSS_REVIEWER_COUNT DEFAULT_MERGE_METHOD DETAILS GREETING \
         OWNERS_AREAS OWNERS_AREA_APPROVERS OWNERS_LABELS branch \
         GITHUB_RUN_ID GITHUB_REPOSITORY GITHUB_SERVER_URL \
         MOCK_GH_FAIL MOCK_CURL_FAIL \
-        MOCK_PR_FILES_JSON MOCK_OWNERS_FILE
+        MOCK_PR_FILES_JSON MOCK_OWNERS_FILE \
+        MOCK_PR_COMMITS_JSON MOCK_ISSUE_COMMENTS_JSON
 }
 
 # begin_case <description> finishes the previous case and starts a new
@@ -75,11 +75,8 @@ function begin_case() {
     export MOCK_PR_JSON="${CASE_DIR}/pr.json"
     export MOCK_WIP_JSON="${CASE_DIR}/wip.json"
     export MOCK_SIZE_JSON="${CASE_DIR}/size.json"
-    export MOCK_MERGEABLE_JSON="${CASE_DIR}/mergeable.json"
-    export MOCK_TITLE_JSON="${CASE_DIR}/title.json"
     export MOCK_LABELS_JSON="${CASE_DIR}/labels.json"
     export MOCK_LABEL_LIST_JSON="${CASE_DIR}/label-list.json"
-    export MOCK_PR_COMMITS_JSON="${CASE_DIR}/pr-commits.json"
     export PATH="${STUB_DIR}:${MOCK_DIR}:${BIN_DIR}:${BASE_PATH}"
     reset_env
     OUTPUT=""
@@ -196,43 +193,6 @@ function mklabels() {
     jq -n --args '{labels: [$ARGS.positional[] | {name: .}]}' "${@}" >"${MOCK_LABELS_JSON}"
 }
 
-# mkmergeable <state> <mergeable> [label...] builds the reply to
-# `gh pr view --json mergeable,state,labels`.
-function mkmergeable() {
-    local state="${1}"
-    local mergeable="${2}"
-    shift 2
-    jq -n --arg state "${state}" --arg mergeable "${mergeable}" --args \
-        '{mergeable: $mergeable, state: $state, labels: [$ARGS.positional[] | {name: .}]}' \
-        "${@}" >"${MOCK_MERGEABLE_JSON}"
-}
-
-# mktitle <title> [label...] builds the reply to
-# `gh pr view --json title,labels`.
-function mktitle() {
-    local title="${1}"
-    shift
-    jq -n --arg title "${title}" --args \
-        '{title: $title, labels: [$ARGS.positional[] | {name: .}]}' \
-        "${@}" >"${MOCK_TITLE_JSON}"
-}
-
-# mkcommits [<parents>:<message>...] builds the reply to the PR commits
-# query `gh api /repos/<repo>/pulls/<n>/commits`, one commit per argument
-# with the given number of parents (more than 1 makes it a merge commit)
-# and commit message.
-function mkcommits() {
-    jq -n --args \
-        '[$ARGS.positional[] | capture("^(?<parents>[0-9]+):(?<message>.*)"; "m")] |
-            to_entries |
-            map({
-                sha: ("sha-" + ((.key + 1) | tostring)),
-                parents: [range(.value.parents | tonumber) | {sha: ("parent-" + tostring)}],
-                commit: {message: .value.message}
-            })' \
-        "${@}" >"${MOCK_PR_COMMITS_JSON}"
-}
-
 # mkrepolabels [label...] builds the reply to
 # `gh label list --json name`: the labels existing in the repository.
 function mkrepolabels() {
@@ -252,6 +212,44 @@ function mkfiles() {
 function mkowners() {
     export MOCK_OWNERS_FILE="${CASE_DIR}/owners"
     printf '%s\n' "${1}" >"${MOCK_OWNERS_FILE}"
+}
+
+# mkcommits <sha> <message> [<sha> <message>...] builds the reply to the
+# PR commits query `gh api /repos/<repo>/pulls/<n>/commits`. A sha
+# prefixed with "merge:" produces a merge commit (two parents).
+function mkcommits() {
+    export MOCK_PR_COMMITS_JSON="${CASE_DIR}/pr-commits.json"
+    local json="[]" sha message parents
+    while [[ "${#}" -ge 2 ]]; do
+        sha="${1}"
+        message="${2}"
+        shift 2
+        parents='[{}]'
+        if [[ "${sha}" == merge:* ]]; then
+            sha="${sha#merge:}"
+            parents='[{},{}]'
+        fi
+        json="$(jq --arg sha "${sha}" --arg message "${message}" --argjson parents "${parents}" \
+            '. + [{sha: $sha, html_url: ("https://github.com/" + env.GH_REPOSITORY + "/commit/" + $sha), commit: {message: $message}, parents: $parents}]' <<<"${json}")"
+    done
+    printf '%s\n' "${json}" >"${MOCK_PR_COMMITS_JSON}"
+}
+
+# mkissuecomments <login> <body> [<login> <body>...] builds the reply to
+# the issue comments query `gh api /repos/<repo>/issues/<n>/comments`,
+# numbering the comment ids 1, 2, ... in order.
+function mkissuecomments() {
+    export MOCK_ISSUE_COMMENTS_JSON="${CASE_DIR}/issue-comments.json"
+    local json="[]" id=0 login body
+    while [[ "${#}" -ge 2 ]]; do
+        login="${1}"
+        body="${2}"
+        shift 2
+        id=$((id + 1))
+        json="$(jq --arg login "${login}" --arg body "${body}" --argjson id "${id}" \
+            '. + [{id: $id, user: {login: $login}, body: $body}]' <<<"${json}")"
+    done
+    printf '%s\n' "${json}" >"${MOCK_ISSUE_COMMENTS_JSON}"
 }
 
 # assert_status <expected> checks the exit code of the last run.

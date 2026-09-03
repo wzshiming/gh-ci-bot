@@ -33,8 +33,8 @@ do-not-merge/hold
 do-not-merge/work-in-progress
 do-not-merge/release-note-label-needed
 do-not-merge/needs-kind
-do-not-merge/contains-merge-commits
-do-not-merge/invalid-commit-message
+dco-signoff: yes
+dco-signoff: no
 kind/api-change
 kind/bug
 kind/cleanup
@@ -46,7 +46,6 @@ kind/flake
 kind/regression
 kind/support
 needs-kind
-needs-rebase
 needs-sig
 needs-triage
 priority/awaiting-more-evidence
@@ -115,6 +114,12 @@ function label_color() {
   do-not-merge | do-not-merge/*)
     echo "e11d21"
     ;;
+  "dco-signoff: yes")
+    echo "bfe5bf"
+    ;;
+  "dco-signoff: no")
+    echo "e11d21"
+    ;;
   kind/api-change | kind/bug | kind/deprecation | kind/failing-test | kind/regression)
     echo "e11d21"
     ;;
@@ -135,9 +140,6 @@ function label_color() {
     ;;
   sig/* | wg/*)
     echo "d2b48c"
-    ;;
-  needs-rebase)
-    echo "e11d21"
     ;;
   priority/awaiting-more-evidence)
     echo "fef2c0"
@@ -236,14 +238,14 @@ function label_description() {
   do-not-merge/needs-kind)
     echo "Indicates a PR lacks a \`kind/foo\` label and requires one."
     ;;
-  do-not-merge/contains-merge-commits)
-    echo "Indicates a PR which contains merge commits."
-    ;;
-  do-not-merge/invalid-commit-message)
-    echo "Indicates that a PR should not merge because it has an invalid commit message."
-    ;;
   do-not-merge/*)
     echo "Indicates that a PR should not merge."
+    ;;
+  "dco-signoff: yes")
+    echo "Indicates the PR's author has DCO signed all their commits."
+    ;;
+  "dco-signoff: no")
+    echo "Indicates the PR's author has not DCO signed all their commits."
     ;;
   kind/api-change)
     echo "Categorizes issue or PR as related to adding, removing, or otherwise changing an API"
@@ -292,9 +294,6 @@ function label_description() {
     ;;
   needs-kind)
     echo "Indicates an issue or PR lacks a \`kind/foo\` label and requires one."
-    ;;
-  needs-rebase)
-    echo "Indicates a PR cannot be merged because it has merge conflicts with HEAD."
     ;;
   needs-*)
     echo "Indicates an issue or PR lacks a \`${1#needs-}/foo\` label and requires one."

@@ -43,6 +43,7 @@ Each command belongs to a plugin; follow the plugin link for the full documentat
 | `/[remove-]question`                         | Applies or removes the 'question' label.                           | [label-question](plugins/label-question/README.md)                 |
 | `/[remove-]wontfix`                          | Applies or removes the 'wontfix' label.                            | [label-wontfix](plugins/label-wontfix/README.md)                   |
 | `/release-note-none`                         | Marks the PR as not needing a release note.                        | [release-note](plugins/release-note/README.md)                     |
+| `/check-dco`                                 | Re-runs the DCO signoff check of the PR.                           | [check-dco](plugins/check-dco/README.md)                           |
 | `/base <branch>`                             | Changes the branch this PR will be merged into.                    | [base](plugins/base/README.md)                                     |
 | `/rebase`                                    | Rebases the PR onto the latest base branch.                        | [rebase](plugins/rebase/README.md)                                 |
 | `/cherry-pick <branch>`                      | Cherry-picks a merged PR to a target branch and creates a new PR.  | [cherry-pick](plugins/cherry-pick/README.md)                       |
@@ -124,19 +125,9 @@ The missing labels are created automatically if they do not exist, provided they
 
 Like prow's [`release-note`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugins/releasenote) plugin, when the `RELEASE_NOTE_REQUIRED` environment variable is set to a non-empty value (it is unset by default), the bot classifies the ```` ```release-note ```` block in the PR body whenever a PR is opened, edited or pushed to, and applies exactly one of the `release-note`, `release-note-none` or `do-not-merge/release-note-label-needed` labels, blocking merge until a valid block is added or `/release-note-none` is used. See [release-note](plugins/release-note/README.md#automatic-behavior) for details.
 
-### Needs rebase
+### DCO
 
-Like prow's [`needs-rebase`](https://github.com/kubernetes-sigs/prow/tree/main/cmd/external-plugins/needs-rebase) external plugin, when the `NEEDS_REBASE` environment variable is set to a non-empty value (it is unset by default), the bot checks the PR's mergeability whenever a PR is opened, pushed to, edited or commented on. A PR that has merge conflicts with its base branch gets the `needs-rebase` label; once the conflicts are resolved, the label is removed automatically. Labels only, no comments. This complements the [`/rebase`](plugins/rebase/README.md) command, which updates a conflict-free branch to the latest base branch but cannot resolve conflicts.
-
-GitHub computes mergeability lazily, so a conflict caused by another PR merging into the base branch may only be noticed the next time the PR is pushed to, edited or commented on.
-
-### Merge commits
-
-Like prow's [`mergecommitblocker`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugins/mergecommitblocker) plugin, when the `BLOCK_MERGE_COMMITS` environment variable is set to a non-empty value (it is unset by default), the bot applies the `do-not-merge/contains-merge-commits` label to a PR while it contains merge commits (commits with more than one parent), blocking merge until the branch is rebased, and removes the label once the merge commits are gone.
-
-### Invalid commit messages
-
-Like prow's [`invalidcommitmsg`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugins/invalidcommitmsg) plugin, when the `BLOCK_INVALID_COMMIT_MESSAGES` environment variable is set to a non-empty value (it is unset by default), the bot applies the `do-not-merge/invalid-commit-message` label to a PR while any of its commit messages or its title contains an `@mention` or a [keyword which can automatically close issues](https://docs.github.com/articles/closing-issues-using-keywords) (e.g. `fixes #42`), and removes the label once they are fixed. An invalid title can be fixed with [`/retitle`](plugins/retitle/README.md); invalid commit messages require rewording the commits.
+Like prow's [`dco`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugins/dco) plugin, when the `DCO_REQUIRED` environment variable is set to a non-empty value (it is unset by default), the bot checks that every commit of a PR has a `Signed-off-by` line whenever the PR is opened or pushed to, and applies the `dco-signoff: yes` or `dco-signoff: no` label accordingly. The `dco-signoff: no` label blocks [`/merge`](plugins/merge/README.md) and auto-merge, and the bot comments with the list of commits missing a signoff and instructions to fix them. Use `/check-dco` to re-run the check. See [check-dco](plugins/check-dco/README.md) for details.
 
 ## Troubleshooting
 
