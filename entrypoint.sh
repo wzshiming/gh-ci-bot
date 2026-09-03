@@ -98,9 +98,9 @@ function sync_matching_labels() {
     check-matching-labels.sh
 }
 
-# sync_auto_merge disarms a merge queued by /merge --auto once a
+# disarm_auto_merge disables a merge queued by /merge --auto once a
 # do-not-merge/* label is present, which GitHub itself does not do.
-function sync_auto_merge() {
+function disarm_auto_merge() {
     if [[ "${ISSUE_KIND}" == "pr" ]]; then
         disable-auto-merge.sh
     fi
@@ -137,7 +137,7 @@ function main() {
         echo "Labels changed, syncing needs-* labels"
         sync_matching_labels
         if [[ "${TYPE}" == "labeled" ]]; then
-            sync_auto_merge
+            disarm_auto_merge
         fi
     fi
 }
