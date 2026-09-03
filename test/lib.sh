@@ -5,9 +5,9 @@
 # A spec is a plain bash script: it declares cases with begin_case, builds
 # canned gh replies with the mk* fixture helpers, runs the real scripts
 # under test with run, and checks the result with the assert_* and log_*
-# helpers. gh and curl are replaced by the executables in test/mock, which
-# log every invocation to ${MOCK_LOG} and serve the fixtures; nothing ever
-# talks to GitHub.
+# helpers. gh, curl and git are replaced by the executables in test/mock,
+# which log every invocation to ${MOCK_LOG} and serve the fixtures; nothing
+# ever talks to GitHub.
 #
 # Every case gets a fresh temp dir, a fresh invocation log, a fresh stub
 # dir and a reset baseline environment, so cases cannot leak state into
@@ -58,7 +58,8 @@ function reset_env() {
         GITHUB_RUN_ID GITHUB_REPOSITORY GITHUB_SERVER_URL \
         MOCK_GH_FAIL MOCK_CURL_FAIL \
         MOCK_PR_FILES_JSON MOCK_OWNERS_FILE \
-        MOCK_ISSUE_COMMENTS_JSON
+        MOCK_ISSUE_COMMENTS_JSON \
+        MOCK_GIT_CLONE_FAIL MOCK_GIT_PARENTS MOCK_GIT_LOG MOCK_GIT_LOG_FAIL MOCK_GIT_PICK_FAIL MOCK_GIT_PUSH_FAIL
 }
 
 # begin_case <description> finishes the previous case and starts a new
@@ -77,6 +78,7 @@ function begin_case() {
     export MOCK_WIP_JSON="${CASE_DIR}/wip.json"
     export MOCK_SIZE_JSON="${CASE_DIR}/size.json"
     export MOCK_MERGEABLE_JSON="${CASE_DIR}/mergeable.json"
+    export MOCK_MERGED_JSON="${CASE_DIR}/merged.json"
     export MOCK_TITLE_JSON="${CASE_DIR}/title.json"
     export MOCK_LABELS_JSON="${CASE_DIR}/labels.json"
     export MOCK_LABEL_LIST_JSON="${CASE_DIR}/label-list.json"
@@ -206,6 +208,13 @@ function mkmergeable() {
     jq -n --arg state "${state}" --arg mergeable "${mergeable}" --args \
         '{mergeable: $mergeable, state: $state, labels: [$ARGS.positional[] | {name: .}]}' \
         "${@}" >"${MOCK_MERGEABLE_JSON}"
+}
+
+# mkmerged <state> <oid> <title> builds the reply to
+# `gh pr view --json state,mergeCommit,title`.
+function mkmerged() {
+    jq -n --arg state "${1}" --arg oid "${2}" --arg title "${3}" \
+        '{state: $state, mergeCommit: {oid: $oid}, title: $title}' >"${MOCK_MERGED_JSON}"
 }
 
 # mktitle <title> [label...] builds the reply to
