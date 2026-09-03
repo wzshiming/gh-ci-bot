@@ -70,15 +70,15 @@ mkwip false "Fix WIP handling" "${WIP_LABEL}"
 run check-wip.sh
 assert_status 0
 log_has_line "stub remove-labels.sh ${WIP_LABEL}"
-log_has_line "stub check-auto-merge.sh"
+log_lacks "stub check-auto-merge.sh"
 
-begin_case "unlabels a PR that is no longer a draft and re-checks auto-merge"
+begin_case "unlabels a PR that is no longer a draft without evaluating auto-merge"
 stub_label_scripts
 mkwip false "Add a renderer" "${WIP_LABEL}" "kind/feature"
 run check-wip.sh
 assert_status 0
 log_has_line "stub remove-labels.sh ${WIP_LABEL}"
-log_has_line "stub check-auto-merge.sh"
+log_lacks "stub check-auto-merge.sh"
 log_lacks "stub add-labels.sh"
 
 begin_case "leaves a ready unlabeled PR alone"
@@ -96,11 +96,10 @@ run check-wip.sh
 assert_status 0
 log_empty
 
-begin_case "full stack: really removes the label via gh and checks auto-merge"
+begin_case "full stack: really removes the label via gh without evaluating auto-merge"
 mkwip false "Add a renderer" "${WIP_LABEL}"
-mklabels
 run check-wip.sh
 assert_status 0
 log_has_line "gh pr -R wzshiming/example edit 1 --remove-label ${WIP_LABEL}"
-log_has "view 1 --json labels"
+log_lacks "view 1 --json labels"
 log_lacks " merge 1"

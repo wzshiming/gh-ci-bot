@@ -80,7 +80,7 @@ assert_status 0
 assert_out_has "alice is a member"
 log_has_line "stub add-labels.sh ${HOLD_LABEL}"
 
-begin_case "/hold cancel removes the hold label and re-checks auto-merge"
+begin_case "/hold cancel removes the hold label without evaluating auto-merge"
 member hold
 export MESSAGE="/hold cancel"
 stub remove-labels.sh
@@ -88,7 +88,7 @@ stub check-auto-merge.sh
 run command.sh
 assert_status 0
 log_has_line "stub remove-labels.sh ${HOLD_LABEL}"
-log_has_line "stub check-auto-merge.sh"
+log_lacks "stub check-auto-merge.sh"
 
 begin_case "/hold is only available on pull requests"
 member hold
@@ -166,7 +166,7 @@ assert_out_lacks "alice is a reviewer"
 assert_out_has "[FAIL] You don't have permission to use the \`/lgtm\` command."
 log_lacks "stub add-labels.sh"
 
-begin_case "/lgtm by a reviewer adds lgtm and re-checks auto-merge"
+begin_case "/lgtm by a reviewer adds the lgtm label without evaluating auto-merge"
 reviewer label-lgtm
 export MESSAGE="/lgtm"
 stub add-labels.sh
@@ -175,7 +175,7 @@ run command.sh
 assert_status 0
 assert_out_has "alice is a reviewer"
 log_has_line "stub add-labels.sh lgtm"
-log_has_line "stub check-auto-merge.sh"
+log_lacks "stub check-auto-merge.sh"
 
 begin_case "/lgtm by the PR author is refused"
 reviewer label-lgtm
@@ -426,7 +426,6 @@ export REVIEWERS=$'Alice\ncarol'
 export REVIEWERS_PLUGINS="label-lgtm"
 export MESSAGE="/lgtm"
 stub add-labels.sh
-stub check-auto-merge.sh
 run command.sh
 assert_status 0
 assert_out_has "alice is a reviewer"

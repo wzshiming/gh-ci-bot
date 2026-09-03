@@ -10,7 +10,6 @@ HOLD_LABEL="do-not-merge/hold"
 # Prow-style: `/hold cancel` removes the hold label.
 if [[ "${1:-}" == "cancel" ]]; then
     remove-labels.sh "${HOLD_LABEL}"
-    check-auto-merge.sh
     exit $?
 fi
 

@@ -11,5 +11,3 @@ if [[ "${LOGIN}" == "${AUTHOR}" ]]; then
 fi
 
 add-labels.sh lgtm
-
-check-auto-merge.sh

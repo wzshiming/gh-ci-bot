@@ -108,7 +108,7 @@ env:
 With this configuration:
 
 - A new issue gets `needs-kind` and `needs-triage`. Commenting `/kind bug` applies the `kind/bug` label and the bot removes `needs-kind`; `/triage accepted` applies `triage/accepted` and removes `needs-triage`. If the last `kind/*` label is removed again (`/remove-kind bug`), `needs-kind` comes back.
-- A new PR gets `do-not-merge/needs-kind`, which blocks `/merge` and auto-merge like any other `do-not-merge/*` label. Once a `kind/*` label is applied (e.g. `/kind feature`), the label is removed and the PR can be merged again.
+- A new PR gets `do-not-merge/needs-kind`, which blocks `/merge` and auto-merge like any other `do-not-merge/*` label. Once a `kind/*` label is applied (e.g. `/kind feature`), the label is removed; since [auto-merge](plugins/merge/README.md#auto-merge) is evaluated at the end of every PR event, a PR that already qualifies is merged right away.
 
 When a variable is unset, it defaults to `needs-kind ^kind/`. Set it to an empty string to disable the check for the corresponding scope:
 

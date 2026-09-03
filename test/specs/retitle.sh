@@ -21,6 +21,7 @@ run "${RETITLE}" Add a renderer
 assert_status 0
 log_has_line "gh pr -R wzshiming/example edit 1 --title Add a renderer"
 log_has_line "stub remove-labels.sh do-not-merge/work-in-progress"
+log_lacks "stub check-auto-merge.sh"
 
 begin_case "replies [FAIL] and skips the wip sync when the edit fails"
 stub_label_scripts

@@ -38,7 +38,6 @@ if [[ "${want}" == "${RELEASE_NOTE_NEEDED_LABEL}" ]] && grep -qxF "${RELEASE_NOT
     want="${RELEASE_NOTE_NONE_LABEL}"
 fi
 
-removed_needed=false
 for label in "${RELEASE_NOTE_LABEL}" "${RELEASE_NOTE_NONE_LABEL}" "${RELEASE_NOTE_NEEDED_LABEL}"; do
     if [[ "${label}" == "${want}" ]]; then
         if ! grep -qxF "${label}" <<<"${labels}"; then
@@ -46,12 +45,5 @@ for label in "${RELEASE_NOTE_LABEL}" "${RELEASE_NOTE_NONE_LABEL}" "${RELEASE_NOT
         fi
     elif grep -qxF "${label}" <<<"${labels}"; then
         remove-labels.sh "${label}"
-        if [[ "${label}" == "${RELEASE_NOTE_NEEDED_LABEL}" ]]; then
-            removed_needed=true
-        fi
     fi
 done
-
-if [[ "${removed_needed}" == "true" ]]; then
-    check-auto-merge.sh
-fi
