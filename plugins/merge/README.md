@@ -12,7 +12,7 @@ Merges a pull request.
 
 - Only available on pull requests.
 - Without an argument, the merge method comes from the `DEFAULT_MERGE_METHOD` environment variable (`merge`, `rebase` or `squash`; default `merge`).
-- Merging is refused while the PR carries any `do-not-merge/*` label (e.g. from [hold](../hold/README.md), [wip](../wip/README.md), [release-note](../release-note/README.md) or [require-matching-label](../require-matching-label/README.md)); the blocking labels are listed in the reply.
+- Merging is refused while the PR carries any `do-not-merge/*` label (e.g. from [hold](../hold/README.md), [wip](../../README.md#work-in-progress), [release-note](../release-note/README.md) or [require-matching-label](../../README.md#require-matching-label)); the blocking labels are listed in the reply.
 - If a direct merge fails (for example because required checks are still pending), the bot falls back to enabling GitHub auto-merge so the PR merges once they pass.
 
 ## Auto-merge

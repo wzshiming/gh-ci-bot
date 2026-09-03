@@ -11,4 +11,4 @@ Edits the title of a PR or issue.
 ## Behavior
 
 - Everything after `/retitle` becomes the new title.
-- On pull requests, the [work-in-progress](../wip/README.md) label is synced right away, since title edits made with `GITHUB_TOKEN` do not trigger workflows.
+- On pull requests, the [work-in-progress](../../README.md#work-in-progress) label is synced right away, since title edits made with `GITHUB_TOKEN` do not trigger workflows.

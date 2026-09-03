@@ -15,4 +15,4 @@ Requests or removes review requests on a pull request.
 - Multiple users can be given in one command, separated by spaces; the leading `@` is optional.
 - GitHub only accepts review requests for users with access to the repository, so the requested user must be a member or collaborator.
 
-To have reviewers picked automatically from OWNERS files, see the [auto-cc](../auto-cc/README.md) command and the [blunderbuss](../blunderbuss/README.md) behavior.
+To have reviewers picked automatically from OWNERS files, see the [auto-cc](../auto-cc/README.md) command and the [blunderbuss](../../README.md#auto-requesting-reviewers) behavior.

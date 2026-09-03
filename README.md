@@ -64,16 +64,62 @@ Each command in the table above belongs to a plugin, named in the last column. P
 
 ## Automatic Behaviors
 
-Besides commands, the bot performs some automation on its own. Each behavior is documented in its plugin directory:
+Besides commands, the bot performs some automation on its own.
 
-| Behavior                  | Description                                                                                                       | Plugin                                                                     |
-| ------------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| Label management          | Creates missing well-known or `LABELS`-allowlisted labels whenever the bot applies them.                          | [label](plugins/label/README.md#automatic-label-creation)                  |
-| Work in progress          | Applies 'do-not-merge/work-in-progress' while a PR is a draft or titled `WIP`, blocking merging.                  | [wip](plugins/wip/README.md)                                               |
-| PR size                   | Labels every PR with 'size/*' based on the number of changed lines.                                               | [size](plugins/size/README.md)                                             |
-| Auto-requesting reviewers | Requests reviewers from the OWNERS files nearest to the changed files when a PR is opened.                        | [blunderbuss](plugins/blunderbuss/README.md)                               |
-| Require matching label    | Applies 'needs-*' labels while a required label (by default 'kind/*') is missing.                                 | [require-matching-label](plugins/require-matching-label/README.md)         |
-| Release notes             | Syncs the release-note labels from the `release-note` block in PR bodies, blocking merge until one applies. Opt-in. | [release-note](plugins/release-note/README.md#automatic-behavior)          |
+### Label management
+
+Whenever the bot adds a label (via commands like `/label`, `/kind`, `/lgtm`, `/approve`, OWNERS `labels:`, or automatic labels like `do-not-merge/work-in-progress`), any label that does not yet exist in the repository is created automatically, provided it is in the built-in default list of well-known labels or listed in the `LABELS` environment variable. Labels not in the allowlist are never created automatically (so a typo like `/label doocumentation` does not pollute the repository); they are only applied if they already exist in the repository. See [automatic label creation](plugins/label/README.md#automatic-label-creation) for the allowlist and the `LABELS` configuration.
+
+### Work in progress
+
+Like prow's [`wip`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugins/wip) plugin, the bot automatically applies the `do-not-merge/work-in-progress` label to a PR while it is a draft or its title starts with `WIP` (case-insensitive; leading spaces or punctuation are ignored, so `WIP: Title` and `[WIP] Title` also match), and removes the label once neither is true. Any label starting with `do-not-merge/` blocks both [`/merge`](plugins/merge/README.md) and auto-merge. The label is created automatically if it does not exist.
+
+### PR size
+
+Like prow's [`size`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugins/size) plugin, the bot automatically labels every PR with one of `size/XS`, `size/S`, `size/M`, `size/L`, `size/XL` or `size/XXL` based on the total number of changed lines (additions + deletions), updating the label whenever new commits are pushed. The thresholds mirror prow's defaults: XS < 10, S < 30, M < 100, L < 500, XL < 1000, XXL ≥ 1000.
+
+### Auto-requesting reviewers
+
+Like prow's [`blunderbuss`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugins/blunderbuss) plugin, the bot automatically requests reviewers when a PR is opened (like [`/auto-cc`](plugins/auto-cc/README.md) but without a manual trigger; both share the same reviewer-selection logic). Reviewers are picked from the `OWNERS` files nearest to the changed files, falling back to the `REVIEWERS` environment variable, and the PR author is never picked. Draft PRs are skipped. The number of reviewers to request is configured with the `BLUNDERBUSS_REVIEWER_COUNT` environment variable (default `2`); set it to `0` to disable the behavior (the manual `/auto-cc` command keeps working).
+
+### Require matching label
+
+Like prow's [`require-matching-label`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugins/require-matching-label) plugin, the bot automatically applies a `needs-X` label when an issue or PR is missing a label matching a configured regular expression, and removes it once a matching label is added. By default, an issue or PR without a `kind/*` label gets the `needs-kind` label, which is removed as soon as a `kind/*` label is applied (e.g. via [`/kind bug`](plugins/label-kind/README.md)). The labels are re-synced whenever the issue or PR is opened, commented on, labeled or unlabeled.
+
+The rules are configured through the `ISSUE_REQUIRE_MATCHING_LABELS` (issues) and `PR_REQUIRE_MATCHING_LABELS` (PRs) environment variables, one rule per line in the format `<missing-label> <regexp>`:
+
+```yaml
+env:
+  # Issues: apply needs-kind until a kind/* label is present, and
+  # needs-triage until a triage/* label is present.
+  ISSUE_REQUIRE_MATCHING_LABELS: |-
+    needs-kind ^kind/
+    needs-triage ^triage/
+  # PRs: apply do-not-merge/needs-kind until a kind/* label is present.
+  # A do-not-merge/* missing label additionally blocks /merge and
+  # auto-merge until a matching label is added.
+  PR_REQUIRE_MATCHING_LABELS: |-
+    do-not-merge/needs-kind ^kind/
+```
+
+With this configuration:
+
+- A new issue gets `needs-kind` and `needs-triage`. Commenting `/kind bug` applies the `kind/bug` label and the bot removes `needs-kind`; `/triage accepted` applies `triage/accepted` and removes `needs-triage`. If the last `kind/*` label is removed again (`/remove-kind bug`), `needs-kind` comes back.
+- A new PR gets `do-not-merge/needs-kind`, which blocks `/merge` and auto-merge like any other `do-not-merge/*` label. Once a `kind/*` label is applied (e.g. `/kind feature`), the label is removed and the PR can be merged again.
+
+When a variable is unset, it defaults to `needs-kind ^kind/`. Set it to an empty string to disable the check for the corresponding scope:
+
+```yaml
+env:
+  # Keep the default needs-kind rule for issues, disable the check for PRs.
+  PR_REQUIRE_MATCHING_LABELS: ""
+```
+
+The missing labels are created automatically if they do not exist, provided they are allowlisted like `needs-kind`, `needs-triage` or `do-not-merge/needs-kind` (see [Label management](#label-management)).
+
+### Release notes
+
+Like prow's [`release-note`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugins/releasenote) plugin, when the `RELEASE_NOTE_REQUIRED` environment variable is set to a non-empty value (it is unset by default), the bot classifies the ```` ```release-note ```` block in the PR body whenever a PR is opened, edited or pushed to, and applies exactly one of the `release-note`, `release-note-none` or `do-not-merge/release-note-label-needed` labels, blocking merge until a valid block is added or `/release-note-none` is used. See [release-note](plugins/release-note/README.md#automatic-behavior) for details.
 
 ## Troubleshooting
 
@@ -106,25 +152,11 @@ OWNERS files are used hierarchically. You can place OWNERS files in any director
 
 For example, if `pkg/api/handler.go` and `pkg/util/helper.go` are both changed and both `pkg/api` and `pkg/util` contain an OWNERS file with approvers, the PR has two areas: `pkg/api` and `pkg/util`. Each area can be approved by its own approvers or by approvers from `pkg` or the root OWNERS file.
 
-The [`/auto-cc`](plugins/auto-cc/README.md) command and the automatic [blunderbuss](plugins/blunderbuss/README.md) behavior share the same logic: they walk up from each individual changed file to find the nearest OWNERS file with available reviewers.
+The [`/auto-cc`](plugins/auto-cc/README.md) command and the automatic [blunderbuss](#auto-requesting-reviewers) behavior share the same logic: they walk up from each individual changed file to find the nearest OWNERS file with available reviewers.
 
 ## Testing
 
-The test suite in [`test/`](test/) runs the real scripts (`bin/*.sh`, `plugins/**/*.plugin.sh`, `entrypoint.sh`) against a mocked `gh` (and `curl`) that logs every invocation and serves canned JSON fixtures, so nothing ever talks to GitHub. It is pure bash with no dependencies beyond `bash` and `jq`, and runs on every push and pull request via [`.github/workflows/test.yml`](.github/workflows/test.yml).
-
-Run the whole suite locally:
-
-```bash
-./test/run.sh
-```
-
-Or only some specs, by name:
-
-```bash
-./test/run.sh release-note check-wip
-```
-
-Specs live in [`test/specs/`](test/specs/); the assertion, log and fixture helpers they use are documented in [`test/lib.sh`](test/lib.sh). On macOS, install GNU coreutils first (`brew install coreutils`) because the scripts use `realpath -m`; CI's ubuntu runners work out of the box.
+The test suite lives in [`test/`](test/README.md); see its README for how to run and write tests.
 
 ## Roadmap
 
