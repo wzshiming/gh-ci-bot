@@ -127,6 +127,9 @@ env:
   # Sync release-note labels from the ```release-note block in PR bodies, blocking merge until one applies (prow's release-note plugin). Unset to disable.
   RELEASE_NOTE_REQUIRED: "true"
 
+  # Label PRs that have merge conflicts with needs-rebase, removing the label automatically once the conflicts are resolved (prow's needs-rebase plugin, labels only). Unset to disable.
+  NEEDS_REBASE: "true"
+
   # Block PRs containing merge commits with the
   # do-not-merge/contains-merge-commits label (prow's mergecommitblocker
   # plugin). Unset to disable.

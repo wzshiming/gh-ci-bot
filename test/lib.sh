@@ -50,7 +50,7 @@ function reset_env() {
     unset MESSAGE PLUGINS AUTHOR_PLUGINS CONTRIBUTORS_PLUGINS MEMBERS_PLUGINS REVIEWERS_PLUGINS \
         APPROVERS_PLUGINS MAINTAINERS_PLUGINS OWNERS_PLUGINS \
         REVIEWERS APPROVERS MAINTAINERS \
-        RELEASE_NOTE_REQUIRED LABELS \
+        RELEASE_NOTE_REQUIRED NEEDS_REBASE LABELS \
         BLOCK_MERGE_COMMITS BLOCK_INVALID_COMMIT_MESSAGES \
         ISSUE_REQUIRE_MATCHING_LABELS PR_REQUIRE_MATCHING_LABELS \
         BLUNDERBUSS_REVIEWER_COUNT DEFAULT_MERGE_METHOD DETAILS GREETING \
@@ -75,6 +75,7 @@ function begin_case() {
     export MOCK_PR_JSON="${CASE_DIR}/pr.json"
     export MOCK_WIP_JSON="${CASE_DIR}/wip.json"
     export MOCK_SIZE_JSON="${CASE_DIR}/size.json"
+    export MOCK_MERGEABLE_JSON="${CASE_DIR}/mergeable.json"
     export MOCK_TITLE_JSON="${CASE_DIR}/title.json"
     export MOCK_LABELS_JSON="${CASE_DIR}/labels.json"
     export MOCK_LABEL_LIST_JSON="${CASE_DIR}/label-list.json"
@@ -193,6 +194,17 @@ function mksize() {
 # mklabels [label...] builds the reply to `gh <kind> view --json labels`.
 function mklabels() {
     jq -n --args '{labels: [$ARGS.positional[] | {name: .}]}' "${@}" >"${MOCK_LABELS_JSON}"
+}
+
+# mkmergeable <state> <mergeable> [label...] builds the reply to
+# `gh pr view --json mergeable,state,labels`.
+function mkmergeable() {
+    local state="${1}"
+    local mergeable="${2}"
+    shift 2
+    jq -n --arg state "${state}" --arg mergeable "${mergeable}" --args \
+        '{mergeable: $mergeable, state: $state, labels: [$ARGS.positional[] | {name: .}]}' \
+        "${@}" >"${MOCK_MERGEABLE_JSON}"
 }
 
 # mktitle <title> [label...] builds the reply to

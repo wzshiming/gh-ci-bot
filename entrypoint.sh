@@ -84,6 +84,14 @@ function sync_size_label() {
     fi
 }
 
+# sync_needs_rebase_label keeps the needs-rebase label in sync with the
+# PR's mergeability, mirroring prow's needs-rebase external plugin.
+function sync_needs_rebase_label() {
+    if [[ "${ISSUE_KIND}" == "pr" ]]; then
+        check-needs-rebase.sh
+    fi
+}
+
 # sync_merge_commits_label keeps the do-not-merge/contains-merge-commits
 # label in sync with the PR's commits, mirroring prow's mergecommitblocker
 # plugin.
@@ -137,6 +145,7 @@ function main() {
         sync_wip_label
         sync_release_note_label
         sync_size_label
+        sync_needs_rebase_label
         sync_merge_commits_label
         sync_commit_messages_label
         sync_approve_status
@@ -148,6 +157,7 @@ function main() {
     elif [[ "${TYPE}" == "comment" ]]; then
         echo "Response to action"
         response.sh
+        sync_needs_rebase_label
         sync_matching_labels
         sync_auto_merge
     elif [[ "${TYPE}" == "synchronize" ]]; then
@@ -156,6 +166,7 @@ function main() {
         sync_wip_label
         sync_release_note_label
         sync_size_label
+        sync_needs_rebase_label
         sync_merge_commits_label
         sync_commit_messages_label
         sync_approve_status
@@ -165,6 +176,7 @@ function main() {
         echo "PR edited, syncing work-in-progress label"
         sync_wip_label
         sync_release_note_label
+        sync_needs_rebase_label
         sync_commit_messages_label
         sync_matching_labels
         sync_auto_merge
