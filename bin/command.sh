@@ -7,6 +7,78 @@ PLUGINS_DIR="$(realpath -m ${PLUGINS_DIR})"
 
 PLUGINS="${PLUGINS:-}"
 
+# Drop HTML comments (unterminated ones hide everything to EOF, like GitHub
+# rendering) and fenced code blocks; awk keeps it portable across GNU/BSD.
+function clearComment() {
+    awk '
+    function stripComments(line,    s, e, out) {
+        out = ""
+        while ((s = index(line, "<!--")) > 0) {
+            e = index(substr(line, s + 4), "-->")
+            if (e == 0) {
+                inComment = 1
+                return out substr(line, 1, s - 1)
+            }
+            out = out substr(line, 1, s - 1) "COMMENT"
+            line = substr(line, s + e + 6)
+        }
+        return out line
+    }
+    # fenceTicks: number of leading fence chars; sets fenceChar and fenceRest.
+    function fenceTicks(line,    i, n, ch) {
+        i = 1
+        while (i <= 3 && substr(line, i, 1) == " ") i++
+        ch = substr(line, i, 1)
+        fenceChar = ""
+        fenceRest = ""
+        if (ch != "`" && ch != "~") return 0
+        n = 0
+        while (substr(line, i + n, 1) == ch) n++
+        fenceChar = ch
+        fenceRest = substr(line, i + n)
+        return n
+    }
+    {
+        line = $0
+        if (inComment) {
+            e = index(line, "-->")
+            if (e == 0) next
+            inComment = 0
+            line = "COMMENT" substr(line, e + 3)
+        }
+        n = fenceTicks(line)
+        if (inFence) {
+            # Closer: same char, at least as many, nothing else on the line.
+            if (n >= fenceOpen && fenceChar == openChar && fenceRest ~ /^[ \t\r]*$/) inFence = 0
+            next
+        }
+        # A backtick opener with a backtick in its info string is plain text.
+        if (n >= 3 && !(fenceChar == "`" && index(fenceRest, "`") > 0)) {
+            inFence = 1
+            fenceOpen = n
+            openChar = fenceChar
+            next
+        }
+        print stripComments(line)
+    }
+    '
+}
+
+function extractCommand() {
+    grep -e '^/[a-z]\+'
+}
+
+# Extract the commands before doing anything else: most comments carry no
+# command, and everything below - fetching the changed files and the OWNERS
+# chain, computing the permission tiers - only matters for dispatching them.
+COMMANDS=""
+if [[ "${MESSAGE}" != "" ]]; then
+    COMMANDS="$(printf '%s\n' "${MESSAGE}" | clearComment | extractCommand)"
+fi
+if [[ "${COMMANDS}" == "" ]]; then
+    exit 0
+fi
+
 # Load OWNERS file reviewers and approvers for PRs
 if [[ "${ISSUE_KIND}" == "pr" && "${ISSUE_NUMBER}" != "" && "${GH_REPOSITORY}" != "" ]]; then
     source "${ROOT}/owners.sh"
@@ -100,79 +172,13 @@ function exec_cmd() {
     "${cmdpath}" "$@"
 }
 
-# Drop HTML comments (unterminated ones hide everything to EOF, like GitHub
-# rendering) and fenced code blocks; awk keeps it portable across GNU/BSD.
-function clearComment() {
-    awk '
-    function stripComments(line,    s, e, out) {
-        out = ""
-        while ((s = index(line, "<!--")) > 0) {
-            e = index(substr(line, s + 4), "-->")
-            if (e == 0) {
-                inComment = 1
-                return out substr(line, 1, s - 1)
-            }
-            out = out substr(line, 1, s - 1) "COMMENT"
-            line = substr(line, s + e + 6)
-        }
-        return out line
-    }
-    # fenceTicks: number of leading fence chars; sets fenceChar and fenceRest.
-    function fenceTicks(line,    i, n, ch) {
-        i = 1
-        while (i <= 3 && substr(line, i, 1) == " ") i++
-        ch = substr(line, i, 1)
-        fenceChar = ""
-        fenceRest = ""
-        if (ch != "`" && ch != "~") return 0
-        n = 0
-        while (substr(line, i + n, 1) == ch) n++
-        fenceChar = ch
-        fenceRest = substr(line, i + n)
-        return n
-    }
-    {
-        line = $0
-        if (inComment) {
-            e = index(line, "-->")
-            if (e == 0) next
-            inComment = 0
-            line = "COMMENT" substr(line, e + 3)
-        }
-        n = fenceTicks(line)
-        if (inFence) {
-            # Closer: same char, at least as many, nothing else on the line.
-            if (n >= fenceOpen && fenceChar == openChar && fenceRest ~ /^[ \t\r]*$/) inFence = 0
-            next
-        }
-        # A backtick opener with a backtick in its info string is plain text.
-        if (n >= 3 && !(fenceChar == "`" && index(fenceRest, "`") > 0)) {
-            inFence = 1
-            fenceOpen = n
-            openChar = fenceChar
-            next
-        }
-        print stripComments(line)
-    }
-    '
-}
-
-function extractCommand() {
-    grep -e '^/[a-z]\+'
-}
-
 function main() {
-    if [[ "${MESSAGE}" == "" ]]; then
-        return 0
-    fi
-    printf '%s\n' "${MESSAGE}" |
-        clearComment |
-        extractCommand | while IFS= read -r line; do
+    while IFS= read -r line; do
         line="${line//$'\r'/}"
         read -r -a cmd <<<"${line#/}"
         echo "Exec command: ${cmd[@]}"
         exec_cmd "${cmd[@]}" || true
-    done
+    done <<<"${COMMANDS}"
 }
 
 main
