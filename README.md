@@ -10,37 +10,43 @@ Copy [examples/ci-bot.yml](examples/ci-bot.yml) into the `.github/workflows/` di
 
 ## Commands
 
-| Command                           | Example                                                | Description                                                                                                                                                                          | Plugin                 |
-| --------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------- |
-| `/retitle`                        | `/retitle New Title`                                   | Edits the PR or issue title.                                                                                                                                                         | retitle                |
-| `/[un]cc [[@]...]`                | `/cc`</br>`/uncc`</br>`/cc @wzshiming`                 | Requests a review from the user(s). Must be a Member.                                                                                                                                | cc                     |
-| `/auto-cc`                        | `/auto-cc`                                             | Requests reviews from randomly selected reviewers.                                                                                                                                          | auto-cc                |
-| `/[un]assign [[@]...]`            | `/assign`</br>`/unassign`</br>`/assign @wzshiming`     | Assigns assignee(s) to the PR or issue.                                                                                                                                              | assign                 |
-| `/[remove-]milestone [milestone]` | `/milestone v1.0.0`</br>`/remove-milestone`            | Edits the PR or issue milestone. **Milestones need to be created manually in advance.**                                                                                               | milestone              |
-| `/close`                          | `/close`                                               | Closes a PR or issue.                                                                                                                                                               | lifecycle              |
-| `/reopen`                         | `/reopen`                                              | Reopens a PR or issue.                                                                                                                                                               | lifecycle              |
-| `/merge [rebase\|squash]`         | `/merge`</br>`/merge rebase`</br>`/merge squash`       | Merges a PR.                                                                                                                                                                          | merge                  |
-| `/hold [cancel]`                  | `/hold`</br>`/hold cancel`                             | Applies or removes the 'do-not-merge/hold' label, blocking `/merge` and auto-merge while present.                                 | hold                   |
-| `/retest`                         | `/retest`                                              | Reruns all failed tests of a PR.                                                                                                                                                        | retest                 |
-| `/test [workflow-or-job\|all]`    | `/test all`</br>`/test CI`</br>`/test unit-test`       | Reruns a specific workflow or job for a PR by name, or all of them with `all`.                                                                                                          | retest                 |
-| `/[remove-]kind [...]`            | `/kind doc`</br>`/remove-kind doc`                     | Applies or removes the 'kind/*' labels to a PR or issue.                                                                         | label-kind             |
-| `/[remove-]label [...]`           | `/label doc`</br>`/remove-label doc`                   | Applies or removes the '*' labels to a PR or issue.                                                                              | label                  |
-| `/[remove-]lgtm`                  | `/lgtm`</br>`/remove-lgtm`                             | Applies or removes the 'lgtm' label. Removed automatically on new commits. Auto-merges with 'approved'.                           | label-lgtm             |
-| `/approve [cancel]`               | `/approve`</br>`/approve cancel`</br>`/remove-approve` | Approves the PR areas the commenter owns (via OWNERS files); adds 'approved' once all areas are covered. Auto-merges with 'lgtm'. | label-approve          |
-| `/[remove-]help-wanted`           | `/help-wanted`</br>`/remove-help-wanted`               | Applies or removes the 'help wanted' labels to a PR or issue.                                                                                                                       | label-help-wanted      |
-| `/[remove-]good-first-issue`      | `/good-first-issue`</br>`/remove-good-first-issue`     | Applies or removes the 'good first issue' labels to a PR or issue.                                                                                                                  | label-good-first-issue |
-| `/[remove-]bug`                   | `/bug`</br>`/remove-bug`                               | Applies or removes the 'bug' labels to a PR or issue.                                                                                                                               | label-bug              |
-| `/[remove-]documentation`         | `/documentation`</br>`/remove-documentation`           | Applies or removes the 'documentation' labels to a PR or issue.                                                                                                                     | label-documentation    |
-| `/[remove-]duplicate`             | `/duplicate`</br>`/remove-duplicate`                   | Applies or removes the 'duplicate' labels to a PR or issue.                                                                                                                         | label-duplicate        |
-| `/[remove-]enhancement`           | `/enhancement`</br>`/remove-enhancement`               | Applies or removes the 'enhancement' labels to a PR or issue.                                                                                                                       | label-enhancement      |
-| `/[remove-]invalid`               | `/invalid`</br>`/remove-invalid`                       | Applies or removes the 'invalid' labels to a PR or issue.                                                                                                                           | label-invalid          |
-| `/[remove-]question`              | `/question`</br>`/remove-question`                     | Applies or removes the 'question' labels to a PR or issue.                                                                                                                          | label-question         |
-| `/[remove-]wontfix`               | `/wontfix`</br>`/remove-wontfix`                       | Applies or removes the 'wontfix' labels to a PR or issue.                                                                                                                           | label-wontfix          |
-| `/release-note-none`              | `/release-note-none`                                   | Applies the 'release-note-none' label, marking the PR as not needing a release note. Fails if the PR body's release-note block contains a note.   | release-note           |
-| `/base [branch]`                  | `/base main`                                           | Changes the branch this PR will be merged into.                                                                                                                                  | base                   |
-| `/rebase`                         | `/rebase`                                              | Rebases the PR onto the latest base branch.                                                                                                                                       | rebase                 |
-| `/cherry-pick [branch]`           | `/cherry-pick release-1.0`                             | Cherry-picks a merged PR to a target branch and creates a new PR.                                                                                                                       | cherry-pick            |
-| `/transfer-issue [repo]`          | `/transfer-issue other-repo`                           | Transfers an issue to another repository in the same organization.                                                                                                                   | transfer-issue         |
+Each command belongs to a plugin; follow the plugin link for the full documentation (syntax, examples, behavior and related environment variables).
+
+| Command                                      | Description                                                        | Plugin                                                             |
+| -------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------ |
+| `/retitle <title>`                           | Edits the PR or issue title.                                       | [retitle](plugins/retitle/README.md)                               |
+| `/[un]cc [[@]...]`                           | Requests or removes a review from the user(s). Must be a Member.   | [cc](plugins/cc/README.md)                                         |
+| `/auto-cc`                                   | Requests reviews from randomly selected reviewers.                 | [auto-cc](plugins/auto-cc/README.md)                               |
+| `/[un]assign [[@]...]`                       | Assigns or unassigns assignee(s) on the PR or issue.               | [assign](plugins/assign/README.md)                                 |
+| `/[remove-]milestone [milestone]`            | Sets or clears the PR or issue milestone.                          | [milestone](plugins/milestone/README.md)                           |
+| `/close`</br>`/reopen`                       | Closes or reopens a PR or issue.                                   | [lifecycle](plugins/lifecycle/README.md)                           |
+| `/merge [rebase\|squash]`                    | Merges a PR.                                                       | [merge](plugins/merge/README.md)                                   |
+| `/hold [cancel]`                             | Applies or removes the 'do-not-merge/hold' label, blocking merging while present. | [hold](plugins/hold/README.md)                      |
+| `/retest`</br>`/test [workflow-or-job\|all]` | Reruns failed tests, or specific workflows or jobs, of a PR.       | [retest](plugins/retest/README.md)                                 |
+| `/[remove-]label [...]`                      | Applies or removes the '*' labels.                                 | [label](plugins/label/README.md)                                   |
+| `/[remove-]kind [...]`                       | Applies or removes the 'kind/*' labels.                            | [label-kind](plugins/label-kind/README.md)                         |
+| `/[remove-]sig [...]`                        | Applies or removes the 'sig/*' labels.                             | [label-sig](plugins/label-sig/README.md)                           |
+| `/[remove-]area [...]`                       | Applies or removes the 'area/*' labels.                            | [label-area](plugins/label-area/README.md)                         |
+| `/[remove-]priority [...]`                   | Applies or removes the 'priority/*' labels.                        | [label-priority](plugins/label-priority/README.md)                 |
+| `/[remove-]triage [...]`                     | Applies or removes the 'triage/*' labels.                          | [label-triage](plugins/label-triage/README.md)                     |
+| `/[remove-]wg [...]`                         | Applies or removes the 'wg/*' labels.                              | [label-wg](plugins/label-wg/README.md)                             |
+| `/[remove-]committee [...]`                  | Applies or removes the 'committee/*' labels.                       | [label-committee](plugins/label-committee/README.md)               |
+| `/[remove-]lgtm`                             | Applies or removes the 'lgtm' label.                               | [label-lgtm](plugins/label-lgtm/README.md)                         |
+| `/approve [cancel]`                          | Approves the PR areas the commenter owns (via OWNERS files).       | [label-approve](plugins/label-approve/README.md)                   |
+| `/[remove-]help-wanted`                      | Applies or removes the 'help wanted' label.                        | [label-help-wanted](plugins/label-help-wanted/README.md)           |
+| `/[remove-]good-first-issue`                 | Applies or removes the 'good first issue' label.                   | [label-good-first-issue](plugins/label-good-first-issue/README.md) |
+| `/[remove-]bug`                              | Applies or removes the 'bug' label.                                | [label-bug](plugins/label-bug/README.md)                           |
+| `/[remove-]documentation`                    | Applies or removes the 'documentation' label.                      | [label-documentation](plugins/label-documentation/README.md)       |
+| `/[remove-]duplicate`                        | Applies or removes the 'duplicate' label.                          | [label-duplicate](plugins/label-duplicate/README.md)               |
+| `/[remove-]enhancement`                      | Applies or removes the 'enhancement' label.                        | [label-enhancement](plugins/label-enhancement/README.md)           |
+| `/[remove-]invalid`                          | Applies or removes the 'invalid' label.                            | [label-invalid](plugins/label-invalid/README.md)                   |
+| `/[remove-]question`                         | Applies or removes the 'question' label.                           | [label-question](plugins/label-question/README.md)                 |
+| `/[remove-]wontfix`                          | Applies or removes the 'wontfix' label.                            | [label-wontfix](plugins/label-wontfix/README.md)                   |
+| `/release-note-none`                         | Marks the PR as not needing a release note.                        | [release-note](plugins/release-note/README.md)                     |
+| `/base <branch>`                             | Changes the branch this PR will be merged into.                    | [base](plugins/base/README.md)                                     |
+| `/rebase`                                    | Rebases the PR onto the latest base branch.                        | [rebase](plugins/rebase/README.md)                                 |
+| `/cherry-pick <branch>`                      | Cherry-picks a merged PR to a target branch and creates a new PR.  | [cherry-pick](plugins/cherry-pick/README.md)                       |
+| `/transfer-issue <repo>`                     | Transfers an issue to another repository in the same organization. | [transfer-issue](plugins/transfer-issue/README.md)                 |
 
 ### Who can run which command
 
@@ -61,13 +67,15 @@ The other associations GitHub reports (`FIRST_TIME_CONTRIBUTOR`, `FIRST_TIMER`, 
 
 ## Automatic Behaviors
 
+Besides commands, the bot performs some automation on its own.
+
 ### Label management
 
-Whenever the bot adds a label (via commands like `/label`, `/kind`, `/lgtm`, `/approve`, OWNERS `labels:`, or automatic labels like `do-not-merge/work-in-progress`), any label that does not yet exist in the repository is created automatically, provided it is in the built-in default list of well-known labels or listed in the `LABELS` environment variable. Labels not in the allowlist are never created automatically (so a typo like `/label doocumentation` does not pollute the repository); they are only applied if they already exist in the repository.
+Whenever the bot adds a label (via commands like `/label`, `/kind`, `/lgtm`, `/approve`, OWNERS `labels:`, or automatic labels like `do-not-merge/work-in-progress`), any label that does not yet exist in the repository is created automatically, provided it is in the built-in default list of well-known labels or listed in the `LABELS` environment variable. Labels not in the allowlist are never created automatically (so a typo like `/label doocumentation` does not pollute the repository); they are only applied if they already exist in the repository. See [automatic label creation](plugins/label/README.md#automatic-label-creation) for the allowlist and the `LABELS` configuration.
 
 ### Work in progress
 
-Like prow's [`wip`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugins/wip) plugin, the bot automatically applies the `do-not-merge/work-in-progress` label to a PR while it is a draft or its title starts with `WIP`, and removes the label once neither is true. Any label starting with `do-not-merge/` blocks both `/merge` and auto-merge. The label is created automatically if it does not exist.
+Like prow's [`wip`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugins/wip) plugin, the bot automatically applies the `do-not-merge/work-in-progress` label to a PR while it is a draft or its title starts with `WIP` (case-insensitive; leading spaces or punctuation are ignored, so `WIP: Title` and `[WIP] Title` also match), and removes the label once neither is true. Any label starting with `do-not-merge/` blocks both [`/merge`](plugins/merge/README.md) and auto-merge. The label is created automatically if it does not exist.
 
 ### PR size
 
@@ -75,50 +83,49 @@ Like prow's [`size`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugi
 
 ### Auto-requesting reviewers
 
-Like prow's [`blunderbuss`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugins/blunderbuss) plugin, the bot automatically requests reviewers when a PR is opened (like `/auto-cc` but without a manual trigger; both share the same reviewer-selection logic). Reviewers are picked from the `OWNERS` files nearest to the changed files, falling back to the `REVIEWERS` environment variable, and the PR author is never picked. Draft PRs are skipped. The number of reviewers to request is configured with the `BLUNDERBUSS_REVIEWER_COUNT` environment variable (default `2`); set it to `0` to disable the behavior (the manual `/auto-cc` command keeps working).
+Like prow's [`blunderbuss`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugins/blunderbuss) plugin, the bot automatically requests reviewers when a PR is opened (like [`/auto-cc`](plugins/auto-cc/README.md) but without a manual trigger; both share the same reviewer-selection logic). Reviewers are picked from the `OWNERS` files nearest to the changed files, falling back to the `REVIEWERS` environment variable, and the PR author is never picked. Draft PRs are skipped. The number of reviewers to request is configured with the `BLUNDERBUSS_REVIEWER_COUNT` environment variable (default `2`); set it to `0` to disable the behavior (the manual `/auto-cc` command keeps working).
 
 ### Require matching label
 
-Like prow's [`require-matching-label`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugins/require-matching-label) plugin, the bot automatically applies a `needs-X` label when an issue or PR is missing a label matching a configured regular expression, and removes it once a matching label is added. By default, an issue or PR without a `kind/*` label gets the `needs-kind` label, which is removed as soon as a `kind/*` label is applied (e.g. via `/kind bug`).
+Like prow's [`require-matching-label`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugins/require-matching-label) plugin, the bot automatically applies a `needs-X` label when an issue or PR is missing a label matching a configured regular expression, and removes it once a matching label is added. By default, an issue or PR without a `kind/*` label gets the `needs-kind` label, which is removed as soon as a `kind/*` label is applied (e.g. via [`/kind bug`](plugins/label-kind/README.md)). The labels are re-synced whenever the issue or PR is opened, commented on, labeled or unlabeled.
 
 The rules are configured through the `ISSUE_REQUIRE_MATCHING_LABELS` (issues) and `PR_REQUIRE_MATCHING_LABELS` (PRs) environment variables, one rule per line in the format `<missing-label> <regexp>`:
 
 ```yaml
 env:
+  # Issues: apply needs-kind until a kind/* label is present, and
+  # needs-triage until a triage/* label is present.
   ISSUE_REQUIRE_MATCHING_LABELS: |-
     needs-kind ^kind/
+    needs-triage ^triage/
+  # PRs: apply do-not-merge/needs-kind until a kind/* label is present.
+  # A do-not-merge/* missing label additionally blocks /merge and
+  # auto-merge until a matching label is added.
   PR_REQUIRE_MATCHING_LABELS: |-
     do-not-merge/needs-kind ^kind/
-    needs-priority ^priority/
 ```
 
-Set a variable to an empty string to disable the check for the corresponding scope. Using a `do-not-merge/*` missing label (e.g. `do-not-merge/needs-kind` for PRs) additionally blocks `/merge` and auto-merge until a matching label is added.
+With this configuration:
+
+- A new issue gets `needs-kind` and `needs-triage`. Commenting `/kind bug` applies the `kind/bug` label and the bot removes `needs-kind`; `/triage accepted` applies `triage/accepted` and removes `needs-triage`. If the last `kind/*` label is removed again (`/remove-kind bug`), `needs-kind` comes back.
+- A new PR gets `do-not-merge/needs-kind`, which blocks `/merge` and auto-merge like any other `do-not-merge/*` label. Once a `kind/*` label is applied (e.g. `/kind feature`), the label is removed and the PR can be merged again.
+
+When a variable is unset, it defaults to `needs-kind ^kind/`. Set it to an empty string to disable the check for the corresponding scope:
+
+```yaml
+env:
+  # Keep the default needs-kind rule for issues, disable the check for PRs.
+  PR_REQUIRE_MATCHING_LABELS: ""
+```
+
+The missing labels are created automatically if they do not exist, provided they are allowlisted like `needs-kind`, `needs-triage` or `do-not-merge/needs-kind` (see [Label management](#label-management)).
 
 ### Release notes
 
-Like prow's [`release-note`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugins/releasenote) plugin, when the `RELEASE_NOTE_REQUIRED` environment variable is set to a non-empty value (it is unset by default), the bot parses a fenced code block from the PR body whenever a PR is opened, edited or pushed to:
-
-````
-```release-note
-Added a feature.
-```
-````
-
-and applies exactly one of these mutually exclusive labels, removing the others:
-
-| Block content             | Label                                    |
-| ------------------------- | ---------------------------------------- |
-| `NONE` (case-insensitive) | `release-note-none`                      |
-| any other non-empty text  | `release-note`                           |
-| block missing or empty    | `do-not-merge/release-note-label-needed` |
-
-`do-not-merge/release-note-label-needed` blocks `/merge` and auto-merge like any other `do-not-merge/*` label, until a valid block is added or `/release-note-none` is used. The `/release-note-none` command is available to whoever the `release-note` plugin is enabled for, even when `RELEASE_NOTE_REQUIRED` is unset.
+Like prow's [`release-note`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugins/releasenote) plugin, when the `RELEASE_NOTE_REQUIRED` environment variable is set to a non-empty value (it is unset by default), the bot classifies the ```` ```release-note ```` block in the PR body whenever a PR is opened, edited or pushed to, and applies exactly one of the `release-note`, `release-note-none` or `do-not-merge/release-note-label-needed` labels, blocking merge until a valid block is added or `/release-note-none` is used. See [release-note](plugins/release-note/README.md#automatic-behavior) for details.
 
 ## Troubleshooting
 
-- `/cherry-pick`
-    If you encounter the error `pull request create failed: GraphQL: GitHub Actions is not permitted to create or approve pull requests (createPullRequest)`,
-    go to your repository settings under the Actions section and check `Allow GitHub Actions to create and approve pull requests`.
 - Changes to `.github/**`
     The default `${{ secrets.GITHUB_TOKEN }}` is read-only on pull request runs, so it cannot merge workflow or other `.github` changes on your behalf. Use a PAT or GitHub App token with `contents`/`pull_requests`/`workflows` write access instead. See [GitHub docs](https://docs.github.com/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token).
 - Workflows not firing after bot merges
@@ -148,25 +155,11 @@ OWNERS files are used hierarchically. You can place OWNERS files in any director
 
 For example, if `pkg/api/handler.go` and `pkg/util/helper.go` are both changed and both `pkg/api` and `pkg/util` contain an OWNERS file with approvers, the PR has two areas: `pkg/api` and `pkg/util`. Each area can be approved by its own approvers or by approvers from `pkg` or the root OWNERS file.
 
-The `/auto-cc` command and the automatic blunderbuss behavior share the same logic: they walk up from each individual changed file to find the nearest OWNERS file with available reviewers.
+The [`/auto-cc`](plugins/auto-cc/README.md) command and the automatic [blunderbuss](#auto-requesting-reviewers) behavior share the same logic: they walk up from each individual changed file to find the nearest OWNERS file with available reviewers.
 
 ## Testing
 
-The test suite in [`test/`](test/) runs the real scripts (`bin/*.sh`, `plugins/**/*.plugin.sh`, `entrypoint.sh`) against a mocked `gh` (and `curl`) that logs every invocation and serves canned JSON fixtures, so nothing ever talks to GitHub. It is pure bash with no dependencies beyond `bash` and `jq`, and runs on every push and pull request via [`.github/workflows/test.yml`](.github/workflows/test.yml).
-
-Run the whole suite locally:
-
-```bash
-./test/run.sh
-```
-
-Or only some specs, by name:
-
-```bash
-./test/run.sh release-note check-wip
-```
-
-Specs live in [`test/specs/`](test/specs/); the assertion, log and fixture helpers they use are documented in [`test/lib.sh`](test/lib.sh). On macOS, install GNU coreutils first (`brew install coreutils`) because the scripts use `realpath -m`; CI's ubuntu runners work out of the box.
+The test suite lives in [`test/`](test/README.md); see its README for how to run and write tests.
 
 ## Roadmap
 
