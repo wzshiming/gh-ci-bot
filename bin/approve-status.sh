@@ -337,6 +337,24 @@ function cmd_check() {
     state_all_approved "$(build_state "${old_state}")"
 }
 
+# Incomplete OWNERS data must neither grant, revoke nor reconcile approvals.
+if [[ -n "${OWNERS_LOAD_FAILED:-}" ]]; then
+    case "$1" in
+    approve | unapprove)
+        echo "[FAIL] Could not load the OWNERS data of this PR because of an API error. Please try again later."
+        exit 1
+        ;;
+    sync)
+        echo "OWNERS data unavailable, skipping the approval sync." >&2
+        exit 0
+        ;;
+    check)
+        echo "OWNERS data unavailable, the approvals cannot be verified." >&2
+        exit 1
+        ;;
+    esac
+fi
+
 case "$1" in
 approve)
     cmd_approve "$2"

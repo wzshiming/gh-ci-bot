@@ -2,7 +2,8 @@
 
 # owners.sh: load_owners_for_pr maps every changed file to its area (the
 # nearest ancestor directory whose OWNERS file lists approvers) without
-# splitting paths on whitespace or expanding glob characters.
+# splitting paths on whitespace or expanding glob characters, and flags a
+# failed fetch of an OWNERS file or of the changed files as incomplete data.
 
 source "$(dirname "${BASH_SOURCE[0]}")/../lib.sh"
 
@@ -12,7 +13,8 @@ function load_owners() {
     run bash -c 'cd "${1}" && source owners.sh &&
         load_owners_for_pr &&
         echo "areas=<${OWNERS_AREAS}>" &&
-        echo "area_approvers=<${OWNERS_AREA_APPROVERS}>"' bash "${1:-.}"
+        echo "area_approvers=<${OWNERS_AREA_APPROVERS}>" &&
+        echo "load_failed=<${OWNERS_LOAD_FAILED:-}>"' bash "${1:-.}"
 }
 
 begin_case "a path with spaces is one file mapping to one area"
@@ -49,3 +51,57 @@ load_owners
 assert_status 0
 assert_out_has "areas=<>"
 assert_out_has "area_approvers=<>"
+
+begin_case "a missing OWNERS file is not a load failure"
+export APPROVERS="root-admin"
+mkfiles "README.md"
+load_owners
+assert_status 0
+assert_out_has "area_approvers=<. root-admin>"
+assert_out_has "load_failed=<>"
+assert_out_lacks "OWNERS: failed"
+
+begin_case "a failed OWNERS fetch flags the load as failed"
+export APPROVERS="root-admin"
+mkfiles "docs/guide.md"
+export MOCK_OWNERS_FAIL=1
+load_owners
+assert_status 0
+assert_out_has "OWNERS: failed to fetch docs/OWNERS"
+assert_out_has "load_failed=<1>"
+
+begin_case "a failed changed-files fetch flags the load as failed"
+mkowners "approvers: [carol]"
+export MOCK_PR_FILES_FAIL=1
+load_owners
+assert_status 0
+assert_out_has "OWNERS: failed to fetch the changed files"
+assert_out_has "areas=<>"
+assert_out_has "load_failed=<1>"
+
+begin_case "a failed default-branch lookup flags the load as failed"
+mkfiles "README.md"
+mkowners "approvers: [carol]"
+export MOCK_REPO_FAIL=1
+load_owners
+assert_status 0
+assert_out_has "OWNERS: failed to resolve the default branch"
+assert_out_has "load_failed=<1>"
+
+begin_case "stderr chatter on a successful fetch is not OWNERS content"
+mkfiles "README.md"
+mkowners "approvers: [carol]"
+export MOCK_GH_STDERR="* Request at 2026-09-03 12:00:00"
+load_owners
+assert_status 0
+assert_out_has "area_approvers=<. carol>"
+assert_out_has "load_failed=<>"
+
+begin_case "a fresh load clears an inherited failure flag"
+mkfiles "README.md"
+mkowners "approvers: [carol]"
+export OWNERS_LOAD_FAILED=1
+load_owners
+assert_status 0
+assert_out_has "area_approvers=<. carol>"
+assert_out_has "load_failed=<>"

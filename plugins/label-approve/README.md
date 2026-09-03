@@ -18,4 +18,5 @@ Approves the PR areas the commenter owns via [OWNERS files](../../README.md#owne
 - Approvals are sticky across new commits, mirroring prow's approve plugin, and are recomputed against the current change set on every push.
 - Areas owned by the PR author are approved by default (implicit self-approval); the author may still `/approve` explicitly.
 - The per-area approval state is kept in a single bot comment with a human-readable summary table.
+- If the OWNERS files or the changed files of the PR cannot be fetched because of an API error, `/approve` and `/approve cancel` reply with an error and the approval state is left as it is; auto-merge waits until the data can be loaded. A missing OWNERS file is not an error.
 - Once the PR has both `approved` and `lgtm` (see [label-lgtm](../label-lgtm/README.md)), it is [auto-merged](../merge/README.md#auto-merge).

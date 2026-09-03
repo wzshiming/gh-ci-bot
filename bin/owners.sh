@@ -16,12 +16,26 @@
 #   OWNERS_AREA_APPROVERS - lines of "<area> <approver>...", one per area
 #   OWNERS_LABELS         - newline separated list of labels declared in
 #                           the OWNERS files of the changed directories
+#   OWNERS_LOAD_FAILED    - set to 1 when the default branch, an OWNERS file
+#                           or the changed files could not be fetched (a
+#                           missing OWNERS file is not a failure); the data
+#                           is then incomplete
+
+# Sourcing starts a fresh load, so an inherited flag does not apply.
+unset OWNERS_LOAD_FAILED
 
 branch="${branch:-$(gh api /repos/${GH_REPOSITORY} | jq -r '.default_branch')}"
 export branch
+# gh prints the error body on failure, which jq turns into "null".
+if [[ -z "${branch}" || "${branch}" == "null" ]]; then
+    echo "OWNERS: failed to resolve the default branch" >&2
+    OWNERS_LOAD_FAILED=1
+    export OWNERS_LOAD_FAILED
+fi
 
 # fetch_owners_file fetches an OWNERS file from the given directory in the repo.
-# Outputs the file content on success, empty on failure.
+# Outputs the file content on success, empty when the file does not exist,
+# and fails on any other error.
 function fetch_owners_file() {
     local dir="$1"
     local path
@@ -32,12 +46,24 @@ function fetch_owners_file() {
         path="${dir}/OWNERS"
     fi
 
-    if ! content="$(gh api \
+    # Keep gh's stderr apart from the content: debug output would parse as YAML.
+    local err
+    err="$(mktemp)"
+    content="$(gh api \
         --method GET \
         -H "Accept: application/vnd.github.raw+json" \
         "/repos/${GH_REPOSITORY}/contents/${path}" \
-        -f "ref=${branch}" 2>/dev/null)"; then
-        return 0
+        -f "ref=${branch}" 2>"${err}")"
+    local rc=$?
+    local reason
+    reason="$(<"${err}")"
+    rm -f "${err}"
+    if [[ "${rc}" -ne 0 ]]; then
+        if grep -q "HTTP 404" <<<"${reason}"; then
+            return 0
+        fi
+        echo "OWNERS: failed to fetch ${path}: ${reason##*$'\n'}" >&2
+        return 1
     fi
 
     printf '%s\n' "${content}"
@@ -95,7 +121,10 @@ ${dir}"
     fi
 
     local content
-    content="$(fetch_owners_file "${fetch_dir}")"
+    if ! content="$(fetch_owners_file "${fetch_dir}")"; then
+        OWNERS_LOAD_FAILED=1
+        export OWNERS_LOAD_FAILED
+    fi
 
     local a r l
     a="$(get_owners_approvers "${content}")"
@@ -177,18 +206,23 @@ function collect_area_approvers() {
 
 # get_pr_changed_files fetches the list of changed files for the current PR.
 function get_pr_changed_files() {
-    gh api \
+    local files
+    files="$(gh api \
         --paginate \
         "/repos/${GH_REPOSITORY}/pulls/${ISSUE_NUMBER}/files" \
-        --jq '.[].filename' |
-        sort -u
+        --jq '.[].filename')" || return 1
+    sort -u <<<"${files}"
 }
 
 # load_owners_for_pr fetches changed files, computes the changed areas,
 # collects per-area approvers, and merges everything with env vars.
 function load_owners_for_pr() {
     local files
-    files="$(get_pr_changed_files)"
+    if ! files="$(get_pr_changed_files)"; then
+        echo "OWNERS: failed to fetch the changed files" >&2
+        OWNERS_LOAD_FAILED=1
+        export OWNERS_LOAD_FAILED
+    fi
 
     local areas=""
     local f

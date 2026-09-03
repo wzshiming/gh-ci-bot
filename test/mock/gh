@@ -6,13 +6,18 @@
 # ...) succeed silently so the log is the only trace of them.
 #
 # Setting MOCK_GH_FAIL to a non-empty value makes every call fail, to
-# simulate API failures.
+# simulate API failures. MOCK_GH_STDERR is printed to stderr on every call,
+# like the traces of GH_DEBUG.
 #
 # This is an executable, not a shell function, and it is only ever put on
 # PATH by the spec process, so it cannot leak into an interactive shell.
 
 if [[ -n "${MOCK_LOG:-}" ]]; then
     echo "gh $*" >>"${MOCK_LOG}"
+fi
+
+if [[ -n "${MOCK_GH_STDERR:-}" ]]; then
+    echo "${MOCK_GH_STDERR}" >&2
 fi
 
 if [[ -n "${MOCK_GH_FAIL:-}" ]]; then
@@ -81,7 +86,12 @@ case "$*" in
     echo '{"login":"mock-bot"}'
     ;;
 *"/pulls/"*"/files"*)
-    # Changed files of the PR; defaults to no changed files.
+    # Changed files of the PR; defaults to no changed files, and
+    # MOCK_PR_FILES_FAIL fails the query like an API error.
+    if [[ -n "${MOCK_PR_FILES_FAIL:-}" ]]; then
+        echo "gh: Internal Server Error (HTTP 500)" >&2
+        exit 1
+    fi
     if [[ -n "${MOCK_PR_FILES_JSON:-}" && -f "${MOCK_PR_FILES_JSON:-}" ]]; then
         serve "${MOCK_PR_FILES_JSON}"
     fi
@@ -97,16 +107,28 @@ case "$*" in
     fi
     ;;
 *"/contents/"*)
-    # OWNERS file fetches; fail like a 404 unless a fixture is given.
+    # OWNERS file fetches: MOCK_OWNERS_FAIL fails them like an API error, no
+    # fixture answers like the real gh for a missing file (HTTP 404).
+    if [[ -n "${MOCK_OWNERS_FAIL:-}" ]]; then
+        echo "gh: Internal Server Error (HTTP 500)" >&2
+        exit 1
+    fi
     if [[ -n "${MOCK_OWNERS_FILE:-}" && -f "${MOCK_OWNERS_FILE:-}" ]]; then
         cat "${MOCK_OWNERS_FILE}"
     else
-        echo "mock gh: no fixture for: gh $*" >&2
+        echo '{"message":"Not Found"}'
+        echo "gh: Not Found (HTTP 404)" >&2
         exit 1
     fi
     ;;
 "api /repos/"*)
-    # Repository metadata, used to resolve the default branch.
+    # Repository metadata, used to resolve the default branch;
+    # MOCK_REPO_FAIL fails it like an API error, error body on stdout.
+    if [[ -n "${MOCK_REPO_FAIL:-}" ]]; then
+        echo '{"message":"Server Error"}'
+        echo "gh: Server Error (HTTP 500)" >&2
+        exit 1
+    fi
     echo '{"default_branch":"main"}'
     ;;
 *)
