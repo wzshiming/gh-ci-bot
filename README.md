@@ -149,6 +149,8 @@ Like prow's [`dco`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugin
     The default `${{ secrets.GITHUB_TOKEN }}` is read-only on pull request runs, so it cannot merge workflow or other `.github` changes on your behalf. Use a PAT or GitHub App token with `contents`/`pull_requests`/`workflows` write access instead. See [GitHub docs](https://docs.github.com/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token).
 - Workflows not firing after bot merges
     Events performed with `GITHUB_TOKEN` do not trigger other workflows (except `workflow_dispatch` and `repository_dispatch`) to avoid recursion. If you need a merge to kick off another workflow, use a PAT or GitHub App token. See [GitHub docs](https://docs.github.com/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow#triggering-a-workflow-from-a-workflow).
+- Approvals not sticking, or a new approval status comment on every event, with a GitHub App token
+    The bot finds its own comments (the approval status, the DCO notice) by author login. `GITHUB_TOKEN` and PATs resolve it through the API, but GitHub App installation tokens cannot, so the bot falls back to `github-actions[bot]` and never finds them. Set `BOT_LOGIN` to the App's login, e.g. `BOT_LOGIN: ${{ steps.app-token.outputs.app-slug }}[bot]` when the token comes from [`actions/create-github-app-token`](https://github.com/actions/create-github-app-token).
 
 ## OWNERS Files
 

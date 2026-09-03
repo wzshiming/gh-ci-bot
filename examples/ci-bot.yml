@@ -107,6 +107,11 @@ env:
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   GH_REPOSITORY: ${{ github.repository }}
 
+  # Login the bot comments as, used to find its own comments. Only needed
+  # with a GitHub App installation token, which cannot resolve it via the
+  # API: set it to "<app-slug>[bot]".
+  # BOT_LOGIN: ""
+
   # It can be `merge`, `rebase`, or `squash`.
   DEFAULT_MERGE_METHOD: squash
 
