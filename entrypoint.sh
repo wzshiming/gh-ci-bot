@@ -16,7 +16,9 @@ function check_args() {
         exit 1
     fi
 
-    if [[ "${ISSUE_NUMBER}" == "" ]]; then
+    # The scheduled merge-pool sync targets the whole repository, not a
+    # single issue or PR, so it is the only type without an issue number.
+    if [[ "${ISSUE_NUMBER}" == "" && "${TYPE}" != "schedule" ]]; then
         echo "No issue number specified"
         exit 1
     fi
@@ -128,13 +130,24 @@ function sync_matching_labels() {
 }
 
 # sync_auto_merge merges the PR once it has both the lgtm and approved
-# labels, every area is approved and no do-not-merge/* label is left. It
-# runs as the last step of every PR event, the way tide reconciles its
-# pool, so the merge happens no matter which command, sync or UI action
+# labels, every area is approved, no do-not-merge/* label is left, its
+# head contains the latest base commit and every check is green. It runs
+# as the last step of every PR event, the way tide reconciles its pool,
+# so the merge happens no matter which command, sync or UI action
 # removed the last blocker.
 function sync_auto_merge() {
     if [[ "${ISSUE_KIND}" == "pr" ]]; then
         check-auto-merge.sh
+    fi
+}
+
+# sync_merge_pool reconciles the whole merge pool on the scheduled sync
+# event, like tide's sync loop: pool PRs that turned green or stale in
+# the background trigger no bot event of their own, so the periodic
+# reconcile is what merges (or updates and retests) them.
+function sync_merge_pool() {
+    if [[ "${ISSUE_KIND}" == "pr" ]]; then
+        check-merge-pool.sh
     fi
 }
 
@@ -161,8 +174,16 @@ function main() {
         sync_matching_labels
         sync_auto_merge
     elif [[ "${TYPE}" == "synchronize" ]]; then
-        echo "PR synchronized, removing lgtm label"
-        remove-labels.sh lgtm
+        # The bot only pushes base-branch refreshes (update-branch and
+        # /rebase), which change no author content, so its own pushes
+        # keep the lgtm label: stripping it would kick every pool PR out
+        # of the pool whenever it is retested against the latest base.
+        if [[ "${LOGIN}" == "$(bot-login.sh)" ]]; then
+            echo "PR synchronized by the bot itself, keeping the lgtm label"
+        else
+            echo "PR synchronized, removing lgtm label"
+            remove-labels.sh lgtm
+        fi
         sync_wip_label
         sync_release_note_label
         sync_size_label
@@ -191,6 +212,9 @@ function main() {
         echo "Labels changed, syncing needs-* labels"
         sync_matching_labels
         sync_auto_merge
+    elif [[ "${TYPE}" == "schedule" ]]; then
+        echo "Scheduled sync, reconciling the merge pool"
+        sync_merge_pool
     fi
 }
 

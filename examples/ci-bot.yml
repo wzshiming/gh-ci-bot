@@ -30,6 +30,14 @@ on:
       - labeled
       - unlabeled
 
+  # Reconcile the merge pool periodically: without this, a PR whose checks
+  # finish after the last label event, or that becomes mergeable once an
+  # earlier PR in the pool merges, would wait for another event forever.
+  schedule:
+    - cron: "*/15 * * * *"
+
+  workflow_dispatch: {}
+
 env:
   # This plugins is for anyone who can use it
   PLUGINS: |-
@@ -141,6 +149,13 @@ env:
   # plugin). Unset to disable.
   BLOCK_INVALID_COMMIT_MESSAGES: "true"
 
+  # Update stale auto-merge candidates with the latest base branch so their
+  # checks rerun against it (tide's retest). Requires GH_TOKEN to be a PAT or
+  # GitHub App token: pushes made with the default GITHUB_TOKEN do not
+  # trigger workflows, so the refreshed PR would never get new check runs.
+  # Unset to disable.
+  # AUTO_MERGE_UPDATE_BRANCH: "true"
+
   # Additional labels the bot is allowed to create, one entry per line.
   # Each entry is either an exact label name, or a prefix ending in a
   # slash (e.g. kind/) which allows any label with that prefix. These are
@@ -218,7 +233,9 @@ jobs:
         uses: wzshiming/gh-ci-bot@v1.6.0
         if: ${{ github.event_name == 'pull_request_target' && github.event.action == 'synchronize' }}
         env:
-          LOGIN: ${{ github.event.pull_request.user.login }}
+          # The sender (whoever pushed), not the PR author: pushes made by
+          # the bot itself (update-branch, /rebase) keep the lgtm label.
+          LOGIN: ${{ github.event.sender.login }}
           AUTHOR: ${{ github.event.pull_request.user.login }}
           MESSAGE: ""
           ISSUE_NUMBER: ${{ github.event.pull_request.number }}
@@ -309,3 +326,15 @@ jobs:
           AUTHOR_ASSOCIATION: ${{ github.event.comment.author_association }}
           ISSUE_KIND: pr
           TYPE: comment
+
+      - name: Merge Pool Sync
+        uses: wzshiming/gh-ci-bot@v1.6.0
+        if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+        env:
+          LOGIN: ${{ github.actor }}
+          AUTHOR: ""
+          MESSAGE: ""
+          ISSUE_NUMBER: ""
+          AUTHOR_ASSOCIATION: ""
+          ISSUE_KIND: pr
+          TYPE: schedule

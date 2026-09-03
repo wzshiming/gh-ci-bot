@@ -54,6 +54,7 @@ function reset_env() {
         BLOCK_MERGE_COMMITS BLOCK_INVALID_COMMIT_MESSAGES \
         ISSUE_REQUIRE_MATCHING_LABELS PR_REQUIRE_MATCHING_LABELS \
         BLUNDERBUSS_REVIEWER_COUNT DEFAULT_MERGE_METHOD DETAILS GREETING \
+        AUTO_MERGE_UPDATE_BRANCH GITHUB_WORKFLOW \
         OWNERS_AREAS OWNERS_AREA_APPROVERS OWNERS_LABELS branch \
         GITHUB_RUN_ID GITHUB_REPOSITORY GITHUB_SERVER_URL \
         MOCK_GH_FAIL MOCK_CURL_FAIL \
@@ -80,6 +81,9 @@ function begin_case() {
     export MOCK_LABELS_JSON="${CASE_DIR}/labels.json"
     export MOCK_LABEL_LIST_JSON="${CASE_DIR}/label-list.json"
     export MOCK_PR_COMMITS_JSON="${CASE_DIR}/pr-commits.json"
+    export MOCK_MERGE_JSON="${CASE_DIR}/merge.json"
+    export MOCK_COMPARE_JSON="${CASE_DIR}/compare.json"
+    export MOCK_PR_LIST_JSON="${CASE_DIR}/pr-list.json"
     export PATH="${STUB_DIR}:${MOCK_DIR}:${BIN_DIR}:${BASE_PATH}"
     reset_env
     OUTPUT=""
@@ -237,6 +241,36 @@ function mkcommits() {
 # `gh label list --json name`: the labels existing in the repository.
 function mkrepolabels() {
     jq -n --args '[$ARGS.positional[] | {name: .}]' "${@}" >"${MOCK_LABEL_LIST_JSON}"
+}
+
+# mkmergestate <mergeable> [check...] builds the reply to the pre-merge
+# validation query `gh pr view --json
+# baseRefName,headRefOid,mergeable,statusCheckRollup`. Each check is
+# either "<workflow>,<name>,<status>,<conclusion>" (a check run) or
+# "status,<context>,<state>" (a commit status).
+function mkmergestate() {
+    local mergeable="${1}"
+    shift
+    jq -n --arg mergeable "${mergeable}" --args '
+        {baseRefName: "main", headRefOid: "headsha", mergeable: $mergeable,
+         statusCheckRollup: [$ARGS.positional[] | split(",") |
+            if .[0] == "status" then
+                {"__typename": "StatusContext", context: .[1], state: .[2]}
+            else
+                {"__typename": "CheckRun", workflowName: .[0], name: .[1], status: .[2], conclusion: .[3]}
+            end]}' "${@}" >"${MOCK_MERGE_JSON}"
+}
+
+# mkbehind <n> builds the reply to the base-freshness compare query: the
+# PR head is <n> commits behind its base branch.
+function mkbehind() {
+    jq -n --argjson n "${1}" '{behind_by: $n}' >"${MOCK_COMPARE_JSON}"
+}
+
+# mkpool [number...] builds the reply to `gh pr list --json number`: the
+# open PRs of the merge pool.
+function mkpool() {
+    jq -n --args '[$ARGS.positional[] | {number: (. | tonumber)}]' "${@}" >"${MOCK_PR_LIST_JSON}"
 }
 
 # mkfiles [path...] builds the reply to the changed-files query

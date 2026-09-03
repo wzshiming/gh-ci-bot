@@ -61,6 +61,10 @@ case "$*" in
 *"--json additions,deletions,labels"*)
     serve "${MOCK_SIZE_JSON:-}"
     ;;
+*"--json baseRefName,headRefOid,mergeable,statusCheckRollup"*)
+    # Pre-merge validation state of the PR (check-auto-merge.sh).
+    serve "${MOCK_MERGE_JSON:-}"
+    ;;
 *"--json mergeable,state,labels"*)
     serve "${MOCK_MERGEABLE_JSON:-}"
     ;;
@@ -73,6 +77,10 @@ case "$*" in
 *"--json name"*)
     # gh label list --json name: the repository's existing labels.
     serve "${MOCK_LABEL_LIST_JSON:-}"
+    ;;
+*"--json number"*)
+    # gh pr list --json number: the open PRs of the merge pool.
+    serve "${MOCK_PR_LIST_JSON:-}"
     ;;
 "api /user"*)
     echo '{"login":"mock-bot"}'
@@ -95,6 +103,11 @@ case "$*" in
         echo "mock gh: no fixture for: gh $*" >&2
         exit 1
     fi
+    ;;
+*"/compare/"*)
+    # Base-freshness compare of check-auto-merge.sh: how many commits
+    # the PR head is behind its base branch.
+    serve "${MOCK_COMPARE_JSON:-}"
     ;;
 "api /repos/"*)
     # Repository metadata, used to resolve the default branch.

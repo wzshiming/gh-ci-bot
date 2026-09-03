@@ -138,6 +138,10 @@ Like prow's [`mergecommitblocker`](https://github.com/kubernetes-sigs/prow/tree/
 
 Like prow's [`invalidcommitmsg`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugins/invalidcommitmsg) plugin, when the `BLOCK_INVALID_COMMIT_MESSAGES` environment variable is set to a non-empty value (it is unset by default), the bot applies the `do-not-merge/invalid-commit-message` label to a PR while any of its commit messages or its title contains an `@mention` or a [keyword which can automatically close issues](https://docs.github.com/articles/closing-issues-using-keywords) (e.g. `fixes #42`), and removes the label once they are fixed. An invalid title can be fixed with [`/retitle`](plugins/retitle/README.md); invalid commit messages require rewording the commits.
 
+### Merge pool
+
+Like prow's [tide](https://docs.prow.k8s.io/docs/components/core/tide/), the bot treats the open PRs labeled both `lgtm` and `approved` as a merge pool. Right before merging a pool PR it re-validates the labels, that the PR has no conflicts, that its head is up to date with the base branch, and that every check is green; stale PRs can optionally be updated to retest against the latest base (`AUTO_MERGE_UPDATE_BRANCH`). A scheduled sync re-evaluates the pool oldest PR first, one at a time, so merges are serialized and every PR is retested on top of whatever merged before it. See [auto-merge](plugins/merge/README.md#auto-merge) for details.
+
 ## Troubleshooting
 
 - Changes to `.github/**`

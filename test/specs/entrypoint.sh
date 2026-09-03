@@ -138,10 +138,25 @@ log_lacks " merge 1"
 begin_case "full stack: an unlabeled event on a qualifying PR merges it"
 export TYPE="unlabeled"
 mklabels lgtm approved kind/feature
+mkmergestate MERGEABLE "CI,test,COMPLETED,SUCCESS"
+mkbehind 0
 run "${ENTRYPOINT}"
 assert_status 0
 assert_out_has "Auto-merging."
 log_has "merge 1 --merge"
+
+begin_case "full stack: a stale PR is not merged before it is retested"
+export TYPE="unlabeled"
+export AUTO_MERGE_UPDATE_BRANCH="true"
+mklabels lgtm approved kind/feature
+mkmergestate MERGEABLE "CI,test,COMPLETED,SUCCESS"
+mkbehind 3
+run "${ENTRYPOINT}"
+assert_status 0
+assert_out_has "Skipping auto-merge."
+assert_out_has "Updating the branch to retest against the latest base."
+log_has "update-branch 1"
+log_lacks " merge 1"
 
 begin_case "a /kind comment runs the auto-merge check after the matching-labels sync"
 export TYPE="comment"
@@ -149,6 +164,8 @@ export PLUGINS="label-kind"
 export MESSAGE="/kind feature"
 export PR_REQUIRE_MATCHING_LABELS="needs-kind ^kind/"
 mklabels lgtm approved kind/feature needs-kind
+mkmergestate MERGEABLE "CI,test,COMPLETED,SUCCESS"
+mkbehind 0
 cd "${CASE_DIR}"
 run "${ENTRYPOINT}"
 assert_status 0
@@ -167,3 +184,50 @@ log_has "issue -R wzshiming/example view 1 --json labels"
 log_lacks "gh pr"
 assert_out_lacks "Auto-merging."
 assert_out_lacks "Skipping auto-merge."
+
+begin_case "a push by someone else still removes the lgtm label"
+export TYPE="synchronize"
+export PR_REQUIRE_MATCHING_LABELS=""
+mkwip false "Add a feature"
+mksize 1 0
+mklabels lgtm kind/feature
+run "${ENTRYPOINT}"
+assert_status 0
+assert_out_has "PR synchronized, removing lgtm label"
+log_has "--remove-label lgtm"
+
+begin_case "a push by the bot itself keeps the lgtm label"
+export TYPE="synchronize"
+export LOGIN="mock-bot"
+export PR_REQUIRE_MATCHING_LABELS=""
+mkwip false "Add a feature"
+mksize 1 0
+mklabels lgtm kind/feature
+run "${ENTRYPOINT}"
+assert_status 0
+assert_out_has "PR synchronized by the bot itself, keeping the lgtm label"
+log_lacks "--remove-label lgtm"
+
+begin_case "a scheduled sync reconciles the merge pool without an issue number"
+export TYPE="schedule"
+export ISSUE_NUMBER=""
+mkpool
+run "${ENTRYPOINT}"
+assert_status 0
+assert_out_has "Scheduled sync, reconciling the merge pool"
+assert_out_has "The merge pool is empty."
+log_lacks "view"
+
+begin_case "full stack: a scheduled sync merges a green pool PR"
+export TYPE="schedule"
+export ISSUE_NUMBER=""
+mkpool 3
+mklabels lgtm approved kind/feature
+mkmergestate MERGEABLE "CI,test,COMPLETED,SUCCESS"
+mkbehind 0
+run "${ENTRYPOINT}"
+assert_status 0
+assert_out_has "Evaluating merge pool PR #3"
+assert_out_has "Auto-merging."
+log_has "view 3 --json labels"
+log_has "merge 3 --merge"
