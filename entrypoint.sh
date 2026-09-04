@@ -170,9 +170,14 @@ function main() {
         sync_needs_rebase_label
         sync_matching_labels
         sync_auto_merge
-    elif [[ "${TYPE}" == "synchronize" ]]; then
-        echo "PR synchronized, removing lgtm label"
-        remove-labels.sh lgtm
+    elif [[ "${TYPE}" == "synchronize" || "${TYPE}" == "reopened" ]]; then
+        if [[ "${TYPE}" == "synchronize" ]]; then
+            echo "PR synchronized, removing lgtm label"
+            remove-labels.sh lgtm
+        else
+            # Pushes to a closed PR fire no synchronize event, so re-sync everything.
+            echo "PR reopened, re-syncing labels"
+        fi
         sync_wip_label
         sync_release_note_label
         sync_dco_label

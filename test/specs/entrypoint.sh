@@ -14,6 +14,11 @@
 # a PR is opened, so ready_for_review must request reviewers, while
 # edited and converted_to_draft only sync labels.
 #
+# reopened runs the same full sync as a push: a closed PR gets no
+# synchronize events, so its labels may be stale, and a PR whose opened
+# event never started a run (one created with GITHUB_TOKEN) has none.
+# Unlike a push it keeps the lgtm label: the reviewed code is unchanged.
+#
 # Auto-merge is evaluated once, at the end of every PR event
 # (sync_auto_merge), so a qualifying PR is merged no matter which
 # command, sync or UI action removed its last blocker; issue events
@@ -126,6 +131,41 @@ cd "${CASE_DIR}"
 run "${ENTRYPOINT}"
 assert_status 0
 log_has "--remove-label needs-kind"
+
+begin_case "a reopen runs the full push sync but keeps the lgtm label"
+export TYPE="reopened"
+export RELEASE_NOTE_REQUIRED=1
+export DCO_REQUIRED=1
+export BLOCK_MERGE_COMMITS=1
+export PR_REQUIRE_MATCHING_LABELS="needs-kind ^kind/"
+mkpr ""
+mkwip false "Add a feature"
+mksize 1 0
+mkcommits "1:Add a feature"
+mklabels lgtm
+mkrepolabels
+cd "${CASE_DIR}"
+run "${ENTRYPOINT}"
+assert_status 0
+assert_out_has "PR reopened, re-syncing labels"
+log_lacks "--remove-label lgtm"
+log_has "--add-label do-not-merge/release-note-label-needed"
+log_has "--add-label dco-signoff: no"
+log_has "--add-label size/XS"
+log_has "/pulls/1/commits"
+log_has "--add-label needs-kind"
+log_lacks "--add-reviewer"
+
+begin_case "a reopen on a qualifying PR merges it"
+export TYPE="reopened"
+mkwip false "Add a feature"
+mksize 1 0
+mklabels lgtm approved kind/feature
+cd "${CASE_DIR}"
+run "${ENTRYPOINT}"
+assert_status 0
+assert_out_has "Auto-merging."
+log_has "merge 1 --merge"
 
 begin_case "an unlabeled event evaluates auto-merge and still respects blockers"
 export TYPE="unlabeled"

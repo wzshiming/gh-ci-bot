@@ -27,6 +27,7 @@ on:
       - edited
       - converted_to_draft
       - ready_for_review
+      - reopened
       - labeled
       - unlabeled
 
@@ -235,9 +236,9 @@ jobs:
           ISSUE_KIND: pr
           TYPE: synchronize
 
-      - name: PR Edited or Draft State Changed
+      - name: PR Edited, Reopened or Draft State Changed
         uses: ./
-        if: ${{ github.event_name == 'pull_request_target' && (github.event.action == 'edited' || github.event.action == 'converted_to_draft' || github.event.action == 'ready_for_review') }}
+        if: ${{ github.event_name == 'pull_request_target' && (github.event.action == 'edited' || github.event.action == 'converted_to_draft' || github.event.action == 'ready_for_review' || github.event.action == 'reopened') }}
         env:
           LOGIN: ${{ github.event.pull_request.user.login }}
           AUTHOR: ${{ github.event.pull_request.user.login }}
