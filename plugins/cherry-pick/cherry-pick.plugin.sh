@@ -113,8 +113,11 @@ git cherry-pick "${pick[@]}" || {
 }
 
 if ! out="$(git push origin "${cherry_pick_branch}" 2>&1)"; then
-    echo "${out//"${GH_TOKEN}"/***}"
-    echo "[FAIL] Failed to push the cherry-pick branch."
+    out="${out//"${GH_TOKEN}"/***}"
+    echo "${out}"
+    echo "[FAIL] Failed to push the cherry-pick branch: $(echo "${out}" | tr '\n' ' ' | sed 's/  */ /g')"
+    # Name what the pick changed so the workflows-permission case can be explained.
+    git diff --name-only "origin/${branch}" HEAD | explain-workflows-permission.sh
     exit 1
 fi
 

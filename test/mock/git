@@ -9,6 +9,7 @@
 #   MOCK_GIT_CLONE_FAIL  exit code of `clone` (default 0)
 #   MOCK_GIT_PICK_FAIL   exit code of `cherry-pick` (default 0)
 #   MOCK_GIT_PUSH_FAIL   exit code of `push` (default 0)
+#   MOCK_GIT_DIFF        reply to `diff --name-only ...`
 # A failing clone or push names the authenticated URL with ${GH_TOKEN} on
 # stderr, like the real git, so specs can check that the token is masked.
 
@@ -40,6 +41,9 @@ log)
             echo "${line#*=}"
         fi
     done <<<"${MOCK_GIT_LOG:-}"
+    ;;
+diff)
+    [[ -n "${MOCK_GIT_DIFF:-}" ]] && printf '%s\n' "${MOCK_GIT_DIFF}"
     ;;
 esac
 

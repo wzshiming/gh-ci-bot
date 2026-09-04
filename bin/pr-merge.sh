@@ -47,9 +47,14 @@ function try_merge() {
 }
 
 if ! try_merge "${args}"; then
+  hint="$(gh api --paginate "/repos/${GH_REPOSITORY}/pulls/${ISSUE_NUMBER}/files" --jq '.[].filename' | explain-workflows-permission.sh)"
+  if [[ -n "${hint}" ]]; then
+    # GitHub would never complete an auto-merge the token cannot perform.
+    echo "[FAIL] Failed to merge the PR: ${merge_error:-unknown error}"
+    echo "${hint}"
   # A direct merge fails when required checks are still pending; fall back
   # to enabling auto-merge so GitHub merges once they pass.
-  if ! try_merge --auto "${args}"; then
+  elif ! try_merge --auto "${args}"; then
     echo "[FAIL] Failed to merge the PR: ${merge_error:-unknown error}"
   fi
 fi

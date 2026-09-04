@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
 # cherry-pick plugin: picks what the merge left on the base branch (merge
-# commit with -m 1, every commit of a rebase merge, the squash commit) and
-# reports clone and push failures instead of hiding them behind sed's status.
+# commit with -m 1, every commit of a rebase merge, the squash commit),
+# reports clone and push failures instead of hiding them behind sed's status,
+# and explains a push refused for a workflow file under the default token.
 # git is the mock in test/mock, driven by the MOCK_GIT_* variables it documents.
 
 source "$(dirname "${BASH_SOURCE[0]}")/../lib.sh"
@@ -32,6 +33,7 @@ log_has_line "git cherry-pick -m 1 ${SHA}"
 log_has_line "git push origin cherry-pick/1/release-1.0"
 log_has_line "${CREATE_PR}"
 log_lacks "/pulls/1/commits"
+log_lacks "git diff"
 
 begin_case "picks the merge commit alone when the PR has a single commit"
 mkmerged MERGED "${SHA}" "Fix the fonts"
@@ -91,11 +93,48 @@ export MOCK_GIT_PARENTS="${SHA} p1 p2"
 export MOCK_GIT_PUSH_FAIL=1
 run "${CHERRY_PICK}" release-1.0
 assert_status 1
-assert_out_has "[FAIL] Failed to push the cherry-pick branch."
+assert_out_has "[FAIL] Failed to push the cherry-pick branch: fatal: unable to access 'https://x-access-token:***@github.com/wzshiming/example.git/'"
 assert_out_has "x-access-token:***@github.com"
 assert_out_lacks "mock-token"
+assert_out_lacks "workflows"
 log_has_line "git push origin cherry-pick/1/release-1.0"
+log_has_line "git diff --name-only origin/release-1.0 HEAD"
 log_lacks "gh pr create"
+
+begin_case "explains a push refused for a workflow file under the default token"
+mkmerged MERGED "${SHA}" "Fix the fonts"
+export MOCK_GIT_PARENTS="${SHA} p1 p2"
+export MOCK_GIT_PUSH_FAIL=1
+export MOCK_GIT_DIFF=$'.github/workflows/ci-bot.yml\nexamples/ci-bot.yml'
+export BOT_LOGIN="github-actions[bot]"
+run "${CHERRY_PICK}" release-1.0
+assert_status 1
+assert_out_has "[FAIL] Failed to push the cherry-pick branch: fatal:"
+assert_out_has "[FAIL] This change touches \`.github/workflows/ci-bot.yml\`, which the default \`GITHUB_TOKEN\` cannot merge or push"
+log_has_line "git diff --name-only origin/release-1.0 HEAD"
+log_lacks "gh pr create"
+
+begin_case "does not blame the workflows permission when no workflow file changed"
+mkmerged MERGED "${SHA}" "Fix the fonts"
+export MOCK_GIT_PARENTS="${SHA} p1 p2"
+export MOCK_GIT_PUSH_FAIL=1
+export MOCK_GIT_DIFF="README.md"
+export BOT_LOGIN="github-actions[bot]"
+run "${CHERRY_PICK}" release-1.0
+assert_status 1
+assert_out_has "[FAIL] Failed to push the cherry-pick branch:"
+assert_out_lacks "workflows\` permission"
+
+begin_case "does not blame the workflows permission for a token that is not GITHUB_TOKEN"
+mkmerged MERGED "${SHA}" "Fix the fonts"
+export MOCK_GIT_PARENTS="${SHA} p1 p2"
+export MOCK_GIT_PUSH_FAIL=1
+export MOCK_GIT_DIFF=".github/workflows/ci-bot.yml"
+export BOT_LOGIN="my-app[bot]"
+run "${CHERRY_PICK}" release-1.0
+assert_status 1
+assert_out_has "[FAIL] Failed to push the cherry-pick branch:"
+assert_out_lacks "workflows\` permission"
 
 begin_case "reports a conflicting cherry-pick and does not push"
 mkmerged MERGED "${SHA}" "Fix the fonts"
