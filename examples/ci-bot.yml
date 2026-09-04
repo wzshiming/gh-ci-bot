@@ -177,7 +177,7 @@ env:
 
     </details>
 
-# https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+# https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#permissions
 permissions:
   actions: write
   checks: read
