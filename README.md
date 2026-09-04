@@ -145,8 +145,8 @@ Like prow's [`dco`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugin
 
 ## Troubleshooting
 
-- Changes to `.github/**`
-    The default `${{ secrets.GITHUB_TOKEN }}` is read-only on pull request runs, so it cannot merge workflow or other `.github` changes on your behalf. Use a PAT or GitHub App token with `contents`/`pull_requests`/`workflows` write access instead. See [GitHub docs](https://docs.github.com/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token).
+- Changes to `.github/workflows/**`
+    The default `${{ secrets.GITHUB_TOKEN }}` cannot be granted the `workflows` permission (it is not in the [`permissions` block](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#permissions)), so GitHub refuses any merge or push from it that changes a workflow file: [`/merge`](plugins/merge/README.md) and auto-merge fail, and [`/cherry-pick`](plugins/cherry-pick/README.md) cannot push its branch. The bot's reply names the workflow files when this is the cause. Set `GH_TOKEN` to a PAT with the `workflow` scope or to a GitHub App token with `workflows: write` (see `BOT_LOGIN` below), or merge or cherry-pick such PRs manually.
 - Workflows not firing after bot merges, or a PR opened by the bot (e.g. by `/cherry-pick`) getting no labels
     Events performed with `GITHUB_TOKEN` do not trigger other workflows (except `workflow_dispatch` and `repository_dispatch`) to avoid recursion, so neither a bot merge nor the `opened` event of a PR the bot creates starts a run. Closing and reopening such a PR runs the same label sync as a push. If you need these events to fire on their own, use a PAT or GitHub App token. See [GitHub docs](https://docs.github.com/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow#triggering-a-workflow-from-a-workflow).
 - Approvals not sticking, or a new approval status comment on every event, with a GitHub App token

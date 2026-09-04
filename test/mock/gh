@@ -120,6 +120,13 @@ case "$*" in
     # Repository metadata, used to resolve the default branch.
     echo '{"default_branch":"main"}'
     ;;
+"pr -R "*" merge "*)
+    # gh pr merge; MOCK_MERGE_FAIL fails it with that text like the API would.
+    if [[ -n "${MOCK_MERGE_FAIL:-}" ]]; then
+        echo "${MOCK_MERGE_FAIL}" >&2
+        exit 1
+    fi
+    ;;
 *)
     # Mutations (label edits, comments, label create, ...): log only.
     ;;
