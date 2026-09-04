@@ -127,6 +127,10 @@ case "$*" in
         exit 1
     fi
     ;;
+"pr create "*)
+    # The real gh prints the new PR's URL.
+    echo "https://github.com/${GH_REPOSITORY}/pull/2"
+    ;;
 *)
     # Mutations (label edits, comments, label create, ...): log only.
     ;;

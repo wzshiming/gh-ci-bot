@@ -4,7 +4,10 @@
 # commit with -m 1, every commit of a rebase merge, the squash commit),
 # reports clone and push failures instead of hiding them behind sed's status,
 # and explains a push refused for a workflow file under the default token.
-# git is the mock in test/mock, driven by the MOCK_GIT_* variables it documents.
+# The new PR carries the parent's release note and kind/* labels, is assigned
+# to the requester and, under the default token, gets its release-note and
+# needs-* labels synced in-process. git is the mock in test/mock, driven by the
+# MOCK_GIT_* variables it documents.
 
 source "$(dirname "${BASH_SOURCE[0]}")/../lib.sh"
 
@@ -34,6 +37,70 @@ log_has_line "git push origin cherry-pick/1/release-1.0"
 log_has_line "${CREATE_PR}"
 log_lacks "/pulls/1/commits"
 log_lacks "git diff"
+
+begin_case "copies the parent's release note into the new PR body"
+mkmerged MERGED "${SHA}" "Fix the fonts" $'Fixes #42.\n\n```release-note\nFixed the fonts\n```'
+export MOCK_GIT_PARENTS="${SHA} p1 p2"
+run "${CHERRY_PICK}" release-1.0
+assert_status 0
+log_has "--body Cherry-pick of #1 to \`release-1.0\`."
+log_has_line '```release-note'
+log_has_line "Fixed the fonts"
+log_has_line '```'
+
+begin_case "leaves the body alone when the parent has no release note"
+mkmerged MERGED "${SHA}" "Fix the fonts" "Fixes #42."
+export MOCK_GIT_PARENTS="${SHA} p1 p2"
+run "${CHERRY_PICK}" release-1.0
+assert_status 0
+log_has_line "${CREATE_PR}"
+log_lacks "release-note"
+
+begin_case "carries the parent's kind labels to the new PR"
+mkmerged MERGED "${SHA}" "Fix the fonts" "" kind/bug kind/cleanup lgtm
+export MOCK_GIT_PARENTS="${SHA} p1 p2"
+run "${CHERRY_PICK}" release-1.0
+assert_status 0
+log_has "--label kind/bug --label kind/cleanup"
+log_lacks "--label lgtm"
+
+begin_case "assigns the requester to the new PR"
+mkmerged MERGED "${SHA}" "Fix the fonts"
+export MOCK_GIT_PARENTS="${SHA} p1 p2"
+run "${CHERRY_PICK}" release-1.0
+assert_status 0
+log_has "/repos/wzshiming/example/issues/2/assignees"
+log_has '"assignees":["alice"]'
+
+begin_case "syncs the new PR's release-note and needs-kind labels itself under the default token"
+mkmerged MERGED "${SHA}" "Fix the fonts"
+export MOCK_GIT_PARENTS="${SHA} p1 p2"
+export BOT_LOGIN="github-actions[bot]"
+export RELEASE_NOTE_REQUIRED=1
+mkpr $'```release-note\nFixed the fonts\n```'
+mklabels
+run "${CHERRY_PICK}" release-1.0
+assert_status 0
+log_before "${CREATE_PR}" "view 2"
+log_has_line "gh pr -R wzshiming/example edit 2 --add-label release-note"
+log_has_line "gh pr -R wzshiming/example edit 2 --add-label needs-kind"
+log_lacks "edit 1"
+
+begin_case "leaves the new PR's labels to the real opened event under another token"
+mkmerged MERGED "${SHA}" "Fix the fonts"
+export MOCK_GIT_PARENTS="${SHA} p1 p2"
+export BOT_LOGIN="my-app[bot]"
+run "${CHERRY_PICK}" release-1.0
+assert_status 0
+log_lacks "view 2"
+
+begin_case "leaves the new PR's labels to the real opened event when the login is not github-actions[bot]"
+mkmerged MERGED "${SHA}" "Fix the fonts"
+export MOCK_GIT_PARENTS="${SHA} p1 p2"
+run "${CHERRY_PICK}" release-1.0
+assert_status 0
+log_has "api /user"
+log_lacks "view 2"
 
 begin_case "picks the merge commit alone when the PR has a single commit"
 mkmerged MERGED "${SHA}" "Fix the fonts"

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Classify the ```release-note block in the PR body read on stdin and print the release-note label to apply.
+# Classify the ```release-note block in the PR body read on stdin and print the release-note label to apply; `release-note.sh content` prints the block's trimmed content instead.
 
 content="$(tr -d '\r' | awk '
     /^```/ {
@@ -27,6 +27,13 @@ content="$(tr -d '\r' | awk '
         for (i = start; i <= end; i++) print lines[i]
     }
 ')"
+
+if [[ "${1:-}" == "content" ]]; then
+    if [[ -n "${content}" ]]; then
+        printf '%s\n' "${content}"
+    fi
+    exit 0
+fi
 
 if [[ -z "${content}" ]]; then
     echo "do-not-merge/release-note-label-needed"
