@@ -33,7 +33,7 @@ fi
 # Get the PR title
 pr_title="$(jq -r '.title' <<<"${pr}")"
 
-cherry_pick_branch="cherry-pick-${ISSUE_NUMBER}-to-${branch}"
+cherry_pick_branch="cherry-pick/${ISSUE_NUMBER}/${branch}"
 
 # Clone the repository and perform the cherry-pick
 tmpdir="$(mktemp -d)"
