@@ -13,7 +13,7 @@ Cherry-picks a merged pull request to a target branch and creates a new PR.
 - Only available on pull requests, and only after the PR has been **merged**.
 - The PR's merge commit is cherry-picked (with `-m 1` if it is a merge commit) onto a new branch named `cherry-pick/<pr-number>/<branch>`, which is pushed to the repository. For a PR merged with the rebase method, all of the PR's rebased commits are cherry-picked.
 - A new PR titled `[<branch>] <original title>` is opened against the target branch, with a body referencing the original PR and copying its ```` ```release-note ```` block when present; the original PR's `kind/*` labels are applied to it and the commenter is assigned.
-- When the bot runs as `github-actions[bot]`, the `opened` event of the new PR starts no workflow run, so the command syncs the new PR's [release-note](../../README.md#release-notes) and [needs-*](../../README.md#require-matching-label) labels itself; its other labels are applied on the PR's next event. With a PAT or GitHub App token the real event fires instead.
+- When the bot runs as `github-actions[bot]`, the `opened` event of the new PR starts no workflow run, so the command syncs the new PR's [release-note](../../README.md#release-notes) and [needs-*](../../README.md#require-matching-label) labels itself, then starts the bot's own run for it (the remaining labels, reviewers, approval status) and the `DISPATCH_WORKFLOWS` on its branch; see [Dispatched workflows](../../README.md#dispatched-workflows). With a PAT or GitHub App token the real event fires instead.
 - If the clone or the push fails, the command fails with a reply quoting git's error. If the cherry-pick has conflicts, the command fails with a reply and the cherry-pick needs to be done manually.
 - If the push is refused because the cherry-pick changes a file under `.github/workflows/` and the bot runs with the default `GITHUB_TOKEN`, the reply also names the workflow files and explains that the token cannot be granted the `workflows` permission.
 
@@ -22,3 +22,5 @@ Cherry-picks a merged pull request to a target branch and creates a new PR.
 If you encounter the error `pull request create failed: GraphQL: GitHub Actions is not permitted to create or approve pull requests (createPullRequest)`, go to your repository settings under the Actions section and check `Allow GitHub Actions to create and approve pull requests`.
 
 If the push is rejected with `refusing to allow a GitHub App to create or update workflow ... without workflows permission`, see [Changes to `.github/workflows/**`](../../README.md#troubleshooting) in the main README.
+
+If the reply contains `Failed to start the bot's run for #N: ... HTTP 422 ...`, the bot's workflow lacks the `workflow_dispatch` trigger or its `number`/`type` inputs; copy them and the "PR Dispatched" step from [examples/ci-bot.yml](../../examples/ci-bot.yml).

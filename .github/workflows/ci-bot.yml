@@ -31,12 +31,29 @@ on:
       - labeled
       - unlabeled
 
+  # Events performed with GITHUB_TOKEN start no runs, so the bot dispatches
+  # this workflow itself for the PRs it opens with /cherry-pick or pushes with
+  # /rebase; the same trigger re-syncs any PR by hand from the Actions tab.
+  workflow_dispatch:
+    inputs:
+      number:
+        description: Pull request number
+        required: true
+      type:
+        description: "created: handle the PR as just opened; synchronize: as just pushed; reopened: re-sync its labels"
+        type: choice
+        options:
+          - created
+          - synchronize
+          - reopened
+        default: reopened
+
 # Runs for the same PR or issue execute one at a time, in order, so they
 # cannot race on its labels and approval status comment; runs for different
 # PRs and issues stay parallel. `queue: max` keeps every waiting run instead
 # of cancelling the older pending one, so no command is dropped.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.issue.number || github.run_id }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.issue.number || inputs.number || github.run_id }}
   queue: max
 
 env:
@@ -132,6 +149,12 @@ env:
 
   # Label PRs that have merge conflicts with needs-rebase, removing the label automatically once the conflicts are resolved (prow's needs-rebase plugin, labels only). Unset to disable.
   NEEDS_REBASE: "true"
+
+  # Workflows to start with workflow_dispatch on the head branch of a PR the bot
+  # opens or pushes, because GitHub starts none for the default GITHUB_TOKEN: `*`
+  # for every workflow of that branch that runs on pull_request and has a
+  # `workflow_dispatch:` trigger, or workflow file names one per line. Unset to disable.
+  DISPATCH_WORKFLOWS: "*"
 
   # Block PRs containing merge commits with the
   # do-not-merge/contains-merge-commits label (prow's mergecommitblocker
@@ -271,6 +294,15 @@ jobs:
           AUTHOR_ASSOCIATION: ${{ github.event.pull_request.author_association }}
           ISSUE_KIND: pr
           TYPE: ${{ github.event.action }}
+
+      - name: PR Dispatched
+        uses: ./
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        env:
+          MESSAGE: ""
+          ISSUE_NUMBER: ${{ inputs.number }}
+          ISSUE_KIND: pr
+          TYPE: ${{ inputs.type }}
 
       - name: Issue Commented
         uses: ./

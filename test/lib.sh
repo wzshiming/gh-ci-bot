@@ -56,9 +56,11 @@ function reset_env() {
         BLUNDERBUSS_REVIEWER_COUNT DEFAULT_MERGE_METHOD DETAILS GREETING BOT_LOGIN \
         OWNERS_AREAS OWNERS_AREA_APPROVERS OWNERS_LABELS branch \
         GITHUB_RUN_ID GITHUB_REPOSITORY GITHUB_SERVER_URL \
+        DISPATCH_WORKFLOWS GITHUB_WORKFLOW_REF \
         MOCK_GH_FAIL MOCK_CURL_FAIL \
         MOCK_PR_FILES_JSON MOCK_OWNERS_FILE \
         MOCK_ISSUE_COMMENTS_JSON MOCK_COMMENT_FAIL MOCK_MERGE_FAIL \
+        MOCK_WORKFLOW_RUN_FAIL MOCK_UPDATE_BRANCH_FAIL \
         MOCK_GIT_CLONE_FAIL MOCK_GIT_PARENTS MOCK_GIT_LOG MOCK_GIT_LOG_FAIL MOCK_GIT_PICK_FAIL MOCK_GIT_PUSH_FAIL MOCK_GIT_DIFF
 }
 
@@ -79,10 +81,14 @@ function begin_case() {
     export MOCK_SIZE_JSON="${CASE_DIR}/size.json"
     export MOCK_MERGEABLE_JSON="${CASE_DIR}/mergeable.json"
     export MOCK_MERGED_JSON="${CASE_DIR}/merged.json"
+    export MOCK_HEAD_JSON="${CASE_DIR}/head.json"
+    export MOCK_PULL_JSON="${CASE_DIR}/pull.json"
     export MOCK_TITLE_JSON="${CASE_DIR}/title.json"
     export MOCK_LABELS_JSON="${CASE_DIR}/labels.json"
     export MOCK_LABEL_LIST_JSON="${CASE_DIR}/label-list.json"
     export MOCK_PR_COMMITS_JSON="${CASE_DIR}/pr-commits.json"
+    export MOCK_WORKFLOW_LIST_JSON="${CASE_DIR}/workflows.json"
+    export MOCK_WORKFLOWS_DIR="${CASE_DIR}/workflows"
     export PATH="${STUB_DIR}:${MOCK_DIR}:${BIN_DIR}:${BASE_PATH}"
     reset_env
     OUTPUT=""
@@ -221,6 +227,47 @@ function mkmerged() {
     jq -n --arg state "${state}" --arg oid "${oid}" --arg title "${title}" --arg body "${body}" --args \
         '{state: $state, mergeCommit: {oid: $oid}, title: $title, body: $body, labels: [$ARGS.positional[] | {name: .}]}' \
         "${@}" >"${MOCK_MERGED_JSON}"
+}
+
+# mkhead <branch> <true|false> builds the reply to
+# `gh pr view --json headRefName,isCrossRepository`.
+function mkhead() {
+    jq -n --arg branch "${1}" --argjson cross "${2}" \
+        '{headRefName: $branch, isCrossRepository: $cross}' >"${MOCK_HEAD_JSON}"
+}
+
+# mkworkflow <file> [trigger...] lists .github/workflows/<file> in the reply
+# to `gh api /repos/<repo>/actions/workflows` and, given triggers, writes the
+# file served by `gh api /repos/<repo>/contents/.github/workflows/<file>` with
+# them under on:; its jobs name pull_request so that only the on: block may count.
+function mkworkflow() {
+    local file="${1}"
+    shift
+    if [[ ! -f "${MOCK_WORKFLOW_LIST_JSON}" ]]; then
+        echo '{"workflows":[]}' >"${MOCK_WORKFLOW_LIST_JSON}"
+    fi
+    jq --arg path ".github/workflows/${file}" \
+        '.workflows += [{path: $path, state: "active"}]' \
+        "${MOCK_WORKFLOW_LIST_JSON}" >"${MOCK_WORKFLOW_LIST_JSON}.tmp"
+    mv "${MOCK_WORKFLOW_LIST_JSON}.tmp" "${MOCK_WORKFLOW_LIST_JSON}"
+    if [[ "${#}" -ne 0 ]]; then
+        mkdir -p "${MOCK_WORKFLOWS_DIR}"
+        {
+            echo "name: ${file}"
+            echo "on:"
+            printf '  %s:\n' "${@}"
+            echo "jobs:"
+            echo "  test:"
+            echo "    if: github.event_name == 'pull_request'"
+        } >"${MOCK_WORKFLOWS_DIR}/${file}"
+    fi
+}
+
+# mkpull <login> <association> builds the reply to the pull request query
+# `gh api /repos/<repo>/pulls/<n>`: its author and their association.
+function mkpull() {
+    jq -n --arg login "${1}" --arg association "${2}" \
+        '{user: {login: $login}, author_association: $association}' >"${MOCK_PULL_JSON}"
 }
 
 # mktitle <title> [label...] builds the reply to

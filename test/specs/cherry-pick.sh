@@ -6,14 +6,16 @@
 # and explains a push refused for a workflow file under the default token.
 # The new PR carries the parent's release note and kind/* labels, is assigned
 # to the requester and, under the default token, gets its release-note and
-# needs-* labels synced in-process. git is the mock in test/mock, driven by the
-# MOCK_GIT_* variables it documents.
+# needs-* labels synced in-process and its runs started, which a PR opened
+# with the default token never gets. git is the mock in test/mock, driven by
+# the MOCK_GIT_* variables it documents.
 
 source "$(dirname "${BASH_SOURCE[0]}")/../lib.sh"
 
 CHERRY_PICK="${PLUGINS_DIR}/cherry-pick/cherry-pick.plugin.sh"
 SHA="abc1234"
 CREATE_PR="gh pr create -R wzshiming/example --base release-1.0 --head cherry-pick/1/release-1.0 --title [release-1.0] Fix the fonts --body Cherry-pick of #1 to \`release-1.0\`."
+WF_REF="wzshiming/example/.github/workflows/ci-bot.yml@refs/heads/master"
 
 begin_case "refuses to cherry-pick a PR that is not merged"
 mkmerged OPEN "${SHA}" "Fix the fonts"
@@ -292,3 +294,37 @@ run "${CHERRY_PICK}" release-1.0
 assert_status 1
 assert_out_has "x-access-token:***@github.com"
 assert_out_lacks 'se.ret$tok'
+
+begin_case "starts the runs of the new PR under the default token"
+mkmerged MERGED "${SHA}" "Fix the fonts"
+mklabels
+export MOCK_GIT_PARENTS="${SHA} p1 p2"
+export BOT_LOGIN="github-actions[bot]" GITHUB_WORKFLOW_REF="${WF_REF}" DISPATCH_WORKFLOWS="test.yml"
+run "${CHERRY_PICK}" release-1.0
+assert_status 0
+assert_out_has "https://github.com/wzshiming/example/pull/2"
+log_has_line "${CREATE_PR}"
+log_has_line "gh workflow run ci-bot.yml -R wzshiming/example -f number=2 -f type=created"
+log_has_line "gh workflow run test.yml -R wzshiming/example --ref cherry-pick/1/release-1.0"
+log_before "gh pr create" "gh workflow run"
+log_before "edit 2 --add-label needs-kind" "gh workflow run"
+assert_out_lacks "[FAIL]"
+
+begin_case "does not start runs for a token that fires the real events"
+mkmerged MERGED "${SHA}" "Fix the fonts"
+export MOCK_GIT_PARENTS="${SHA} p1 p2"
+export GITHUB_WORKFLOW_REF="${WF_REF}" DISPATCH_WORKFLOWS="test.yml"
+run "${CHERRY_PICK}" release-1.0
+assert_status 0
+log_has_line "${CREATE_PR}"
+log_lacks "workflow run"
+
+begin_case "reports a bot run it cannot start"
+mkmerged MERGED "${SHA}" "Fix the fonts"
+mklabels
+export MOCK_GIT_PARENTS="${SHA} p1 p2"
+export BOT_LOGIN="github-actions[bot]" GITHUB_WORKFLOW_REF="${WF_REF}" MOCK_WORKFLOW_RUN_FAIL=1
+run "${CHERRY_PICK}" release-1.0
+assert_status 1
+assert_out_has "[FAIL] Failed to start the bot's run for #2: could not create workflow dispatch event: HTTP 422"
+log_has_line "${CREATE_PR}"

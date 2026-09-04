@@ -23,6 +23,9 @@
 # (sync_auto_merge), so a qualifying PR is merged no matter which
 # command, sync or UI action removed its last blocker; issue events
 # never run the check.
+#
+# A dispatched run (workflow_dispatch) carries no LOGIN/AUTHOR, so the PR
+# author is resolved from the API and the run fails closed without it.
 
 source "$(dirname "${BASH_SOURCE[0]}")/../lib.sh"
 
@@ -207,3 +210,32 @@ log_has "issue -R wzshiming/example view 1 --json labels"
 log_lacks "gh pr"
 assert_out_lacks "Auto-merging."
 assert_out_lacks "Skipping auto-merge."
+
+begin_case "resolves the author of a dispatched run from the pull request"
+export TYPE="created"
+unset LOGIN AUTHOR AUTHOR_ASSOCIATION
+mkpull carol CONTRIBUTOR
+mkpr ""
+mkwip false "Add a feature"
+mksize 1 0
+mklabels
+mkrepolabels
+cd "${CASE_DIR}"
+run "${ENTRYPOINT}"
+assert_status 0
+assert_out_has "Greetings to carol!"
+log_has "gh api /repos/wzshiming/example/pulls/1"
+
+begin_case "fails closed when the author of a dispatched run cannot be resolved"
+export TYPE="created"
+unset LOGIN AUTHOR AUTHOR_ASSOCIATION
+mkpr ""
+mkwip false "Add a feature"
+mksize 1 0
+mklabels
+mkrepolabels
+cd "${CASE_DIR}"
+run "${ENTRYPOINT}"
+assert_status 1
+assert_out_has "No login specified"
+log_lacks "pr view"

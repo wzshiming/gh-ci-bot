@@ -158,3 +158,6 @@ if [[ "$(bot-login.sh)" == "github-actions[bot]" ]]; then
     ISSUE_NUMBER="${number}" check-release-note.sh
     ISSUE_NUMBER="${number}" check-matching-labels.sh
 fi
+
+# Then start the runs GitHub withholds from it: the bot's own full sync and the branch's CI.
+ISSUE_NUMBER="${number}" dispatch-workflows.sh created "${cherry_pick_branch}"

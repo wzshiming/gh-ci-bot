@@ -5,6 +5,16 @@ ROOT="$(realpath -m ${ROOT})"
 
 PATH="${ROOT}/bin:${PATH}"
 
+# resolve_author fetches the PR author of a dispatched run from the API, never
+# from inputs: approve-status.sh approves an approver author's areas by default.
+function resolve_author() {
+    if [[ -z "${AUTHOR:-}" && "${ISSUE_KIND:-}" == "pr" && -n "${ISSUE_NUMBER:-}" ]]; then
+        read -r AUTHOR AUTHOR_ASSOCIATION < <(gh api "/repos/${GH_REPOSITORY}/pulls/${ISSUE_NUMBER}" --jq '"\(.user.login) \(.author_association)"')
+        LOGIN="${LOGIN:-${AUTHOR}}"
+        export LOGIN AUTHOR AUTHOR_ASSOCIATION
+    fi
+}
+
 function check_args() {
     if [[ "${LOGIN}" == "" ]]; then
         echo "No login specified"
@@ -209,6 +219,8 @@ function main() {
         sync_auto_merge
     fi
 }
+
+resolve_author
 
 check_args
 

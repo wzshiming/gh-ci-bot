@@ -81,6 +81,10 @@ case "$*" in
 *"--json title,labels"*)
     serve "${MOCK_TITLE_JSON:-}"
     ;;
+*"--json headRefName,isCrossRepository"*)
+    # Head branch and fork state of the PR (mkhead).
+    serve "${MOCK_HEAD_JSON:-}"
+    ;;
 *"--json labels"*)
     serve "${MOCK_LABELS_JSON:-}"
     ;;
@@ -107,6 +111,25 @@ case "$*" in
         serve "${MOCK_ISSUE_COMMENTS_JSON}"
     fi
     ;;
+"api --paginate /repos/"*"/actions/workflows"*)
+    # The repository's workflows (mkworkflow).
+    serve "${MOCK_WORKFLOW_LIST_JSON:-}"
+    ;;
+*"/contents/.github/workflows/"*)
+    # A workflow file at a ref (mkworkflow); a file the branch lacks fails like a 404.
+    for arg in "$@"; do
+        if [[ "${arg}" == */contents/.github/workflows/* ]]; then
+            file="${arg%%\?*}"
+            file="${MOCK_WORKFLOWS_DIR:-}/${file##*/}"
+        fi
+    done
+    if [[ -f "${file:-}" ]]; then
+        cat "${file}"
+    else
+        echo "gh: Not Found (HTTP 404)" >&2
+        exit 1
+    fi
+    ;;
 *"/contents/"*)
     # OWNERS file fetches; fail like a 404 unless a fixture is given.
     if [[ -n "${MOCK_OWNERS_FILE:-}" && -f "${MOCK_OWNERS_FILE:-}" ]]; then
@@ -115,6 +138,10 @@ case "$*" in
         echo "mock gh: no fixture for: gh $*" >&2
         exit 1
     fi
+    ;;
+"api /repos/"*"/pulls/"*)
+    # The pull request itself (mkpull); after the /files and /commits cases.
+    serve "${MOCK_PULL_JSON:-}"
     ;;
 "api /repos/"*)
     # Repository metadata, used to resolve the default branch.
@@ -127,9 +154,23 @@ case "$*" in
         exit 1
     fi
     ;;
+"pr -R "*" update-branch "*)
+    # gh pr update-branch; MOCK_UPDATE_BRANCH_FAIL fails it with that text like the API would.
+    if [[ -n "${MOCK_UPDATE_BRANCH_FAIL:-}" ]]; then
+        echo "${MOCK_UPDATE_BRANCH_FAIL}" >&2
+        exit 1
+    fi
+    ;;
 "pr create "*)
     # The real gh prints the new PR's URL.
     echo "https://github.com/${GH_REPOSITORY}/pull/2"
+    ;;
+"workflow run "*)
+    # gh workflow run; MOCK_WORKFLOW_RUN_FAIL fails it like a workflow without the trigger.
+    if [[ -n "${MOCK_WORKFLOW_RUN_FAIL:-}" ]]; then
+        echo "could not create workflow dispatch event: HTTP 422: Workflow does not have 'workflow_dispatch' trigger" >&2
+        exit 1
+    fi
     ;;
 *)
     # Mutations (label edits, comments, label create, ...): log only.

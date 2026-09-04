@@ -131,6 +131,19 @@ Like prow's [`needs-rebase`](https://github.com/kubernetes-sigs/prow/tree/main/c
 
 GitHub computes mergeability lazily, so a conflict caused by another PR merging into the base branch may only be noticed the next time the PR is pushed to, edited or commented on.
 
+### Dispatched workflows
+
+GitHub starts no workflow runs for events made with the default `GITHUB_TOKEN`, so a PR the bot opens with [`/cherry-pick`](plugins/cherry-pick/README.md) or pushes with [`/rebase`](plugins/rebase/README.md) would get neither the bot's labels nor CI. The bot therefore starts its own run for such PRs through `workflow_dispatch` (the `workflow_dispatch` trigger and the "PR Dispatched" step in [examples/ci-bot.yml](examples/ci-bot.yml)), and the workflows the `DISPATCH_WORKFLOWS` environment variable selects on the PR's branch: `*` starts every workflow of that branch whose `on:` has both `pull_request` and `workflow_dispatch` (the bot's own workflow excluded; others are skipped silently), or list workflow files one per line:
+
+```yaml
+env:
+  DISPATCH_WORKFLOWS: "*" # or workflow file names, one per line
+```
+
+- A listed workflow without a `workflow_dispatch:` trigger in the branch's copy of the file, or missing on the branch, is rejected with HTTP 422 and named in the bot's reply; `*` only picks files that have it.
+- A PR whose head branch is in a fork cannot be targeted, so only the bot's own run is started and the reply says so.
+- Nothing is dispatched under a PAT or GitHub App token, whose events start runs on their own.
+
 ### Merge commits
 
 Like prow's [`mergecommitblocker`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugins/mergecommitblocker) plugin, when the `BLOCK_MERGE_COMMITS` environment variable is set to a non-empty value (it is unset by default), the bot applies the `do-not-merge/contains-merge-commits` label to a PR while it contains merge commits (commits with more than one parent), blocking merge until the branch is rebased, and removes the label once the merge commits are gone.
@@ -147,8 +160,8 @@ Like prow's [`dco`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugin
 
 - Changes to `.github/workflows/**`
     The default `${{ secrets.GITHUB_TOKEN }}` cannot be granted the `workflows` permission (it is not in the [`permissions` block](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#permissions)), so GitHub refuses any merge or push from it that changes a workflow file: [`/merge`](plugins/merge/README.md) and auto-merge fail, and [`/cherry-pick`](plugins/cherry-pick/README.md) cannot push its branch. The bot's reply names the workflow files when this is the cause. Set `GH_TOKEN` to a PAT with the `workflow` scope or to a GitHub App token with `workflows: write` (see `BOT_LOGIN` below), or merge or cherry-pick such PRs manually.
-- Workflows not firing after bot merges, or a PR opened by the bot (e.g. by `/cherry-pick`) getting no labels
-    Events performed with `GITHUB_TOKEN` do not trigger other workflows (except `workflow_dispatch` and `repository_dispatch`) to avoid recursion, so neither a bot merge nor the `opened` event of a PR the bot creates starts a run. `/cherry-pick` syncs the new PR's release-note and needs-* labels itself when it runs as `github-actions[bot]`; its other labels are applied on the PR's next event, and closing and reopening such a PR runs the same label sync as a push. If you need these events to fire on their own, use a PAT or GitHub App token. See [GitHub docs](https://docs.github.com/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow#triggering-a-workflow-from-a-workflow).
+- Workflows not firing after bot merges, or a PR opened or rebased by the bot getting no labels or CI
+    Events performed with `GITHUB_TOKEN` do not trigger other workflows (except `workflow_dispatch` and `repository_dispatch`) to avoid recursion, so neither a bot merge nor the `opened` event of a PR the bot creates starts a run. For the PRs it opens ([`/cherry-pick`](plugins/cherry-pick/README.md), which also syncs the new PR's release-note and needs-* labels itself right away) or pushes ([`/rebase`](plugins/rebase/README.md)) the bot therefore starts its own run with `workflow_dispatch`, which needs the `workflow_dispatch` trigger and the "PR Dispatched" step from [examples/ci-bot.yml](examples/ci-bot.yml), and the workflows `DISPATCH_WORKFLOWS` selects on the PR's branch (see [Dispatched workflows](#dispatched-workflows)). The same trigger re-syncs any PR by hand (Actions → CI Bot → Run workflow → its number), which replaces closing and reopening it. A bot merge still starts nothing; if you need these events to fire on their own, use a PAT or GitHub App token. See [GitHub docs](https://docs.github.com/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow#triggering-a-workflow-from-a-workflow).
 - Approvals not sticking, or a new approval status comment on every event, with a GitHub App token
     The bot finds its own comments (the approval status, the DCO notice) by author login. `GITHUB_TOKEN` and PATs resolve it through the API, but GitHub App installation tokens cannot, so the bot falls back to `github-actions[bot]` and never finds them. Set `BOT_LOGIN` to the App's login, e.g. `BOT_LOGIN: ${{ steps.app-token.outputs.app-slug }}[bot]` when the token comes from [`actions/create-github-app-token`](https://github.com/actions/create-github-app-token).
 
