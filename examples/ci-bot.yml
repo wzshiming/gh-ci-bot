@@ -142,6 +142,9 @@ env:
   # Sync release-note labels from the ```release-note block in PR bodies, blocking merge until one applies (prow's release-note plugin). Unset to disable.
   RELEASE_NOTE_REQUIRED: "true"
 
+  # Block PRs into release branches with do-not-merge/cherry-pick-not-approved until an approver runs /cherry-pick-approved (prow's cherrypickunapproved plugin). A regular expression matched against the PR's base branch. Unset to disable.
+  RELEASE_BRANCHES: "^release-"
+
   # Label PRs that have merge conflicts with needs-rebase, removing the label automatically once the conflicts are resolved (prow's needs-rebase plugin, labels only). Unset to disable.
   NEEDS_REBASE: "true"
 

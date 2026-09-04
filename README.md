@@ -47,6 +47,7 @@ Each command belongs to a plugin; follow the plugin link for the full documentat
 | `/base <branch>`                             | Changes the branch this PR will be merged into.                    | [base](plugins/base/README.md)                                     |
 | `/rebase`                                    | Rebases the PR onto the latest base branch.                        | [rebase](plugins/rebase/README.md)                                 |
 | `/cherry-pick <branch>`                      | Cherry-picks a merged PR to a target branch and creates a new PR.  | [cherry-pick](plugins/cherry-pick/README.md)                       |
+| `/cherry-pick-approved [cancel]`             | Approves a PR into a release branch by replacing 'do-not-merge/cherry-pick-not-approved' with 'cherry-pick-approved', or revokes the approval. | [cherry-pick](plugins/cherry-pick/README.md) |
 | `/transfer-issue <repo>`                     | Transfers an issue to another repository in the same organization. | [transfer-issue](plugins/transfer-issue/README.md)                 |
 
 ### Who can run which command
@@ -124,6 +125,10 @@ The missing labels are created automatically if they do not exist, provided they
 ### Release notes
 
 Like prow's [`release-note`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugins/releasenote) plugin, when the `RELEASE_NOTE_REQUIRED` environment variable is set to a non-empty value (it is unset by default), the bot classifies the ```` ```release-note ```` block in the PR body whenever a PR is opened, edited or pushed to, and applies exactly one of the `release-note`, `release-note-none` or `do-not-merge/release-note-label-needed` labels, blocking merge until a valid block is added or `/release-note-none` is used. See [release-note](plugins/release-note/README.md#automatic-behavior) for details.
+
+### Cherry-pick approval
+
+Like prow's [`cherrypickunapproved`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugins/cherrypickunapproved) plugin, when the `RELEASE_BRANCHES` environment variable is set to a regular expression (it is unset by default), the bot applies the `do-not-merge/cherry-pick-not-approved` label to every PR whose base branch matches it, blocking merge until an approver runs [`/cherry-pick-approved`](plugins/cherry-pick/README.md), which replaces it with `cherry-pick-approved`. The labels are re-synced on every PR event: retargeting the PR off a release branch (e.g. with [`/base`](plugins/base/README.md)) removes both labels, and a PR opened by [`/cherry-pick`](plugins/cherry-pick/README.md) gets the label in the same run. Labels only, no comments. See [cherry-pick approval](plugins/cherry-pick/README.md#cherry-pick-approval) for details.
 
 ### Needs rebase
 

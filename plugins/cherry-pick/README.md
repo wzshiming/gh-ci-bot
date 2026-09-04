@@ -17,7 +17,10 @@ Cherry-picks a merged pull request to a target branch and creates a new PR.
 - A new PR titled `[<branch>] <original title>` is opened against the target branch, with a body referencing the original PR.
 - If the clone or the push fails, the command fails with a reply quoting git's error. If the cherry-pick has conflicts, the command fails with a reply and the cherry-pick needs to be done manually.
 - If the push is refused because the cherry-pick changes a file under `.github/workflows/` and the bot runs with the default `GITHUB_TOKEN`, the reply also names the workflow files and explains that the token cannot be granted the `workflows` permission.
-- `/cherry-pick-approved` is only available on pull requests. The `cherry-pick-approved` and `do-not-merge/cherry-pick-not-approved` labels are created automatically if they do not exist (see [automatic label creation](../label/README.md#automatic-label-creation)).
+
+## Cherry-pick approval
+
+Like prow's [`cherrypickunapproved`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugins/cherrypickunapproved) plugin, when the `RELEASE_BRANCHES` environment variable is set to a regular expression (it is unset by default), every PR whose base branch matches it carries the `do-not-merge/cherry-pick-not-approved` label until it has `cherry-pick-approved`. `/cherry-pick-approved` (only available on pull requests, meant for approvers) applies `cherry-pick-approved` and removes the blocking label; `/cherry-pick-approved cancel` removes `cherry-pick-approved`, and the blocking label comes back. The labels are synced on every PR event, so retargeting the PR to a branch that does not match (e.g. with [`/base`](../base/README.md)) removes both labels. Labels only, no comments; both labels are created automatically if they do not exist (see [automatic label creation](../label/README.md#automatic-label-creation)).
 
 ## Troubleshooting
 
