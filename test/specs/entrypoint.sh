@@ -187,6 +187,22 @@ assert_status 0
 log_has "--remove-label do-not-merge/cherry-pick-not-approved"
 log_lacks " merge 1"
 
+begin_case "a /cherry-pick-approved cancel comment re-blocks the PR in the same run"
+export TYPE="comment"
+export PLUGINS="cherry-pick"
+export MESSAGE="/cherry-pick-approved cancel"
+export RELEASE_BRANCHES='^release-'
+mklabels cherry-pick-approved
+# The base fixture is the state right after the command dropped the approval.
+mkbase release-1.0
+cd "${CASE_DIR}"
+run "${ENTRYPOINT}"
+assert_status 0
+log_has "--remove-label cherry-pick-approved"
+log_has "--add-label do-not-merge/cherry-pick-not-approved"
+log_before "--remove-label cherry-pick-approved" "--add-label do-not-merge/cherry-pick-not-approved"
+log_lacks " merge 1"
+
 begin_case "full stack: an unlabeled event on a qualifying PR merges it"
 export TYPE="unlabeled"
 mklabels lgtm approved kind/feature
