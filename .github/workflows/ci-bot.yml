@@ -224,23 +224,11 @@ jobs:
             ${{ env.BLUNDERBUSS_REVIEWER_COUNT != '0' && 'Reviewers will be requested automatically. You can also use the `/auto-cc` command to request reviews again.' || 'If the PR is ready, use the `/auto-cc` command to assign Reviewer to Review.' }}
             We will review it shortly.
 
-      - name: PR Synchronize
+      - name: PR Updated
         uses: ./
-        if: ${{ github.event_name == 'pull_request_target' && github.event.action == 'synchronize' }}
+        if: ${{ github.event_name == 'pull_request_target' && github.event.action != 'opened' }}
         env:
-          LOGIN: ${{ github.event.pull_request.user.login }}
-          AUTHOR: ${{ github.event.pull_request.user.login }}
-          MESSAGE: ""
-          ISSUE_NUMBER: ${{ github.event.pull_request.number }}
-          AUTHOR_ASSOCIATION: ${{ github.event.pull_request.author_association }}
-          ISSUE_KIND: pr
-          TYPE: synchronize
-
-      - name: PR Edited, Reopened or Draft State Changed
-        uses: ./
-        if: ${{ github.event_name == 'pull_request_target' && (github.event.action == 'edited' || github.event.action == 'converted_to_draft' || github.event.action == 'ready_for_review' || github.event.action == 'reopened') }}
-        env:
-          LOGIN: ${{ github.event.pull_request.user.login }}
+          LOGIN: ${{ github.event.sender.login }}
           AUTHOR: ${{ github.event.pull_request.user.login }}
           MESSAGE: ""
           ISSUE_NUMBER: ${{ github.event.pull_request.number }}
@@ -260,35 +248,23 @@ jobs:
           ISSUE_KIND: issue
           TYPE: ${{ github.event.action }}
 
-      - name: PR Labeled or Unlabeled
+      - name: Commented
         uses: ./
-        if: ${{ github.event_name == 'pull_request_target' && (github.event.action == 'labeled' || github.event.action == 'unlabeled') }}
+        if: ${{ github.event_name == 'issue_comment' }}
         env:
           LOGIN: ${{ github.event.sender.login }}
-          AUTHOR: ${{ github.event.pull_request.user.login }}
-          MESSAGE: ""
-          ISSUE_NUMBER: ${{ github.event.pull_request.number }}
-          AUTHOR_ASSOCIATION: ${{ github.event.pull_request.author_association }}
-          ISSUE_KIND: pr
-          TYPE: ${{ github.event.action }}
-
-      - name: Issue Commented
-        uses: ./
-        if: ${{ github.event_name == 'issue_comment' && !github.event.issue.pull_request }}
-        env:
-          LOGIN: ${{ github.event.comment.user.login }}
           AUTHOR: ${{ github.event.issue.user.login }}
           MESSAGE: ${{ github.event.comment.body }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           AUTHOR_ASSOCIATION: ${{ github.event.comment.author_association }}
-          ISSUE_KIND: issue
+          ISSUE_KIND: ${{ github.event.issue.pull_request && 'pr' || 'issue' }}
           TYPE: comment
 
       - name: PR Review Commented
         uses: ./
         if: ${{ github.event_name == 'pull_request_review_comment' }}
         env:
-          LOGIN: ${{ github.event.comment.user.login }}
+          LOGIN: ${{ github.event.sender.login }}
           AUTHOR: ${{ github.event.pull_request.user.login }}
           MESSAGE: ${{ github.event.comment.body }}
           ISSUE_NUMBER: ${{ github.event.pull_request.number }}
@@ -300,22 +276,10 @@ jobs:
         uses: ./
         if: ${{ github.event_name == 'pull_request_review' && github.event.review.body != '' }}
         env:
-          LOGIN: ${{ github.event.review.user.login }}
+          LOGIN: ${{ github.event.sender.login }}
           AUTHOR: ${{ github.event.pull_request.user.login }}
           MESSAGE: ${{ github.event.review.body }}
           ISSUE_NUMBER: ${{ github.event.pull_request.number }}
           AUTHOR_ASSOCIATION: ${{ github.event.review.author_association }}
-          ISSUE_KIND: pr
-          TYPE: comment
-
-      - name: PR Commented
-        uses: ./
-        if: ${{ github.event_name == 'issue_comment' && github.event.issue.pull_request }}
-        env:
-          LOGIN: ${{ github.event.comment.user.login }}
-          AUTHOR: ${{ github.event.issue.user.login }}
-          MESSAGE: ${{ github.event.comment.body }}
-          ISSUE_NUMBER: ${{ github.event.issue.number }}
-          AUTHOR_ASSOCIATION: ${{ github.event.comment.author_association }}
           ISSUE_KIND: pr
           TYPE: comment
