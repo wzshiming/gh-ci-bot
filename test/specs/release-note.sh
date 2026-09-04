@@ -187,6 +187,26 @@ EOF
 classify "trailing whitespace after the fence tag is tolerated" "${NONE_LABEL}" \
     < <(printf '```release-note \t\nNONE\n```\n')
 
+# --- release-note.sh content: print the block's content ----------------
+
+begin_case "release-note.sh content: prints the note of a closed block"
+run release-note.sh content <<<"${NOTE_BODY}"
+assert_status 0
+assert_out_is 'Added a `--fonts` flag.'
+log_empty
+
+begin_case "release-note.sh content: prints nothing for an empty block"
+run release-note.sh content <<<"${EMPTY_BODY}"
+assert_status 0
+assert_out_is ""
+log_empty
+
+begin_case "release-note.sh content: prints nothing for an unclosed block"
+run release-note.sh content <<<$'```release-note\nabc'
+assert_status 0
+assert_out_is ""
+log_empty
+
 # --- check-release-note.sh: sync the labels on the PR ------------------
 
 begin_case "check-release-note.sh: does nothing unless RELEASE_NOTE_REQUIRED is set"

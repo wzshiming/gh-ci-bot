@@ -210,11 +210,17 @@ function mkmergeable() {
         "${@}" >"${MOCK_MERGEABLE_JSON}"
 }
 
-# mkmerged <state> <oid> <title> builds the reply to
-# `gh pr view --json state,mergeCommit,title`.
+# mkmerged <state> <oid> <title> [body] [label...] builds the reply to
+# `gh pr view --json state,mergeCommit,title,body,labels`.
 function mkmerged() {
-    jq -n --arg state "${1}" --arg oid "${2}" --arg title "${3}" \
-        '{state: $state, mergeCommit: {oid: $oid}, title: $title}' >"${MOCK_MERGED_JSON}"
+    local state="${1}" oid="${2}" title="${3}" body="${4:-}"
+    shift 3
+    if [[ "${#}" -gt 0 ]]; then
+        shift
+    fi
+    jq -n --arg state "${state}" --arg oid "${oid}" --arg title "${title}" --arg body "${body}" --args \
+        '{state: $state, mergeCommit: {oid: $oid}, title: $title, body: $body, labels: [$ARGS.positional[] | {name: .}]}' \
+        "${@}" >"${MOCK_MERGED_JSON}"
 }
 
 # mktitle <title> [label...] builds the reply to

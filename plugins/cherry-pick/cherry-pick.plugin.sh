@@ -12,7 +12,7 @@ if [[ "${branch}" == "" ]]; then
     exit 1
 fi
 
-if ! pr="$(gh pr -R "${GH_REPOSITORY}" view "${ISSUE_NUMBER}" --json state,mergeCommit,title)"; then
+if ! pr="$(gh pr -R "${GH_REPOSITORY}" view "${ISSUE_NUMBER}" --json state,mergeCommit,title,body,labels)"; then
     echo "[FAIL] Failed to get the pull request."
     exit 1
 fi
@@ -122,11 +122,39 @@ if ! out="$(git push origin "${cherry_pick_branch}" 2>&1)"; then
 fi
 
 # Create a new PR
-gh pr create -R "${GH_REPOSITORY}" \
+body="Cherry-pick of #${ISSUE_NUMBER} to \`${branch}\`."
+pr_body="$(jq -r '.body // ""' <<<"${pr}")"
+note="$(release-note.sh content <<<"${pr_body}")"
+if [[ -n "${note}" ]]; then
+    body+=$'\n\n```release-note\n'"${note}"$'\n```'
+fi
+
+label_args=()
+while read -r label; do
+    label_args+=(--label "${label}")
+done < <(jq -r '.labels[].name' <<<"${pr}" | grep '^kind/')
+
+if ! url="$(gh pr create -R "${GH_REPOSITORY}" \
     --base "${branch}" \
     --head "${cherry_pick_branch}" \
     --title "[${branch}] ${pr_title}" \
-    --body "Cherry-pick of #${ISSUE_NUMBER} to \`${branch}\`." || {
+    --body "${body}" \
+    "${label_args[@]}")"; then
     echo "[FAIL] Failed to create the cherry-pick PR."
     exit 1
-}
+fi
+echo "${url}"
+
+number="${url##*/}"
+if ! [[ "${number}" =~ ^[0-9]+$ ]]; then
+    echo "[FAIL] Could not determine the number of the cherry-pick PR from: ${url}"
+    exit 1
+fi
+
+ISSUE_NUMBER="${number}" add-assignee.sh "${LOGIN}"
+
+# The default GITHUB_TOKEN's PR fires no opened run, so sync its labels here.
+if [[ "$(bot-login.sh)" == "github-actions[bot]" ]]; then
+    ISSUE_NUMBER="${number}" check-release-note.sh
+    ISSUE_NUMBER="${number}" check-matching-labels.sh
+fi
