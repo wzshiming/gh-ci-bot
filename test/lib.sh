@@ -50,7 +50,7 @@ function reset_env() {
     unset MESSAGE PLUGINS AUTHOR_PLUGINS CONTRIBUTORS_PLUGINS MEMBERS_PLUGINS REVIEWERS_PLUGINS \
         APPROVERS_PLUGINS MAINTAINERS_PLUGINS OWNERS_PLUGINS \
         REVIEWERS APPROVERS MAINTAINERS \
-        RELEASE_NOTE_REQUIRED NEEDS_REBASE DCO_REQUIRED LABELS \
+        RELEASE_NOTE_REQUIRED RELEASE_BRANCHES NEEDS_REBASE DCO_REQUIRED LABELS \
         BLOCK_MERGE_COMMITS BLOCK_INVALID_COMMIT_MESSAGES \
         ISSUE_REQUIRE_MATCHING_LABELS PR_REQUIRE_MATCHING_LABELS \
         BLUNDERBUSS_REVIEWER_COUNT DEFAULT_MERGE_METHOD DETAILS GREETING BOT_LOGIN \
@@ -80,6 +80,7 @@ function begin_case() {
     export MOCK_MERGEABLE_JSON="${CASE_DIR}/mergeable.json"
     export MOCK_MERGED_JSON="${CASE_DIR}/merged.json"
     export MOCK_TITLE_JSON="${CASE_DIR}/title.json"
+    export MOCK_BASE_JSON="${CASE_DIR}/base.json"
     export MOCK_LABELS_JSON="${CASE_DIR}/labels.json"
     export MOCK_LABEL_LIST_JSON="${CASE_DIR}/label-list.json"
     export MOCK_PR_COMMITS_JSON="${CASE_DIR}/pr-commits.json"
@@ -225,6 +226,16 @@ function mktitle() {
     jq -n --arg title "${title}" --args \
         '{title: $title, labels: [$ARGS.positional[] | {name: .}]}' \
         "${@}" >"${MOCK_TITLE_JSON}"
+}
+
+# mkbase <baseRefName> [label...] builds the reply to
+# `gh pr view --json baseRefName,labels`.
+function mkbase() {
+    local base="${1}"
+    shift
+    jq -n --arg base "${base}" --args \
+        '{baseRefName: $base, labels: [$ARGS.positional[] | {name: .}]}' \
+        "${@}" >"${MOCK_BASE_JSON}"
 }
 
 # mkcommits [<parents>:<message>...] builds the reply to the PR commits

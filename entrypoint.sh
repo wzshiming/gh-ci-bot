@@ -76,6 +76,14 @@ function sync_release_note_label() {
     fi
 }
 
+# sync_cherry_pick_approved keeps the cherry-pick approval labels in sync
+# with the PR's base branch, mirroring prow's cherrypickunapproved plugin.
+function sync_cherry_pick_approved() {
+    if [[ "${ISSUE_KIND}" == "pr" ]]; then
+        check-cherry-pick-approved.sh
+    fi
+}
+
 # sync_dco_label keeps the dco-signoff labels in sync with the signoff
 # state of the PR's commits, mirroring prow's dco plugin. Only runs when
 # the commits can have changed: on open and on push.
@@ -162,12 +170,14 @@ function main() {
         auto_request_reviewers
         echo "Response to action"
         response.sh
+        sync_cherry_pick_approved
         sync_matching_labels
         sync_auto_merge
     elif [[ "${TYPE}" == "comment" ]]; then
         echo "Response to action"
         response.sh
         sync_needs_rebase_label
+        sync_cherry_pick_approved
         sync_matching_labels
         sync_auto_merge
     elif [[ "${TYPE}" == "synchronize" || "${TYPE}" == "reopened" ]]; then
@@ -186,6 +196,7 @@ function main() {
         sync_merge_commits_label
         sync_commit_messages_label
         sync_approve_status
+        sync_cherry_pick_approved
         sync_matching_labels
         sync_auto_merge
     elif [[ "${TYPE}" == "edited" || "${TYPE}" == "converted_to_draft" ]]; then
@@ -194,6 +205,7 @@ function main() {
         sync_release_note_label
         sync_needs_rebase_label
         sync_commit_messages_label
+        sync_cherry_pick_approved
         sync_matching_labels
         sync_auto_merge
     elif [[ "${TYPE}" == "ready_for_review" ]]; then
@@ -201,10 +213,12 @@ function main() {
         sync_wip_label
         sync_release_note_label
         auto_request_reviewers
+        sync_cherry_pick_approved
         sync_matching_labels
         sync_auto_merge
     elif [[ "${TYPE}" == "labeled" || "${TYPE}" == "unlabeled" ]]; then
         echo "Labels changed, syncing needs-* labels"
+        sync_cherry_pick_approved
         sync_matching_labels
         sync_auto_merge
     fi

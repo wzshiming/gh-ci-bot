@@ -81,6 +81,9 @@ case "$*" in
 *"--json title,labels"*)
     serve "${MOCK_TITLE_JSON:-}"
     ;;
+*"--json baseRefName,labels"*)
+    serve "${MOCK_BASE_JSON:-}"
+    ;;
 *"--json labels"*)
     serve "${MOCK_LABELS_JSON:-}"
     ;;

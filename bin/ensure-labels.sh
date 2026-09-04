@@ -28,6 +28,7 @@ DEFAULT_LABELS="$(
   cat <<'EOF'
 lgtm
 approved
+cherry-pick-approved
 do-not-merge
 do-not-merge/hold
 do-not-merge/work-in-progress
@@ -35,6 +36,7 @@ do-not-merge/release-note-label-needed
 do-not-merge/needs-kind
 do-not-merge/contains-merge-commits
 do-not-merge/invalid-commit-message
+do-not-merge/cherry-pick-not-approved
 dco-signoff: yes
 dco-signoff: no
 kind/api-change
@@ -113,6 +115,9 @@ function label_color() {
     ;;
   approved)
     echo "0ffa16"
+    ;;
+  cherry-pick-approved)
+    echo "fef2c0"
     ;;
   do-not-merge | do-not-merge/*)
     echo "e11d21"
@@ -229,6 +234,9 @@ function label_description() {
   approved)
     echo "Indicates a PR has been approved by an approver from all required OWNERS files."
     ;;
+  cherry-pick-approved)
+    echo "Indicates a cherry-pick PR into a release branch has been approved by the release branch manager."
+    ;;
   do-not-merge)
     echo "Indicates that a PR should not merge. Label can only be manually applied/removed."
     ;;
@@ -249,6 +257,9 @@ function label_description() {
     ;;
   do-not-merge/invalid-commit-message)
     echo "Indicates that a PR should not merge because it has an invalid commit message."
+    ;;
+  do-not-merge/cherry-pick-not-approved)
+    echo "Indicates that a PR is not yet approved to merge into a release branch."
     ;;
   do-not-merge/*)
     echo "Indicates that a PR should not merge."

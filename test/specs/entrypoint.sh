@@ -8,7 +8,9 @@
 # For the same reason the matching-labels sync tails every branch of
 # main(), ahead of the auto-merge check: a push or an edit changes labels
 # too (owners-label, wip, size, release-note), and the labels the run
-# applies itself start no run of their own.
+# applies itself start no run of their own. The cherry-pick approval sync
+# runs right before it, so a /base or /cherry-pick-approved command the
+# run just processed is reflected in the same run.
 #
 # It also dispatches the draft-state TYPEs: blunderbuss skips drafts when
 # a PR is opened, so ready_for_review must request reviewers, while
@@ -173,6 +175,16 @@ mklabels lgtm approved kind/feature do-not-merge/hold
 run "${ENTRYPOINT}"
 assert_status 0
 assert_out_has "PR has the 'do-not-merge/hold' label. Skipping auto-merge."
+log_lacks " merge 1"
+
+begin_case "a labeled event removes the cherry-pick block once the PR is approved"
+export TYPE="labeled"
+export RELEASE_BRANCHES='^release-'
+mkbase release-1.0 cherry-pick-approved do-not-merge/cherry-pick-not-approved
+mklabels cherry-pick-approved do-not-merge/cherry-pick-not-approved
+run "${ENTRYPOINT}"
+assert_status 0
+log_has "--remove-label do-not-merge/cherry-pick-not-approved"
 log_lacks " merge 1"
 
 begin_case "full stack: an unlabeled event on a qualifying PR merges it"
