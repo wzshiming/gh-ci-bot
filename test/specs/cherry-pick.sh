@@ -56,6 +56,15 @@ assert_status 0
 log_has_line "${CREATE_PR}"
 log_lacks "release-note"
 
+begin_case "carries the parent's /release-note-none as a NONE block"
+mkmerged MERGED "${SHA}" "Fix the fonts" "Fixes #42." release-note-none kind/cleanup
+export MOCK_GIT_PARENTS="${SHA} p1 p2"
+run "${CHERRY_PICK}" release-1.0
+assert_status 0
+log_has_line '```release-note'
+log_has_line "NONE"
+log_lacks "--label release-note-none"
+
 begin_case "carries the parent's kind labels to the new PR"
 mkmerged MERGED "${SHA}" "Fix the fonts" "" kind/bug kind/cleanup lgtm
 export MOCK_GIT_PARENTS="${SHA} p1 p2"

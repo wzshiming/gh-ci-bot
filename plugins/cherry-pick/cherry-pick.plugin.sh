@@ -124,7 +124,12 @@ fi
 # Create a new PR
 body="Cherry-pick of #${ISSUE_NUMBER} to \`${branch}\`."
 pr_body="$(jq -r '.body // ""' <<<"${pr}")"
+pr_labels="$(jq -r '.labels[].name' <<<"${pr}")"
 note="$(release-note.sh content <<<"${pr_body}")"
+# /release-note-none leaves no block to copy, so carry it as an explicit NONE.
+if [[ -z "${note}" ]] && grep -qxF "release-note-none" <<<"${pr_labels}"; then
+    note="NONE"
+fi
 if [[ -n "${note}" ]]; then
     body+=$'\n\n```release-note\n'"${note}"$'\n```'
 fi
@@ -132,7 +137,7 @@ fi
 label_args=()
 while read -r label; do
     label_args+=(--label "${label}")
-done < <(jq -r '.labels[].name' <<<"${pr}" | grep '^kind/')
+done < <(grep '^kind/' <<<"${pr_labels}")
 
 if ! url="$(gh pr create -R "${GH_REPOSITORY}" \
     --base "${branch}" \
