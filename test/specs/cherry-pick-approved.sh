@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
-# /cherry-pick-approved: approvers unblock a PR into a release branch by
+# /cherry-pick-approved: maintainers unblock a PR into a release branch by
 # adding cherry-pick-approved and dropping do-not-merge/cherry-pick-not-approved;
 # `cancel` removes the approval again. Labels only, no comments.
 
 source "$(dirname "${BASH_SOURCE[0]}")/../lib.sh"
 
-PLUGIN="${PLUGINS_DIR}/cherry-pick/cherry-pick-approved.plugin.sh"
+PLUGIN="${PLUGINS_DIR}/cherry-pick-approved/cherry-pick-approved.plugin.sh"
 APPROVED_LABEL="cherry-pick-approved"
 UNAPPROVED_LABEL="do-not-merge/cherry-pick-not-approved"
 

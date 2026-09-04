@@ -47,7 +47,7 @@ Each command belongs to a plugin; follow the plugin link for the full documentat
 | `/base <branch>`                             | Changes the branch this PR will be merged into.                    | [base](plugins/base/README.md)                                     |
 | `/rebase`                                    | Rebases the PR onto the latest base branch.                        | [rebase](plugins/rebase/README.md)                                 |
 | `/cherry-pick <branch>`                      | Cherry-picks a merged PR to a target branch and creates a new PR.  | [cherry-pick](plugins/cherry-pick/README.md)                       |
-| `/cherry-pick-approved [cancel]`             | Approves a PR into a release branch by replacing 'do-not-merge/cherry-pick-not-approved' with 'cherry-pick-approved', or revokes the approval. | [cherry-pick](plugins/cherry-pick/README.md) |
+| `/cherry-pick-approved [cancel]`             | Approves a PR into a release branch by replacing 'do-not-merge/cherry-pick-not-approved' with 'cherry-pick-approved', or revokes the approval. | [cherry-pick-approved](plugins/cherry-pick-approved/README.md) |
 | `/transfer-issue <repo>`                     | Transfers an issue to another repository in the same organization. | [transfer-issue](plugins/transfer-issue/README.md)                 |
 
 ### Who can run which command
@@ -128,7 +128,7 @@ Like prow's [`release-note`](https://github.com/kubernetes-sigs/prow/tree/main/p
 
 ### Cherry-pick approval
 
-Like prow's [`cherrypickunapproved`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugins/cherrypickunapproved) plugin, when the `RELEASE_BRANCHES` environment variable is set to a regular expression (it is unset by default), the bot applies the `do-not-merge/cherry-pick-not-approved` label to every PR whose base branch matches it, blocking merge until an approver runs [`/cherry-pick-approved`](plugins/cherry-pick/README.md), which replaces it with `cherry-pick-approved`. The labels are re-synced on every PR event: retargeting the PR off a release branch (e.g. with [`/base`](plugins/base/README.md)) removes both labels, and a PR opened by [`/cherry-pick`](plugins/cherry-pick/README.md) under the default `GITHUB_TOKEN` gets the label on its first event (see [Troubleshooting](#troubleshooting)). Labels only, no comments. See [cherry-pick approval](plugins/cherry-pick/README.md#cherry-pick-approval) for details.
+Like prow's [`cherrypickunapproved`](https://github.com/kubernetes-sigs/prow/tree/main/pkg/plugins/cherrypickunapproved) plugin, when the `RELEASE_BRANCHES` environment variable is set to a regular expression (it is unset by default), the bot applies the `do-not-merge/cherry-pick-not-approved` label to every PR whose base branch matches it, blocking merge until a maintainer runs [`/cherry-pick-approved`](plugins/cherry-pick-approved/README.md), which replaces it with `cherry-pick-approved`. The labels are re-synced on every PR event: retargeting the PR off a release branch (e.g. with [`/base`](plugins/base/README.md)) removes both labels, and a PR opened by [`/cherry-pick`](plugins/cherry-pick/README.md) under the default `GITHUB_TOKEN` gets the label on its first event (see [Troubleshooting](#troubleshooting)). Labels only, no comments. See [cherry-pick-approved](plugins/cherry-pick-approved/README.md) for details.
 
 ### Needs rebase
 

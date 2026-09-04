@@ -12,7 +12,7 @@ Merges a pull request.
 
 - Only available on pull requests.
 - Without an argument, the merge method comes from the `DEFAULT_MERGE_METHOD` environment variable (`merge`, `rebase` or `squash`; default `merge`).
-- Merging is refused while the PR carries the `do-not-merge` label or any `do-not-merge/*` label (e.g. from [hold](../hold/README.md), [wip](../../README.md#work-in-progress), [release-note](../release-note/README.md), [cherry-pick approval](../cherry-pick/README.md#cherry-pick-approval) or [require-matching-label](../../README.md#require-matching-label)) or the `dco-signoff: no` label ([check-dco](../check-dco/README.md)); the blocking labels are listed in the reply.
+- Merging is refused while the PR carries the `do-not-merge` label or any `do-not-merge/*` label (e.g. from [hold](../hold/README.md), [wip](../../README.md#work-in-progress), [release-note](../release-note/README.md), [cherry-pick approval](../cherry-pick-approved/README.md) or [require-matching-label](../../README.md#require-matching-label)) or the `dco-signoff: no` label ([check-dco](../check-dco/README.md)); the blocking labels are listed in the reply.
 - If a direct merge fails (for example because required checks are still pending), the bot falls back to enabling GitHub auto-merge so the PR merges once they pass.
 - If the merge is refused because the PR changes a file under `.github/workflows/` and the bot runs with the default `GITHUB_TOKEN`, no auto-merge is enabled (GitHub would never complete it); the reply quotes GitHub's error, names the workflow files and explains that the token cannot be granted the `workflows` permission. See [Changes to `.github/workflows/**`](../../README.md#troubleshooting).
 

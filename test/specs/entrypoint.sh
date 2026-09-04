@@ -189,7 +189,7 @@ log_lacks " merge 1"
 
 begin_case "a /cherry-pick-approved cancel comment re-blocks the PR in the same run"
 export TYPE="comment"
-export PLUGINS="cherry-pick"
+export PLUGINS="cherry-pick-approved"
 export MESSAGE="/cherry-pick-approved cancel"
 export RELEASE_BRANCHES='^release-'
 mklabels cherry-pick-approved
