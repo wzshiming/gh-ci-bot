@@ -7,4 +7,10 @@ if [[ -z "${milestone}" ]]; then
   exit 1
 fi
 
+# Prow-style keyword, so a milestone literally named "clear" cannot be set.
+if [[ "${milestone}" == "clear" ]]; then
+  set-milestone.sh ""
+  exit $?
+fi
+
 set-milestone.sh "${milestone}"

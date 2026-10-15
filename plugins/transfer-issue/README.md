@@ -7,6 +7,7 @@ Transfers an issue to another repository in the same organization.
 | Command                  | Example                      | Description                                                          |
 | ------------------------ | ---------------------------- | -------------------------------------------------------------------- |
 | `/transfer-issue <repo>` | `/transfer-issue other-repo` | Transfers an issue to another repository in the same organization.   |
+| `/transfer <repo>`       | `/transfer other-repo`       | Prow-style alias of `/transfer-issue`.                               |
 
 ## Behavior
 

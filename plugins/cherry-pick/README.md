@@ -7,6 +7,7 @@ Cherry-picks a merged pull request to a target branch and creates a new PR.
 | Command                 | Example                    | Description                                                         |
 | ----------------------- | -------------------------- | ------------------------------------------------------------------- |
 | `/cherry-pick <branch>` | `/cherry-pick release-1.0` | Cherry-picks a merged PR to a target branch and creates a new PR.   |
+| `/cherrypick <branch>`  | `/cherrypick release-1.0`  | Alias of `/cherry-pick`.                                            |
 
 ## Behavior
 
