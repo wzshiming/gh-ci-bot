@@ -18,10 +18,10 @@ Each command belongs to a plugin; follow the plugin link for the full documentat
 | `/[un]cc [[@]...]`                           | Requests or removes a review from the user(s). Must be a Member.   | [cc](plugins/cc/README.md)                                         |
 | `/auto-cc`                                   | Requests reviews from randomly selected reviewers.                 | [auto-cc](plugins/auto-cc/README.md)                               |
 | `/[un]assign [[@]...]`                       | Assigns or unassigns assignee(s) on the PR or issue.               | [assign](plugins/assign/README.md)                                 |
-| `/[remove-]milestone [milestone]`            | Sets or clears the PR or issue milestone.                          | [milestone](plugins/milestone/README.md)                           |
-| `/close`</br>`/reopen`                       | Closes or reopens a PR or issue.                                   | [lifecycle](plugins/lifecycle/README.md)                           |
+| `/milestone <name\|clear>`</br>`/remove-milestone` | Sets or clears the PR or issue milestone.                    | [milestone](plugins/milestone/README.md)                           |
+| `/close [not-planned]`</br>`/reopen`         | Closes (an issue optionally as not planned) or reopens a PR or issue. | [lifecycle](plugins/lifecycle/README.md)                        |
 | `/merge [rebase\|squash]`                    | Merges a PR.                                                       | [merge](plugins/merge/README.md)                                   |
-| `/hold [cancel]`                             | Applies or removes the 'do-not-merge/hold' label, blocking merging while present. | [hold](plugins/hold/README.md)                      |
+| `/hold [cancel]`</br>`/unhold`</br>`/remove-hold` | Applies or removes the 'do-not-merge/hold' label, blocking merging while present. | [hold](plugins/hold/README.md)                 |
 | `/retest`</br>`/test [workflow-or-job\|all]` | Reruns failed tests, or specific workflows or jobs, of a PR.       | [retest](plugins/retest/README.md)                                 |
 | `/[remove-]label [...]`                      | Applies or removes the '*' labels.                                 | [label](plugins/label/README.md)                                   |
 | `/[remove-]kind [...]`                       | Applies or removes the 'kind/*' labels.                            | [label-kind](plugins/label-kind/README.md)                         |
@@ -31,9 +31,9 @@ Each command belongs to a plugin; follow the plugin link for the full documentat
 | `/[remove-]triage [...]`                     | Applies or removes the 'triage/*' labels.                          | [label-triage](plugins/label-triage/README.md)                     |
 | `/[remove-]wg [...]`                         | Applies or removes the 'wg/*' labels.                              | [label-wg](plugins/label-wg/README.md)                             |
 | `/[remove-]committee [...]`                  | Applies or removes the 'committee/*' labels.                       | [label-committee](plugins/label-committee/README.md)               |
-| `/[remove-]lgtm`                             | Applies or removes the 'lgtm' label.                               | [label-lgtm](plugins/label-lgtm/README.md)                         |
+| `/lgtm [cancel]`</br>`/remove-lgtm`          | Applies or removes the 'lgtm' label.                               | [label-lgtm](plugins/label-lgtm/README.md)                         |
 | `/approve [cancel]`                          | Approves the PR areas the commenter owns (via OWNERS files).       | [label-approve](plugins/label-approve/README.md)                   |
-| `/[remove-]help-wanted`                      | Applies or removes the 'help wanted' label.                        | [label-help-wanted](plugins/label-help-wanted/README.md)           |
+| `/[remove-]help-wanted`</br>`/[remove-]help` | Applies or removes the 'help wanted' label.                        | [label-help-wanted](plugins/label-help-wanted/README.md)           |
 | `/[remove-]good-first-issue`                 | Applies or removes the 'good first issue' label.                   | [label-good-first-issue](plugins/label-good-first-issue/README.md) |
 | `/[remove-]bug`                              | Applies or removes the 'bug' label.                                | [label-bug](plugins/label-bug/README.md)                           |
 | `/[remove-]documentation`                    | Applies or removes the 'documentation' label.                      | [label-documentation](plugins/label-documentation/README.md)       |
@@ -46,8 +46,8 @@ Each command belongs to a plugin; follow the plugin link for the full documentat
 | `/check-dco`                                 | Re-runs the DCO signoff check of the PR.                           | [check-dco](plugins/check-dco/README.md)                           |
 | `/base <branch>`                             | Changes the branch this PR will be merged into.                    | [base](plugins/base/README.md)                                     |
 | `/rebase`                                    | Rebases the PR onto the latest base branch.                        | [rebase](plugins/rebase/README.md)                                 |
-| `/cherry-pick <branch>`                      | Cherry-picks a merged PR to a target branch and creates a new PR.  | [cherry-pick](plugins/cherry-pick/README.md)                       |
-| `/transfer-issue <repo>`                     | Transfers an issue to another repository in the same organization. | [transfer-issue](plugins/transfer-issue/README.md)                 |
+| `/cherry-pick <branch>`</br>`/cherrypick <branch>` | Cherry-picks a merged PR to a target branch and creates a new PR. | [cherry-pick](plugins/cherry-pick/README.md)                  |
+| `/transfer[-issue] <repo>`                   | Transfers an issue to another repository in the same organization. | [transfer-issue](plugins/transfer-issue/README.md)                 |
 
 ### Who can run which command
 

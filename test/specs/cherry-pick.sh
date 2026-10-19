@@ -301,3 +301,16 @@ run "${CHERRY_PICK}" release-1.0
 assert_status 1
 assert_out_has "x-access-token:***@github.com"
 assert_out_lacks 'se.ret$tok'
+
+# /cherrypick is prow's spelling of /cherry-pick.
+begin_case "the cherrypick alias picks the merge commit and opens the PR"
+mkmerged MERGED "${SHA}" "Fix the fonts"
+export MOCK_GIT_PARENTS="${SHA} p1 p2"
+run "${PLUGINS_DIR}/cherry-pick/cherrypick.plugin.sh" release-1.0
+assert_status 0
+log_has_line "${CREATE_PR}"
+
+begin_case "the cherrypick alias refuses a missing branch name"
+run "${PLUGINS_DIR}/cherry-pick/cherrypick.plugin.sh"
+assert_status 1
+assert_out_has "[FAIL] Missing required argument: branch name."

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # command.sh: /command dispatch through the permission tiers, exercised
-# with the hold, label-lgtm and assign plugins.
+# with the hold, label-lgtm, label-help-wanted and assign plugins.
 
 source "$(dirname "${BASH_SOURCE[0]}")/../lib.sh"
 
@@ -71,6 +71,14 @@ assert_status 0
 assert_out_has "[FAIL] You don't have permission to use the \`/hold\` command."
 log_empty
 
+begin_case "an alias outside the granted tiers gets a permission reply naming the alias"
+export ISSUE_KIND="issue"
+export MESSAGE="/unhold"
+run command.sh
+assert_status 0
+assert_out_has "[FAIL] You don't have permission to use the \`/unhold\` command."
+log_empty
+
 begin_case "/hold by a member adds the hold label"
 member hold
 export MESSAGE="/hold"
@@ -90,6 +98,37 @@ assert_status 0
 log_has_line "stub remove-labels.sh ${HOLD_LABEL}"
 log_lacks "stub check-auto-merge.sh"
 
+# /unhold and /remove-hold are prow's aliases of /hold cancel.
+begin_case "/unhold by a member removes the hold label"
+member hold
+export MESSAGE="/unhold"
+stub add-labels.sh
+stub remove-labels.sh
+run command.sh
+assert_status 0
+log_has_line "stub remove-labels.sh ${HOLD_LABEL}"
+log_lacks "stub add-labels.sh"
+
+begin_case "/remove-hold by a member removes the hold label"
+member hold
+export MESSAGE="/remove-hold"
+stub add-labels.sh
+stub remove-labels.sh
+run command.sh
+assert_status 0
+log_has_line "stub remove-labels.sh ${HOLD_LABEL}"
+log_lacks "stub add-labels.sh"
+
+begin_case "/unhold with trailing arguments still removes the hold label"
+member hold
+export MESSAGE="/unhold please"
+stub add-labels.sh
+stub remove-labels.sh
+run command.sh
+assert_status 0
+log_has_line "stub remove-labels.sh ${HOLD_LABEL}"
+log_lacks "stub add-labels.sh"
+
 begin_case "/hold is only available on pull requests"
 member hold
 export ISSUE_KIND="issue"
@@ -99,6 +138,16 @@ run command.sh
 assert_status 0
 assert_out_has "[FAIL] This command is only available on pull requests, not on issues."
 log_lacks "stub add-labels.sh"
+
+begin_case "/unhold and /remove-hold are only available on pull requests"
+member hold
+export ISSUE_KIND="issue"
+export MESSAGE=$'/unhold\n/remove-hold'
+stub remove-labels.sh
+run command.sh
+assert_status 0
+assert_out_has "[FAIL] This command is only available on pull requests, not on issues."
+log_lacks "stub remove-labels.sh"
 
 # The member tier is granted to these associations only.
 for association in OWNER MEMBER COLLABORATOR; do
@@ -205,6 +254,41 @@ stub remove-labels.sh
 run command.sh
 assert_status 0
 log_has_line "stub remove-labels.sh lgtm"
+
+# Prow's /lgtm cancel is /remove-lgtm, which does not refuse the PR author.
+begin_case "/lgtm cancel by a reviewer removes the lgtm label"
+reviewer label-lgtm
+export MESSAGE="/lgtm cancel"
+stub add-labels.sh
+stub remove-labels.sh
+run command.sh
+assert_status 0
+log_has_line "stub remove-labels.sh lgtm"
+log_lacks "stub add-labels.sh"
+
+begin_case "/lgtm cancel by the PR author still removes the lgtm label"
+reviewer label-lgtm
+export AUTHOR="alice"
+export MESSAGE="/lgtm cancel"
+stub add-labels.sh
+stub remove-labels.sh
+run command.sh
+assert_status 0
+assert_out_lacks "You cannot LGTM your own PR"
+log_has_line "stub remove-labels.sh lgtm"
+log_lacks "stub add-labels.sh"
+
+# Prow's /help and /remove-help are /help-wanted and /remove-help-wanted.
+begin_case "/help and /remove-help add and remove the help wanted label"
+member label-help-wanted
+export ISSUE_KIND="issue"
+export MESSAGE=$'/help\n/remove-help'
+stub add-labels.sh
+stub remove-labels.sh
+run command.sh
+assert_status 0
+log_has_line "stub add-labels.sh help wanted"
+log_has_line "stub remove-labels.sh help wanted"
 
 begin_case "/assign without arguments assigns the commenter"
 export ISSUE_KIND="issue"

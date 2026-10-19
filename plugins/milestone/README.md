@@ -4,10 +4,11 @@ Sets or clears the milestone of a PR or issue.
 
 ## Commands
 
-| Command             | Example              | Description                             |
-| ------------------- | -------------------- | --------------------------------------- |
-| `/milestone <name>` | `/milestone v1.0.0`  | Sets the PR or issue milestone.         |
-| `/remove-milestone` | `/remove-milestone`  | Clears the PR or issue milestone.       |
+| Command             | Example              | Description                                        |
+| ------------------- | -------------------- | -------------------------------------------------- |
+| `/milestone <name>` | `/milestone v1.0.0`  | Sets the PR or issue milestone.                    |
+| `/milestone clear`  | `/milestone clear`   | Clears the milestone, same as `/remove-milestone`. |
+| `/remove-milestone` | `/remove-milestone`  | Clears the PR or issue milestone.                  |
 
 ## Behavior
 
